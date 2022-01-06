@@ -33,11 +33,11 @@ jobs:
       - name: Build osxcross
         shell: bash
         run: |
-          git clone https://github.com/tpoechtrager/osxcross
+          git clone https://github.com/jessfraz/osxcross
           cd osxcross
           wget -nc https://dl.oxide.computer/mac/sdk/MacOSX12.1.sdk.tar.xz
           mv MacOSX12.1.sdk.tar.xz tarballs/
-          SDK_VERSION=12.0 UNATTENDED=yes ./build.sh
+          UNATTENDED=yes ./build.sh
       - name: Update cargo config for mac
         shell: bash
         run: |
