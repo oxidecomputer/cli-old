@@ -69,6 +69,7 @@ enum SubCommand {
 ///
 /// Invoke-Expression -Command $(oxide completion -s powershell | Out-String)
 #[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
 pub struct CmdCompletion {
     #[clap(short, long)]
     shell: Shell,
