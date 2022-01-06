@@ -42,7 +42,7 @@ echo -e "\`\`\`console" >> $(BUILDDIR)/README.md;
 echo -e "# Export the sha256sum for verification." >> $(BUILDDIR)/README.md;
 echo -e "$$ export OXIDE_CLI_SHA256=\"`cat $(BUILDDIR)/$(NAME)-$(1).sha256 | awk '{print $$1}'`\"\n\n" >> $(BUILDDIR)/README.md;
 echo -e "# Download and check the sha256sum." >> $(BUILDDIR)/README.md;
-echo -e "$$ curl -fSL \"https://dl.oxide.io/releases/cli/$(VERSION)/$(NAME)-$(1)\" -o \"/usr/local/bin/oxide\" \\" >> $(BUILDDIR)/README.md;
+echo -e "$$ curl -fSL \"https://dl.oxide.computer/releases/cli/$(VERSION)/$(NAME)-$(1)\" -o \"/usr/local/bin/oxide\" \\" >> $(BUILDDIR)/README.md;
 echo -e "\t&& echo \"\$${OXIDE_CLI_SHA256}  /usr/local/bin/oxide\" | sha256sum -c - \\" >> $(BUILDDIR)/README.md;
 echo -e "\t&& chmod a+x \"/usr/local/bin/oxide\"\n\n" >> $(BUILDDIR)/README.md;
 echo -e "$$ echo \"oxide cli installed!\"\n" >> $(BUILDDIR)/README.md;
