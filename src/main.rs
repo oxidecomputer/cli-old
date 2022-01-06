@@ -1,3 +1,6 @@
+//! The Oxide command line tool.
+#![deny(missing_docs)]
+
 use clap::{App, IntoApp, Parser};
 use clap_complete::{generate, Shell};
 
