@@ -61,5 +61,6 @@ jobs:
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
       - name: Run cargo build
         run: |
+          export PATH="$(pwd)/osxcross/target/bin:$PATH"
           make release
         shell: bash
