@@ -3,8 +3,7 @@ use clap_complete::{generate, Shell};
 
 use std::io;
 
-/// This doc string acts as a help message when the user runs '--help'
-/// as do all doc strings on fields.
+/// Work seamlessly with Oxide from the command line.
 #[derive(Parser, Debug, Clone)]
 #[clap(version = clap::crate_version!(), author = clap::crate_authors!("\n"))]
 struct Opts {
