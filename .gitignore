@@ -1,3 +1,6 @@
+# Our target directory.
 /target
+# Where our cross compiled binaries will go.
 /cross
+# For the ci when we cross compile.
 /osxcross
