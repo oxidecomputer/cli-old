@@ -11,13 +11,13 @@ BUILDDIR := ${PREFIX}/cross
 
 # These are chosen from: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 CROSS_TARGETS := x86_64-unknown-linux-musl \
-				 x86_64-unknown-freebsd	\
-				 x86_64-unknown-illumos \
 				 x86_64-apple-darwin \
 				 aarch64-apple-darwin \
 				 x86_64-pc-windows-gnu \
 				 i686-pc-windows-gnu
 #aarch64-unknown-linux-musl	\
+#x86_64-unknown-freebsd	\
+#x86_64-unknown-illumos \
 
 
 # For this to work, you need to install toml-cli: https://github.com/gnprice/toml-cli
