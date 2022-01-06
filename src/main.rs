@@ -1,4 +1,4 @@
-use clap::{App, ArgEnum, IntoApp, Parser};
+use clap::{App, IntoApp, Parser};
 use clap_complete::{generate, Shell};
 
 use std::io;
@@ -68,9 +68,7 @@ enum SubCommand {
 #[derive(Parser, Debug, Clone)]
 pub struct CmdCompletion {
     #[clap(short, long)]
-    shell: String,
-    /* TODO: figure out how to set possible values for the above:
-     * Shell::possible_values() */
+    shell: Shell,
 }
 
 fn main() {
@@ -78,19 +76,11 @@ fn main() {
 
     match opts.subcmd {
         SubCommand::Completion(cmd) => {
-            // Get the shell type.
-            match Shell::from_str(&cmd.shell, true) {
-                Ok(shell) => {
-                    // Convert our opts into a clap app.
-                    let mut app: App = Opts::into_app();
-                    let name = app.get_name().to_string();
-                    // Generate the completion script.
-                    generate(shell, &mut app, name, &mut io::stdout());
-                }
-                Err(e) => {
-                    println!("{} is not a valid shell\n{}", cmd.shell, e,);
-                }
-            }
+            // Convert our opts into a clap app.
+            let mut app: App = Opts::into_app();
+            let name = app.get_name().to_string();
+            // Generate the completion script.
+            generate(cmd.shell, &mut app, name, &mut io::stdout());
         }
     }
 }
