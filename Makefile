@@ -11,10 +11,11 @@ CROSS_TARGETS := aarch64-unknown-linux-musl	\
 				 x86_64-unknown-linux-musl \
 				 x86_64-unknown-freebsd	\
 				 x86_64-unknown-illumos \
-				 aarch64-apple-darwin \
 				 x86_64-apple-darwin \
 				 x86_64-pc-windows-msvc \
 				 i686-pc-windows-msvc
+
+#aarch64-apple-darwin \
 
 # For this to work, you need to install toml-cli: https://github.com/gnprice/toml-cli
 # `cargo install toml-cli`

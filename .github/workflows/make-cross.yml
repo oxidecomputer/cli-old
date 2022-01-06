@@ -37,6 +37,13 @@ jobs:
           wget -nc https://s3.dockerproject.org/darwin/v2/MacOSX10.10.sdk.tar.xz
           mv MacOSX10.10.sdk.tar.xz tarballs/
           UNATTENDED=yes OSX_VERSION_MIN=10.7 ./build.sh
+      - name: Update cargo config for mac
+        shelll: bash
+        run: |
+          echo "[target.x86_64-apple-darwin]" >> $HOME/.cargo/config
+          echo "linker = \"x86_64-apple-darwin14-clang\"" >> $HOME/.cargo/config
+          echo "ar = \"x86_64-apple-darwin14-ar\"" >> $HOME/.cargo/config
+          echo >> $HOME/.cargo/config
       - name: Cache cargo registry
         uses: actions/cache@v2
         with:
