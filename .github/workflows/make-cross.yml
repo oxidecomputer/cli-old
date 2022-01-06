@@ -37,7 +37,7 @@ jobs:
           cd osxcross
           wget -nc https://dl.oxide.computer/mac/sdk/MacOSX12.1.sdk.tar.xz
           mv MacOSX12.1.sdk.tar.xz tarballs/
-          UNATTENDED=yes ./build.sh
+          SDK_VERSION=12.0 UNATTENDED=yes ./build.sh
       - name: Update cargo config for mac
         shell: bash
         run: |
