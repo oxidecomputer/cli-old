@@ -33,7 +33,9 @@ jobs:
             zlib1g-dev \
             libmpc-dev \
             libmpfr-dev \
-            libgmp-dev
+            libgmp-dev \
+            mingw-w64 \
+            gcc-mingw-w64
       - name: Build osxcross
         shell: bash
         run: |
