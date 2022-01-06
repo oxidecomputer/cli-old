@@ -38,7 +38,7 @@ jobs:
           mv MacOSX10.10.sdk.tar.xz tarballs/
           UNATTENDED=yes OSX_VERSION_MIN=10.7 ./build.sh
       - name: Update cargo config for mac
-        shelll: bash
+        shell: bash
         run: |
           echo "[target.x86_64-apple-darwin]" >> $HOME/.cargo/config
           echo "linker = \"x86_64-apple-darwin14-clang\"" >> $HOME/.cargo/config
