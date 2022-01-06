@@ -1,0 +1,66 @@
+on:
+  push:
+    branches:
+      - '**'
+name: cargo test
+jobs:
+  cargotest:
+    name: cargo test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            override: true
+            components: rustfmt, clippy
+      - name: Install libusb
+        shell: bash
+        run: |
+          sudo apt update -y && sudo apt install -y \
+            libusb-1.0-0-dev
+      - name: Cache github etags
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.cache
+          key: github-cache
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      - name: Cache cargo index
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      - name: Cache cargo build
+        uses: actions/cache@v2
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install SQL proxy
+        shell: bash
+        run: |
+          wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy \
+          && chmod +x cloud_sql_proxy
+      - name: Set up environment
+        shell: bash
+        run: |
+          echo "$SQL_PROXY_KEY" > ${{ github.workspace }}/sql_proxy_key
+        env:
+          SQL_PROXY_KEY: ${{ secrets.SQL_PROXY_KEY }}
+      - name: Start the sql_proxy
+        shell: bash
+        run: |
+          ./cloud_sql_proxy -instances=${{ secrets.INSTANCE_CONNECTION_NAME }}=tcp:5432 \
+                  -credential_file=${{ github.workspace }}/sql_proxy_key &
+      - name: Run cargo test
+        run: |
+          cargo test
+        shell: bash
+        env:
+          CIO_DATABASE_URL: ${{ secrets.CIO_DATABASE_URL }}
+          RUST_LOG: trace
+          SENTRY_DSN: ${{secrets.WEBHOOKY_SENTRY_DSN}}
