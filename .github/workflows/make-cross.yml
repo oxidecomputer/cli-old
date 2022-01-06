@@ -35,8 +35,8 @@ jobs:
         run: |
           git clone https://github.com/tpoechtrager/osxcross
           cd osxcross
-          wget -nc https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/MacOSX11.0.sdk.tar.xz
-          mv MacOSX11.0.sdk.tar.xz tarballs/
+          wget -nc https://dl.oxide.computer/mac/sdk/MacOSX12.1.sdk.tar.xz
+          mv MacOSX12.1.sdk.tar.xz tarballs/
           UNATTENDED=yes ./build.sh
       - name: Update cargo config for mac
         shell: bash
