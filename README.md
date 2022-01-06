@@ -66,5 +66,3 @@ _required argument with mutually exclusive options:_
 
 _optional argument with mutually exclusive options:_
 `command sub-command [<path> | <string>]`
-
-e
