@@ -39,7 +39,7 @@ cargo build \
 	--target $(1) \
 	-Z unstable-options \
 	--out-dir $(BUILDDIR);
-mv $(BUILDDIR)/$(NAME) $(BUILDDIR)/$(NAME)-$(1)
+mv $(BUILDDIR)/$(NAME) $(BUILDDIR)/$(NAME)-$(1) || mv $(BUILDDIR)/$(NAME).exe $(BUILDDIR)/$(NAME)-$(1)
 md5sum $(BUILDDIR)/$(NAME)-$(1) > $(BUILDDIR)/$(NAME)-$(1).md5;
 sha256sum $(BUILDDIR)/$(NAME)-$(1) > $(BUILDDIR)/$(NAME)-$(1).sha256;
 echo -e "### $(1)\n\n" >> $(BUILDDIR)/README.md;
