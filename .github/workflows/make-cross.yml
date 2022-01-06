@@ -37,7 +37,7 @@ jobs:
           cd osxcross
           wget -nc https://github.com/phracker/MacOSX-SDKs/releases/download/11.3/MacOSX11.0.sdk.tar.xz
           mv MacOSX11.0.sdk.tar.xz tarballs/
-          UNATTENDED=yes OSX_VERSION_MIN=10.7 ./build.sh
+          UNATTENDED=yes ./build.sh
       - name: Update cargo config for mac
         shell: bash
         run: |
