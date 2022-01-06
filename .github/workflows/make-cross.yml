@@ -63,4 +63,5 @@ jobs:
         run: |
           export PATH="$(pwd)/osxcross/target/bin:$PATH"
           make release
+          ls -la cross
         shell: bash
