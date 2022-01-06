@@ -7,6 +7,7 @@ PREFIX?=$(shell pwd)
 # Set the build dir, where built cross-compiled binaries will be output
 BUILDDIR := ${PREFIX}/cross
 
+# These are chosen from: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 CROSS_TARGETS := x86_64-unknown-linux-musl \
 				 x86_64-unknown-freebsd	\
 				 x86_64-unknown-illumos \
