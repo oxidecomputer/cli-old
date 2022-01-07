@@ -13,11 +13,13 @@ BUILDDIR := ${PREFIX}/cross
 CROSS_TARGETS := x86_64-unknown-linux-musl \
 				 x86_64-apple-darwin \
 				 aarch64-apple-darwin \
-				 x86_64-pc-windows-gnu \
-				 i686-pc-windows-gnu
-#aarch64-unknown-linux-musl	\
-#x86_64-unknown-freebsd	\
-#x86_64-unknown-illumos \
+				 x86_64-pc-windows-gnu
+
+# TODO: Add these back in once they work.
+# aarch64-unknown-linux-musl
+# x86_64-unknown-freebsd
+# x86_64-unknown-illumos
+# i686-pc-windows-gnu
 
 
 # For this to work, you need to install toml-cli: https://github.com/gnprice/toml-cli
