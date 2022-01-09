@@ -4,7 +4,7 @@ The Oxide command line tool.
 
 ### Installing
 
-Instructions for installing are on the [latest Release](https://github.com/oxidecomputer/cli/releases).
+Instructions for installing are on the [latest release](https://github.com/oxidecomputer/cli/releases).
 
 ## How we document our command line syntax
 
