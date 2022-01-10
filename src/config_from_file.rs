@@ -70,9 +70,13 @@ impl crate::config::Config for FileConfig {
         let filename = crate::config_file::config_file()?;
 
         // Get the string representation of the config file.
-        let content = self.map.root.to_string();
+        let content = self.to_string();
 
         // Write the config file.
         crate::config_file::write_config_file(&filename, &content)
+    }
+
+    fn to_string(&self) -> String {
+        self.map.root.to_string().trim().to_string()
     }
 }

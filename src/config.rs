@@ -10,15 +10,24 @@ pub trait Config {
     /// Sets a value in the configuration by its key.
     fn set(&mut self, key: &str, value: &str) -> Result<()>;
 
+    /// Remove a host.
     fn unset_host(&mut self, key: &str) -> Result<()>;
+    /// Get the hosts.
     fn hosts(&self) -> Result<Vec<String>>;
+    /// Get the default host.
     fn default_host(&self) -> Result<String>;
 
+    /// Get the aliases.
     fn aliases(&self) -> Result<Vec<String>>;
 
+    /// Check if the configuration can be written to.
     fn check_writable(&self) -> Result<()>;
 
+    /// Write the configuration.
     fn write(&self) -> Result<()>;
+
+    /// Return the string representation of the config.
+    fn to_string(&self) -> String;
 }
 
 pub struct ConfigOption {
@@ -129,4 +138,49 @@ pub fn new_blank_root() -> Result<toml_edit::Document> {
     }
 
     Ok(s.parse::<toml_edit::Document>()?)
+}
+
+pub fn new_blank_config() -> Result<impl Config> {
+    let root = new_blank_root()?;
+    Ok(new_config(root))
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_file_config_set() {
+        let mut c = new_blank_config().unwrap();
+        assert!(c.set("editor", "vim").is_ok());
+        assert!(c.set("prompt", "disabled").is_ok());
+        assert!(c.set("pager", "less").is_ok());
+        assert!(c.set("browser", "firefox").is_ok());
+
+        let doc = c.to_string();
+        assert!(doc.contains("editor = \"vim\""));
+        assert!(doc.contains("prompt = \"disabled\""));
+        assert!(doc.contains("pager = \"less\""));
+        assert!(doc.contains("browser = \"firefox\""));
+    }
+
+    #[test]
+    fn test_default_config() {
+        let c = new_blank_config().unwrap();
+        let doc = c.to_string();
+
+        let expected = r#"# What editor oxide should run when creating text, etc. If blank, will refer to environment.
+editor = ""
+
+# When to interactively prompt. This is a global config that cannot be overridden by hostname.
+# Supported values: enabled, disabled
+prompt = "enabled"
+
+# A pager program to send command output to, e.g. "less". Set the value to "cat" to disable the pager.
+pager = ""
+
+# What web browser gh should use when opening URLs. If blank, will refer to environment.
+browser = """#;
+        assert_eq!(doc, expected);
+    }
 }

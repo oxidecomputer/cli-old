@@ -42,12 +42,6 @@ pub fn config_dir() -> Result<String> {
         }
     }
 
-    // If the path does not exist and the OXIDE_CONFIG_DIR flag is not set try
-    // migrating config from default paths.
-    if !path.exists() && oxide_config_dir.is_empty() {
-        //_ = autoMigrateConfigDir(path)
-    }
-
     // Convert the path into a string slice
     match path.to_str() {
         None => return Err(anyhow!("path is not a valid UTF-8 sequence")),
@@ -79,11 +73,6 @@ pub fn state_dir() -> Result<String> {
                 return Err(anyhow!("could not find home directory"));
             }
         }
-    }
-
-    // If the path does not exist try migrating state from default paths
-    if !path.exists() {
-        //_ = autoMigrateStateDir(path)
     }
 
     // Convert the path into a string slice
