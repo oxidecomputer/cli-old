@@ -11,4 +11,4 @@ clap = { version = "^3.0.5", features = ["cargo", "derive", "env", "unicode"] }
 clap_complete = "^3.0.2"
 dirs = "4"
 thiserror = "1"
-toml = "^0.5.8"
+toml_edit = "^0.12.4"

@@ -4,6 +4,7 @@
 mod cmd_completion;
 mod config;
 mod config_file;
+mod config_map;
 
 use clap::{App, IntoApp, Parser};
 use clap_complete::generate;
