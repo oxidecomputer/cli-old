@@ -27,7 +27,10 @@ pub trait Config {
     fn write(&self) -> Result<()>;
 
     /// Return the string representation of the config.
-    fn to_string(&self) -> String;
+    fn config_to_string(&self) -> Result<String>;
+
+    /// Return the string representation of the hosts.
+    fn hosts_to_string(&self) -> Result<String>;
 }
 
 pub struct ConfigOption {
@@ -115,7 +118,9 @@ pub fn validate_value(key: String, value: String) -> Result<()> {
 
 pub fn new_config(t: toml_edit::Document) -> impl Config {
     crate::config_from_file::FileConfig {
-        map: crate::config_map::ConfigMap { root: t },
+        map: crate::config_map::ConfigMap {
+            root: t.as_table().clone(),
+        },
     }
 }
 
@@ -157,7 +162,7 @@ mod test {
         assert!(c.set("pager", "less").is_ok());
         assert!(c.set("browser", "firefox").is_ok());
 
-        let doc = c.to_string();
+        let doc = c.config_to_string().unwrap();
         assert!(doc.contains("editor = \"vim\""));
         assert!(doc.contains("prompt = \"disabled\""));
         assert!(doc.contains("pager = \"less\""));
@@ -167,7 +172,7 @@ mod test {
     #[test]
     fn test_default_config() {
         let c = new_blank_config().unwrap();
-        let doc = c.to_string();
+        let doc_config = c.config_to_string().unwrap();
 
         let expected = r#"# What editor oxide should run when creating text, etc. If blank, will refer to environment.
 editor = ""
@@ -181,6 +186,9 @@ pager = ""
 
 # What web browser gh should use when opening URLs. If blank, will refer to environment.
 browser = """#;
-        assert_eq!(doc, expected);
+        assert_eq!(doc_config, expected);
+
+        let doc_hosts = c.hosts_to_string().unwrap();
+        assert_eq!(doc_hosts, "");
     }
 }

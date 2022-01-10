@@ -11,13 +11,11 @@ pub struct HostConfig {
 }
 
 impl crate::config::Config for FileConfig {
-    /// Returns a value from the configuration by its key.
     fn get(&self, key: &str) -> Result<String> {
         let (val, _) = self.get_with_source(key)?;
         Ok(val)
     }
 
-    /// Returns a value from the configuration by its key, with the source.
     fn get_with_source(&self, key: &str) -> Result<(String, String)> {
         let default_source = crate::config_file::config_file()?;
         let value = self.map.get_string_value(key)?;
@@ -25,7 +23,6 @@ impl crate::config::Config for FileConfig {
         Ok((value, default_source))
     }
 
-    /// Sets a value in the configuration by its key.
     fn set(&mut self, key: &str, value: &str) -> Result<()> {
         self.map.set_string_value(key, value)
     }
@@ -67,16 +64,46 @@ impl crate::config::Config for FileConfig {
 
     fn write(&self) -> Result<()> {
         // Get the config file name.
-        let filename = crate::config_file::config_file()?;
+        let config_filename = crate::config_file::config_file()?;
 
         // Get the string representation of the config file.
-        let content = self.to_string();
+        let content = self.config_to_string()?;
 
         // Write the config file.
-        crate::config_file::write_config_file(&filename, &content)
+        crate::config_file::write_config_file(&config_filename, &content)?;
+
+        // Get the hosts file name.
+        let hosts_filename = crate::config_file::hosts_file()?;
+
+        // Get the string representation of the hosts file.
+        let content = self.hosts_to_string()?;
+
+        // Write the hosts file.
+        crate::config_file::write_config_file(&hosts_filename, &content)
     }
 
-    fn to_string(&self) -> String {
-        self.map.root.to_string().trim().to_string()
+    fn config_to_string(&self) -> Result<String> {
+        // Remove the hosts entry from the config map.
+        let mut map = self.map.clone();
+
+        map.remove_entry("hosts");
+
+        Ok(map.root.to_string().trim().to_string())
+    }
+
+    fn hosts_to_string(&self) -> Result<String> {
+        // Remove the hosts entry from the config map.
+        let mut map = self.map.clone();
+
+        match map.root.remove_entry("hosts") {
+            Some((_, v)) => {
+                if let toml_edit::Item::Table(h) = v {
+                    Ok(h.to_string().trim().to_string())
+                } else {
+                    Err(anyhow!("hosts is not a table"))
+                }
+            }
+            None => Ok("".to_string()),
+        }
     }
 }

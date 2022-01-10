@@ -3,8 +3,9 @@ use anyhow::{anyhow, Result};
 // ConfigMap implements a low-level get/set config that is backed by an in-memory tree of toml
 // nodes. It allows us to interact with a toml-based config programmatically, preserving any
 // comments that were present when the toml was parsed.
+#[derive(Clone, Debug)]
 pub struct ConfigMap {
-    pub root: toml_edit::Document,
+    pub root: toml_edit::Table,
 }
 
 impl ConfigMap {

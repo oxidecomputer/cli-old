@@ -4,6 +4,7 @@
 mod cmd_completion;
 mod config;
 mod config_file;
+mod config_from_env;
 mod config_from_file;
 mod config_map;
 
