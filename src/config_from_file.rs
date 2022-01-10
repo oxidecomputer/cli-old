@@ -10,21 +10,117 @@ pub struct HostConfig {
     pub host: String,
 }
 
+impl FileConfig {
+    fn get_host_entries(&self) -> Result<Vec<HostConfig>> {
+        let mut host_configs = Vec::new();
+
+        let hosts = self.map.find_entry("hosts")?;
+
+        // Parse the hosts as an array of tables.
+        match hosts.as_table() {
+            Some(h) => {
+                if h.is_empty() {
+                    return Ok(host_configs);
+                }
+
+                let hosts_table = h.clone();
+
+                // Iterate over the hosts table and create a HostConfig for each host.
+                for (keys, _v) in hosts_table.get_values() {
+                    //let host_table = v.as_table().ok_or(anyhow!("hosts entry is not a table"))?;
+                    let host_config = HostConfig {
+                        map: crate::config_map::ConfigMap {
+                            root: hosts_table.clone(),
+                        },
+                        host: keys.get(0).ok_or(anyhow!("hosts entry is not a table"))?.to_string(),
+                    };
+
+                    host_configs.push(host_config);
+                }
+
+                Ok(host_configs)
+            }
+            None => {
+                return Err(anyhow!("hosts is not an array of tables"));
+            }
+        }
+    }
+
+    fn get_host_config(&self, hostname: &str) -> Result<HostConfig> {
+        let host_configs = self.get_host_entries()?;
+
+        for host_config in host_configs {
+            if host_config.host == *hostname {
+                return Ok(host_config);
+            }
+        }
+
+        Err(anyhow!("host {} not found", hostname))
+    }
+
+    fn make_host_config(&self, hostname: &str) -> Result<HostConfig> {
+        let host_config = HostConfig {
+            map: crate::config_map::ConfigMap {
+                root: toml_edit::Table::new(),
+            },
+            host: hostname.to_string(),
+        };
+
+        let hosts = self.map.find_entry("hosts")?;
+
+        // Parse the hosts as an array of tables.
+        match hosts.as_table() {
+            Some(h) => {
+                let mut hosts_table = h.clone();
+
+                hosts_table.insert(hostname, toml_edit::Item::Table(host_config.map.root.clone()));
+
+                Ok(host_config)
+            }
+            None => {
+                return Err(anyhow!("hosts is not an array of tables"));
+            }
+        }
+    }
+}
+
 impl crate::config::Config for FileConfig {
-    fn get(&self, key: &str) -> Result<String> {
-        let (val, _) = self.get_with_source(key)?;
+    fn get(&self, hostname: &str, key: &str) -> Result<String> {
+        let (val, _) = self.get_with_source(hostname, key)?;
         Ok(val)
     }
 
-    fn get_with_source(&self, key: &str) -> Result<(String, String)> {
-        let default_source = crate::config_file::config_file()?;
-        let value = self.map.get_string_value(key)?;
+    fn get_with_source(&self, hostname: &str, key: &str) -> Result<(String, String)> {
+        if hostname.is_empty() {
+            let default_source = crate::config_file::config_file()?;
+            let value = self.map.get_string_value(key)?;
 
-        Ok((value, default_source))
+            return Ok((value, default_source));
+        }
+
+        let hosts_source = crate::config_file::hosts_file()?;
+
+        let host_config = self.get_host_config(hostname)?;
+
+        let value = host_config.map.get_string_value(key)?;
+
+        Ok((value, hosts_source))
     }
 
-    fn set(&mut self, key: &str, value: &str) -> Result<()> {
-        self.map.set_string_value(key, value)
+    fn set(&mut self, hostname: &str, key: &str, value: &str) -> Result<()> {
+        if hostname.is_empty() {
+            return self.map.set_string_value(key, value);
+        }
+
+        let mut host_config = match self.get_host_config(hostname) {
+            Ok(host_config) => host_config,
+            Err(_) => {
+                // Likely the host doesn't exist, so create it.
+                self.make_host_config(hostname)?
+            }
+        };
+
+        host_config.map.set_string_value(key, value)
     }
 
     fn unset_host(&mut self, hostname: &str) -> Result<()> {
@@ -46,14 +142,19 @@ impl crate::config::Config for FileConfig {
             }
         }
     }
+
     fn hosts(&self) -> Result<Vec<String>> {
+        // TODO: implement
         Ok(vec![])
     }
+
     fn default_host(&self) -> Result<String> {
+        // TODO: implement
         Ok("".to_string())
     }
 
     fn aliases(&self) -> Result<Vec<String>> {
+        // TODO: Implement aliases
         Ok(vec![])
     }
 
@@ -86,7 +187,7 @@ impl crate::config::Config for FileConfig {
         // Remove the hosts entry from the config map.
         let mut map = self.map.clone();
 
-        map.remove_entry("hosts");
+        map.remove_entry("hosts")?;
 
         Ok(map.root.to_string().trim().to_string())
     }

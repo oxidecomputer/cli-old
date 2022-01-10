@@ -4,11 +4,11 @@ use thiserror::Error;
 /// This trait describes interaction with the configuration for oxide.
 pub trait Config {
     /// Returns a value from the configuration by its key.
-    fn get(&self, key: &str) -> Result<String>;
+    fn get(&self, hostname: &str, key: &str) -> Result<String>;
     /// Returns a value from the configuration by its key, with the source.
-    fn get_with_source(&self, key: &str) -> Result<(String, String)>;
+    fn get_with_source(&self, hostname: &str, key: &str) -> Result<(String, String)>;
     /// Sets a value in the configuration by its key.
-    fn set(&mut self, key: &str, value: &str) -> Result<()>;
+    fn set(&mut self, hostname: &str, key: &str, value: &str) -> Result<()>;
 
     /// Remove a host.
     fn unset_host(&mut self, key: &str) -> Result<()>;
@@ -157,10 +157,10 @@ mod test {
     #[test]
     fn test_file_config_set() {
         let mut c = new_blank_config().unwrap();
-        assert!(c.set("editor", "vim").is_ok());
-        assert!(c.set("prompt", "disabled").is_ok());
-        assert!(c.set("pager", "less").is_ok());
-        assert!(c.set("browser", "firefox").is_ok());
+        assert!(c.set("", "editor", "vim").is_ok());
+        assert!(c.set("", "prompt", "disabled").is_ok());
+        assert!(c.set("", "pager", "less").is_ok());
+        assert!(c.set("", "browser", "firefox").is_ok());
 
         let doc = c.config_to_string().unwrap();
         assert!(doc.contains("editor = \"vim\""));
