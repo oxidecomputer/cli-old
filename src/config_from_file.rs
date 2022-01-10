@@ -22,7 +22,7 @@ impl crate::config::Config for FileConfig {
         let default_source = crate::config_file::config_file()?;
         let value = self.map.get_string_value(key)?;
 
-        Ok((value, default_source.to_string()))
+        Ok((value, default_source))
     }
 
     /// Sets a value in the configuration by its key.
@@ -42,7 +42,7 @@ impl crate::config::Config for FileConfig {
                 let mut hosts_table = h.clone();
                 // Remove the host from the table.
                 hosts_table.remove_entry(hostname);
-                return Ok(());
+                Ok(())
             }
             None => {
                 return Err(anyhow!("hosts is not an array of tables, cannot unset host"));
