@@ -24,6 +24,7 @@ pub trait Config {
 pub struct ConfigOption {
     pub key: String,
     pub description: String,
+    pub comment: String,
     pub default_value: String,
     pub allowed_values: Vec<String>,
 }
@@ -33,24 +34,30 @@ pub fn config_options() -> Vec<ConfigOption> {
         ConfigOption {
             key: "editor".to_string(),
             description: "the text editor program to use for authoring text".to_string(),
+            comment: "What editor oxide should run when creating text, etc. If blank, will refer to environment."
+                .to_string(),
             default_value: "".to_string(),
             allowed_values: vec![],
         },
         ConfigOption {
             key: "prompt".to_string(),
             description: "toggle interactive prompting in the terminal".to_string(),
+            comment: "When to interactively prompt. This is a global config that cannot be overridden by hostname."
+                .to_string(),
             default_value: "enabled".to_string(),
             allowed_values: vec!["enabled".to_string(), "disabled".to_string()],
         },
         ConfigOption {
             key: "pager".to_string(),
             description: "the terminal pager program to send standard output to".to_string(),
+            comment: "A pager program to send command output to, e.g. \"less\". Set the value to \"cat\" to disable the pager.".to_string(),
             default_value: "".to_string(),
             allowed_values: vec![],
         },
         ConfigOption {
             key: "browser".to_string(),
             description: "the web browser to use for opening URLs".to_string(),
+            comment: "What web browser gh should use when opening URLs. If blank, will refer to environment.".to_string(),
             default_value: "".to_string(),
             allowed_values: vec![],
         },
@@ -97,23 +104,29 @@ pub fn validate_value(key: String, value: String) -> Result<()> {
     Err(InvalidValueError::ValidValues(valid_values).into())
 }
 
-/*fn new_config(t: toml::Value) -> Config {}
+pub fn new_config(t: toml_edit::Document) -> impl Config {
+    crate::config_from_file::FileConfig {
+        map: crate::config_map::ConfigMap { root: t },
+    }
+}
 
 // new_from_string initializes a Config from a toml string.
-fn new_from_string(str: &str) -> Result<Config> {
-    let root = toml::from_str(str)?;
+fn new_from_string(s: &str) -> Result<impl Config> {
+    let root = s.parse::<toml_edit::Document>()?;
     Ok(new_config(root))
 }
 
-pub fn new_blank_root() -> toml::Value {
-    let root: Config = toml::from_str(
-        r#"
-        ip = '127.0.0.1'
+pub fn new_blank_root() -> Result<toml_edit::Document> {
+    let mut s = String::new();
+    for option in config_options() {
+        if !option.comment.is_empty() {
+            s.push_str(&format!("# {}\n", option.comment));
+            if !option.allowed_values.is_empty() {
+                s.push_str(&format!("# Supported values: {}\n", option.allowed_values.join(", ")));
+            }
+        }
+        s.push_str(&format!("{} = \"{}\"\n\n", option.key, option.default_value));
+    }
 
-        [keys]
-        github = 'xxxxxxxxxxxxxxxxx'
-        travis = 'yyyyyyyyyyyyyyyyy'
-    "#,
-    )
-    .unwrap();
-}*/
+    Ok(s.parse::<toml_edit::Document>()?)
+}
