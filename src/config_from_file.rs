@@ -19,9 +19,10 @@ impl crate::config::Config for FileConfig {
 
     /// Returns a value from the configuration by its key, with the source.
     fn get_with_source(&self, key: &str) -> Result<(String, String)> {
+        let default_source = crate::config_file::config_file()?;
         let value = self.map.get_string_value(key)?;
-        // TODO: get the source of the value
-        Ok((value, "file".to_string()))
+
+        Ok((value, default_source.to_string()))
     }
 
     /// Sets a value in the configuration by its key.
