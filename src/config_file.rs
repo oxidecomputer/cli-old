@@ -167,7 +167,7 @@ fn read_config_file(filename: &str) -> Result<String> {
     fs::read_to_string(filename).with_context(|| format!("failed to read from {}", filename))
 }
 
-fn write_config_file(filename: &str, data: &str) -> Result<()> {
+pub fn write_config_file(filename: &str, data: &str) -> Result<()> {
     let path = Path::new(filename);
     let parent = path.parent().unwrap();
     fs::create_dir_all(parent).with_context(|| format!("failed to create directory {}", parent.display()))?;
@@ -181,10 +181,12 @@ fn backup_config_file(filename: String) -> Result<()> {
     fs::rename(&filename, &format!("{}.bak", filename)).with_context(|| format!("failed to backup {}", filename))
 }
 
-fn parse_config_file(filename: &str) -> Result<(String, toml::Value)> {
+fn parse_config_file(filename: &str) -> Result<(String, toml_edit::Document)> {
     match read_config_file(filename) {
         Ok(data) => {
-            let config = toml::from_str(&data).with_context(|| format!("failed to parse {}", filename))?;
+            let config = data
+                .parse::<toml_edit::Document>()
+                .with_context(|| format!("failed to parse {}", filename))?;
             Ok((data, config))
         }
         Err(e) => {
