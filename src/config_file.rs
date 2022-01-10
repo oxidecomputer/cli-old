@@ -148,20 +148,23 @@ pub fn hosts_file() -> Result<String> {
     }
 }
 
-/*fn parse_default_config() -> Result<Config> {
-    let mut root: toml::Value;
-
+fn parse_default_config() -> Result<impl Config> {
+    let mut root = toml_edit::Document::new();
     let config_file_path = config_file()?;
 
     // If the config file does not exist, create it.
     let path = Path::new(&config_file_path);
     if !path.exists() {
         // Get the default config from a blank.
-        root = config::new_blank_config();
+        root = crate::config::new_blank_config();
+    } else {
+        // Get the default config from the file.
+        let contents = read_config_file(config_file_path)?;
+        root = contents.parse::<toml_edit::Document>()?;
     }
 
-    config::new_config(root)
-}*/
+    crate::config::new_config(root)
+}
 
 fn read_config_file(filename: &str) -> Result<String> {
     fs::read_to_string(filename).with_context(|| format!("failed to read from {}", filename))
