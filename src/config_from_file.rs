@@ -1,5 +1,7 @@
 use anyhow::{anyhow, Result};
 
+use crate::config_alias::AliasConfig;
+
 // This type implements a Config interface and represents a config file on disk.
 pub struct FileConfig {
     pub map: crate::config_map::ConfigMap,
@@ -27,6 +29,26 @@ impl FileConfig {
                 }
 
                 return Err(anyhow!("Error reading hosts table: {}", e));
+            }
+        };
+    }
+
+    fn get_aliases_table(&self) -> Result<toml_edit::Table> {
+        match self.map.find_entry("aliases") {
+            Ok(aliases) => match aliases.as_table() {
+                Some(h) => {
+                    return Ok(h.clone());
+                }
+                None => {
+                    return Err(anyhow!("aliases is not an array of tables"));
+                }
+            },
+            Err(e) => {
+                if e.to_string().contains("not found") {
+                    return Ok(toml_edit::Table::new());
+                }
+
+                return Err(anyhow!("Error reading aliases table: {}", e));
             }
         };
     }
@@ -182,9 +204,13 @@ impl crate::config::Config for FileConfig {
         return Err(anyhow!("No host has been set as default"));
     }
 
-    fn aliases(&self) -> Result<Vec<String>> {
-        // TODO: Implement aliases
-        Ok(vec![])
+    fn aliases(&self) -> Result<crate::config_alias::AliasConfig> {
+        let aliases_table = self.get_aliases_table()?;
+
+        Ok(AliasConfig {
+            map: crate::config_map::ConfigMap { root: aliases_table },
+            parent: self,
+        })
     }
 
     fn check_writable(&self) -> Result<()> {

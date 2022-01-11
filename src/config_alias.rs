@@ -2,12 +2,12 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 
-pub struct AliasConfig {
+pub struct AliasConfig<'a> {
     pub map: crate::config_map::ConfigMap,
-    pub parent: dyn crate::config::Config,
+    pub parent: &'a (dyn crate::config::Config + 'a),
 }
 
-impl AliasConfig {
+impl AliasConfig<'_> {
     pub fn get(&self, alias: &str) -> (String, bool) {
         if self.map.is_empty() {
             return ("".to_string(), false);

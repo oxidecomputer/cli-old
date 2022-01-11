@@ -18,7 +18,7 @@ pub trait Config {
     fn default_host(&self) -> Result<String>;
 
     /// Get the aliases.
-    fn aliases(&self) -> Result<Vec<String>>;
+    fn aliases(&self) -> Result<crate::config_alias::AliasConfig>;
 
     /// Check if the configuration can be written to.
     fn check_writable(&self) -> Result<()>;
