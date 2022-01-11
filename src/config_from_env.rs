@@ -30,6 +30,12 @@ impl crate::config::Config for EnvConfig<'_> {
             if !token.is_empty() {
                 return Ok((token, OXIDE_TOKEN.to_string()));
             }
+        } else {
+            let var = format!("OXIDE_{}", heck::AsShoutySnakeCase(key));
+            let val = get_env_var(&var);
+            if !val.is_empty() {
+                return Ok((val, var));
+            }
         }
 
         self.config.get_with_source(hostname, key)

@@ -12,6 +12,7 @@ atty = "^0.2.14"
 clap = { version = "^3.0.5", features = ["cargo", "derive", "env", "unicode"] }
 clap_complete = "^3.0.2"
 dirs = "4"
+heck = "^0.4.0"
 shlex = "^1.1.0"
 tabwriter = "^1.2.1"
 termbg = "^0.3.0"

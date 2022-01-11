@@ -710,6 +710,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "dirs",
+ "heck 0.4.0",
  "shlex",
  "tabwriter",
  "termbg",
