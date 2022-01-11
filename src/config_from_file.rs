@@ -19,7 +19,7 @@ impl FileConfig {
         match self.map.find_entry("hosts") {
             Ok(hosts) => match hosts.as_table() {
                 Some(h) => Ok(h.clone()),
-                None => Err(anyhow!("hosts is not an array of tables")),
+                None => Err(anyhow!("hosts is not a table")),
             },
             Err(e) => {
                 if e.to_string().contains("not found") {
@@ -35,7 +35,7 @@ impl FileConfig {
         match self.map.find_entry("aliases") {
             Ok(aliases) => match aliases.as_table() {
                 Some(h) => Ok(h.clone()),
-                None => Err(anyhow!("aliases is not an array of tables")),
+                None => Err(anyhow!("aliases is not a table")),
             },
             Err(e) => {
                 if e.to_string().contains("not found") {
@@ -208,13 +208,22 @@ impl crate::config::Config for FileConfig {
         return Err(anyhow!("No host has been set as default"));
     }
 
-    fn aliases(&self) -> Result<crate::config_alias::AliasConfig> {
+    fn aliases(&mut self) -> Result<crate::config_alias::AliasConfig> {
         let aliases_table = self.get_aliases_table()?;
 
         Ok(AliasConfig {
             map: crate::config_map::ConfigMap { root: aliases_table },
             parent: self,
         })
+    }
+
+    fn save_aliases(&mut self, aliases: &crate::config_map::ConfigMap) -> Result<()> {
+        // Save the aliases.
+        self.map
+            .root
+            .insert("aliases", toml_edit::Item::Table(aliases.root.clone()));
+
+        Ok(())
     }
 
     fn check_writable(&self, _hostname: &str, _key: &str) -> Result<()> {
@@ -248,7 +257,9 @@ impl crate::config::Config for FileConfig {
 
         map.remove_entry("hosts")?;
 
-        Ok(map.root.to_string().trim().to_string())
+        let doc: toml_edit::Document = map.root.into();
+
+        Ok(doc.to_string().trim().to_string())
     }
 
     fn hosts_to_string(&self) -> Result<String> {

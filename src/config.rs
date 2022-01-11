@@ -21,7 +21,8 @@ pub trait Config {
     fn default_host_with_source(&self) -> Result<(String, String)>;
 
     /// Get the aliases.
-    fn aliases(&self) -> Result<crate::config_alias::AliasConfig>;
+    fn aliases(&mut self) -> Result<crate::config_alias::AliasConfig>;
+    fn save_aliases(&mut self, aliases: &crate::config_map::ConfigMap) -> Result<()>;
 
     /// Check if the configuration can be written to.
     fn check_writable(&self, hostname: &str, key: &str) -> Result<()>;

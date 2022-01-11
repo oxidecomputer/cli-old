@@ -60,8 +60,12 @@ impl crate::config::Config for EnvConfig<'_> {
         }
     }
 
-    fn aliases(&self) -> Result<crate::config_alias::AliasConfig> {
+    fn aliases(&mut self) -> Result<crate::config_alias::AliasConfig> {
         self.config.aliases()
+    }
+
+    fn save_aliases(&mut self, aliases: &crate::config_map::ConfigMap) -> Result<()> {
+        self.config.save_aliases(aliases)
     }
 
     fn check_writable(&self, hostname: &str, key: &str) -> Result<()> {

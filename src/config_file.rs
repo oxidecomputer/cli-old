@@ -174,7 +174,7 @@ pub fn write_config_file(filename: &str, data: &str) -> Result<()> {
     let parent = path.parent().unwrap();
     fs::create_dir_all(parent).with_context(|| format!("failed to create directory {}", parent.display()))?;
 
-    let mut file = fs::File::create("foo.txt")?;
+    let mut file = fs::File::create(filename)?;
     file.write_all(data.as_bytes())
         .with_context(|| format!("failed to write to {}", filename))
 }
