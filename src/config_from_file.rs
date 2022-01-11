@@ -146,8 +146,15 @@ impl crate::config::Config for FileConfig {
     }
 
     fn hosts(&self) -> Result<Vec<String>> {
-        // TODO: implement
-        Ok(vec![])
+        let mut hosts = Vec::new();
+
+        let hosts_table = self.get_hosts_table()?;
+
+        for (host, _) in hosts_table.iter() {
+            hosts.push(host.to_string());
+        }
+
+        Ok(hosts)
     }
 
     fn default_host(&self) -> Result<String> {

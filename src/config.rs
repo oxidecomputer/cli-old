@@ -186,6 +186,11 @@ browser = "firefox"
 ["oxide.computer"]
 browser = "chrome""#;
         assert_eq!(doc, expected);
+
+        let hosts = c.hosts().unwrap();
+        assert_eq!(hosts.len(), 2);
+        assert_eq!(hosts[0], "example.com".to_string());
+        assert_eq!(hosts[1], "oxide.computer".to_string());
     }
 
     #[test]
