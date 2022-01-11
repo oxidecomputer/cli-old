@@ -180,6 +180,11 @@ impl crate::config::Config for FileConfig {
     }
 
     fn default_host(&self) -> Result<String> {
+        let (host, _) = self.default_host_with_source()?;
+        Ok(host)
+    }
+
+    fn default_host_with_source(&self) -> Result<(String, String)> {
         // Get all the hosts.
         let hosts = self.hosts()?;
 
@@ -187,9 +192,11 @@ impl crate::config::Config for FileConfig {
             return Err(anyhow!("No hosts found"));
         }
 
+        let hosts_source = crate::config_file::hosts_file()?;
+
         // Get the first host.
         if hosts.len() == 1 {
-            return Ok(hosts[0].to_string());
+            return Ok((hosts[0].to_string(), hosts_source));
         }
 
         // Find the default host.
@@ -197,7 +204,7 @@ impl crate::config::Config for FileConfig {
 
         for host_config in host_configs {
             if host_config.map.get_string_value("default")? == "true" {
-                return Ok(host_config.host);
+                return Ok((host_config.host, hosts_source));
             }
         }
 

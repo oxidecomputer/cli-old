@@ -14,8 +14,11 @@ pub trait Config {
     fn unset_host(&mut self, key: &str) -> Result<()>;
     /// Get the hosts.
     fn hosts(&self) -> Result<Vec<String>>;
+
     /// Get the default host.
     fn default_host(&self) -> Result<String>;
+    /// Get the default host with the source.
+    fn default_host_with_source(&self) -> Result<(String, String)>;
 
     /// Get the aliases.
     fn aliases(&self) -> Result<crate::config_alias::AliasConfig>;
