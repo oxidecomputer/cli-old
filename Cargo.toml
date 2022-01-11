@@ -15,6 +15,7 @@ dirs = "4"
 heck = "^0.4.0"
 shlex = "^1.1.0"
 tabwriter = "^1.2.1"
+tempfile = "^3.3.0"
 termbg = "^0.3.0"
 terminal_size = "^0.1.17"
 terminal-spinners = "^0.3.2"
@@ -22,5 +23,4 @@ thiserror = "1"
 toml_edit = "^0.12.4"
 
 [dev-dependencies]
-tempfile = "^3.3.0"
 test-context = "^0.1.3"

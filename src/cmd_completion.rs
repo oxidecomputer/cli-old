@@ -119,12 +119,7 @@ mod test {
                 shell: clap_complete::Shell::from_str(&t.input, true).unwrap(),
             };
 
-            let stdout_path = tempfile::NamedTempFile::new().unwrap();
-            let stderr_path = tempfile::NamedTempFile::new().unwrap();
-            let stdout = std::fs::File::create(&stdout_path).unwrap();
-            let stderr = std::fs::File::create(&stderr_path).unwrap();
-
-            let io = crate::iostreams::IoStreams::test(Box::new(stdout), Box::new(stderr));
+            let (io, stdout_path, _) = crate::iostreams::IoStreams::test();
             let mut config = crate::config::new_blank_config().unwrap();
             let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
             let ctx = crate::context::Context { config: &mut c, io };

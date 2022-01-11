@@ -358,18 +358,27 @@ impl IoStreams {
         io
     }
 
-    pub fn test(stdout: Box<(dyn std::io::Write)>, stderr: Box<(dyn std::io::Write)>) -> Self {
+    // TODO: can this function only be compiled for tests?
+    pub fn test() -> (Self, String, String) {
         let mut io = IoStreams::system();
 
-        io.out = stdout;
-        io.err_out = stderr;
+        let (stdout, stdout_path) = tempfile::NamedTempFile::new().unwrap().keep().unwrap();
+        let (stderr, stderr_path) = tempfile::NamedTempFile::new().unwrap().keep().unwrap();
+
+        io.out = Box::new(stdout);
+        io.err_out = Box::new(stderr);
 
         io.tty_size = test_tty_size;
 
-        io
+        (
+            io,
+            stdout_path.into_os_string().into_string().unwrap(),
+            stderr_path.into_os_string().into_string().unwrap(),
+        )
     }
 }
 
+// TODO: can this function only be compiled for tests?
 fn test_tty_size() -> Result<(i32, i32)> {
     Err(anyhow::anyhow!("tty_size not implemented in tests"))
 }
