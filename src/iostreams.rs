@@ -360,11 +360,11 @@ impl IoStreams {
 
     pub fn test() -> Self {
         let mut io = IoStreams::system();
-        let mut stdout_buf = std::io::Cursor::new(Vec::new());
+        let stdout_buf = std::io::Cursor::new(Vec::new());
 
         io.out = Box::new(stdout_buf);
 
-        let mut stderr_buf = std::io::Cursor::new(Vec::new());
+        let stderr_buf = std::io::Cursor::new(Vec::new());
         io.err_out = Box::new(stderr_buf);
 
         io.tty_size = test_tty_size;
