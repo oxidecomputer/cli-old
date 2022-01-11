@@ -11,13 +11,13 @@ use crate::config_file::get_env_var;
 
 const DEFAULT_WIDTH: i32 = 80;
 
-pub struct IoStreams<'a> {
-    pub stdin: &'a (dyn std::io::Read + 'a),
-    pub out: std::io::BufWriter<&'a mut dyn std::io::Write>,
-    pub err_out: &'a (dyn std::io::Write + 'a),
+pub struct IoStreams {
+    pub stdin: Box<dyn std::io::Read>,
+    pub out: Box<dyn std::io::Write>,
+    pub err_out: Box<dyn std::io::Write>,
 
     // the original (non-colorable) output stream
-    original_out: &'a (dyn std::io::Write + 'a),
+    original_out: Box<dyn std::io::Write>,
 
     color_enabled: bool,
     is_256_enabled: bool,
@@ -45,7 +45,7 @@ pub struct IoStreams<'a> {
     pub tmp_file_override: Option<std::fs::File>,
 }
 
-impl IoStreams<'_> {
+impl IoStreams {
     pub fn color_enabled(&self) -> bool {
         self.color_enabled
     }
@@ -118,6 +118,11 @@ impl IoStreams<'_> {
         false
     }
 
+    pub fn set_stdout_tty(&mut self, is_tty: bool) {
+        self.stdout_tty_override = true;
+        self.stdout_is_tty = is_tty;
+    }
+
     // TODO: fix and do others.
     pub fn is_stdout_tty(&self) -> bool {
         if self.stdout_tty_override {
@@ -125,6 +130,11 @@ impl IoStreams<'_> {
         }
 
         false
+    }
+
+    pub fn set_stderr_tty(&mut self, is_tty: bool) {
+        self.stderr_tty_override = true;
+        self.stderr_is_tty = is_tty;
     }
 
     pub fn set_pager(&mut self, pager_command: String) {
@@ -262,7 +272,7 @@ impl IoStreams<'_> {
     pub fn force_terminal(&mut self, spec: &str) {
         self.color_enabled = !crate::colors::env_color_disabled();
         // TODO: fix this.
-        // self.set_stdout_tty(true);
+        self.set_stdout_tty(true);
 
         if let Ok(i) = spec.parse::<i32>() {
             self.terminal_width_override = i;
@@ -280,6 +290,71 @@ impl IoStreams<'_> {
                 self.terminal_width_override = ((self.terminal_width_override as f64) * (p / 100.00)) as i32;
             }
         }
+    }
+
+    pub fn color_scheme(&self) -> crate::colors::ColorScheme {
+        crate::colors::ColorScheme::new(self.color_enabled(), self.color_support_256(), self.has_true_color())
+    }
+
+    pub fn system() -> Self {
+        let stdout_is_tty = atty::is(atty::Stream::Stdout);
+        let stderr_is_tty = atty::is(atty::Stream::Stderr);
+
+        #[cfg(windows)]
+        let mut assume_true_color = false;
+        #[cfg(unix)]
+        let assume_true_color = false;
+        if stdout_is_tty {
+            // Note for Windows 10 users: On Windows 10, the application must enable ANSI support
+            // first.
+            #[cfg(windows)]
+            let enabled = ansi_term::enable_ansi_support();
+            #[cfg(windows)]
+            if enabled {
+                assume_true_color = true;
+            }
+        }
+
+        let mut io = IoStreams {
+            stdin: Box::new(std::io::stdin()),
+            out: Box::new(std::io::stdout()),
+            err_out: Box::new(std::io::stderr()),
+            original_out: Box::new(std::io::stdout()),
+            color_enabled: crate::colors::env_color_forced() || (!crate::colors::env_color_disabled() && stdout_is_tty),
+            is_256_enabled: assume_true_color || crate::colors::is_256_color_supported(),
+            has_true_color: assume_true_color || crate::colors::is_true_color_supported(),
+
+            terminal_theme: "".to_string(),
+
+            progress_indicator_enabled: false,
+            progress_indicator: None,
+
+            stdin_tty_override: false,
+            stdin_is_tty: atty::is(atty::Stream::Stdin),
+            stdout_tty_override: false,
+            stdout_is_tty,
+            stderr_tty_override: false,
+            stderr_is_tty,
+
+            terminal_width_override: 0,
+
+            tty_size,
+            pager_command: get_env_var("PAGER"),
+
+            pager_process: None,
+            never_prompt: false,
+            tmp_file_override: None,
+        };
+
+        if stdout_is_tty && stderr_is_tty {
+            io.progress_indicator_enabled = true;
+        }
+
+        // prevent duplicate is_terminal queries now that we know the answer.
+        io.set_stdout_tty(stdout_is_tty);
+        io.set_stderr_tty(stderr_is_tty);
+
+        io
     }
 }
 

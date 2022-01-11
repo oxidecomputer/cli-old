@@ -8,7 +8,7 @@ pub fn env_color_forced() -> bool {
     !get_env_var("CLICOLOR_FORCE").is_empty() && get_env_var("CLICOLOR_FORCE") != "0"
 }
 
-fn is_true_color_supported() -> bool {
+pub fn is_true_color_supported() -> bool {
     let term = get_env_var("TERM");
     let color_term = get_env_var("COLORTERM");
 
@@ -31,15 +31,15 @@ pub struct ColorScheme {
     has_true_color: bool,
 }
 
-pub fn new_color_scheme(enabled: bool, is_256_enabled: bool, has_true_color: bool) -> ColorScheme {
-    ColorScheme {
-        enabled,
-        is_256_enabled,
-        has_true_color,
-    }
-}
-
 impl ColorScheme {
+    pub fn new(enabled: bool, is_256_enabled: bool, has_true_color: bool) -> Self {
+        ColorScheme {
+            enabled,
+            is_256_enabled,
+            has_true_color,
+        }
+    }
+
     pub fn bold(&self, t: &str) -> String {
         if !self.enabled {
             return t.to_string();
