@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::Parser;
 
 /// Create command shortcuts.
@@ -28,7 +29,7 @@ impl CmdAlias {
     }
 }
 
-/// Print the value of a given configuration key.
+/// Delete an alias.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdAliasDelete {
@@ -58,86 +59,105 @@ impl CmdAliasDelete {
     }
 }
 
-/// Update configuration with a value for the given key.
+/// Create a shortcut for an oxide command.
+///
+/// Define a word that will expand to a full oxide command when invoked.
+///
+/// The expansion may specify additional arguments and flags. If the expansion includes
+/// positional placeholders such as "$1", extra arguments that follow the alias will be
+/// inserted appropriately. Otherwise, extra arguments will be appended to the expanded
+/// command.
+///
+/// Use "-" as expansion argument to read the expansion string from standard input. This
+/// is useful to avoid quoting issues when defining expansions.
+///
+/// If the expansion starts with "!" or if "--shell" was given, the expansion is a shell
+/// expression that will be evaluated through the "sh" interpreter when the alias is
+/// invoked. This allows for chaining multiple commands via piping and redirection.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdAliasSet {
-    #[clap(name = "key", required = true)]
-    key: String,
+    #[clap(name = "alias", required = true)]
+    alias: String,
 
-    #[clap(name = "value", required = true)]
-    value: String,
+    #[clap(name = "expansion", required = true)]
+    expansion: String,
 
     /// Set per-host setting.
-    #[clap(short = 'H', long, default_value = "")]
-    pub host: String,
+    #[clap(short, long)]
+    pub shell: bool,
 }
 
 impl CmdAliasSet {
     pub fn run(&self, config: &mut dyn crate::config::Config) {
-        // Validate the key.
-        match crate::config::validate_key(&self.key) {
-            Ok(()) => (),
-            Err(_) => {
-                eprintln!("warning: '{}' is not a known configuration key", self.key);
-                std::process::exit(1);
-            }
-        }
+        // TODO: check if valid command.
 
-        // Validate the value.
-        match crate::config::validate_value(&self.key, &self.value) {
-            Ok(()) => (),
+        let mut config_aliases = config.aliases().unwrap();
+
+        match get_expansion(self) {
+            Ok(mut expansion) => {
+                println!("- Adding alias for {}: %{}", self.alias, expansion);
+
+                let mut is_shell = self.shell;
+                if is_shell && !expansion.starts_with("!") {
+                    expansion = format!("!{}", expansion);
+                }
+                is_shell = expansion.starts_with("!");
+
+                // TODO: check if already exists.
+
+                let mut success_msg = format!("Added alias.");
+                let (old_expansion, ok) = config_aliases.get(&self.alias);
+                if ok {
+                    success_msg = format!("Changed alias {} from {} to {}", self.alias, old_expansion, expansion);
+                }
+
+                match config_aliases.add(&self.alias, &expansion) {
+                    Ok(_) => {
+                        println!("{}", success_msg);
+                    }
+                    Err(e) => {
+                        eprintln!("could not create alias: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
             Err(e) => {
-                eprintln!("{}", e);
-                std::process::exit(1);
-            }
-        }
-
-        // Set the value.
-        match config.set(&self.host, &self.key, &self.value) {
-            Ok(()) => (),
-            Err(err) => {
-                eprintln!("{}", err);
-                std::process::exit(1);
-            }
-        }
-
-        // Write the config file.
-        match config.write() {
-            Ok(()) => (),
-            Err(err) => {
-                eprintln!("{}", err);
+                eprintln!("failed to parse expansion {}: {}", self.expansion, e);
                 std::process::exit(1);
             }
         }
     }
 }
 
-/// Print a list of configuration keys and values.
+/// List your aliases.
+///
+/// This command prints out all of the aliases oxide is configured to use.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdAliasList {
-    /// Get per-host configuration.
-    #[clap(short = 'H', long, default_value = "")]
-    pub host: String,
-}
+pub struct CmdAliasList {}
 
 impl CmdAliasList {
     pub fn run(&self, config: &mut dyn crate::config::Config) {
-        let host = if self.host.is_empty() {
-            config.default_host().unwrap_or_default()
-        } else {
-            self.host.to_string()
-        };
+        let config_aliases = config.aliases().unwrap();
 
-        for option in crate::config::config_options() {
-            match config.get(&host, &option.key) {
-                Ok(value) => println!("{}={}", option.key, value),
-                Err(err) => {
-                    eprintln!("{}", err);
-                    std::process::exit(1);
-                }
-            }
+        if config_aliases.map.is_empty() {
+            println!("no aliases configured");
+            return;
         }
+
+        for (alias, expansion) in config_aliases.list().iter() {
+            println!("{}:\t{}", alias, expansion);
+        }
+    }
+}
+
+fn get_expansion(cmd: &CmdAliasSet) -> Result<String> {
+    if cmd.expansion == "-" {
+        let mut expansion = String::new();
+        std::io::stdin().read_line(&mut expansion)?;
+        Ok(expansion)
+    } else {
+        Ok(cmd.expansion.to_string())
     }
 }
