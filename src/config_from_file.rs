@@ -220,7 +220,7 @@ impl crate::config::Config for FileConfig {
         })
     }
 
-    fn check_writable(&self) -> Result<()> {
+    fn check_writable(&self, hostname: &str, key: &str) -> Result<()> {
         // TODO: check if the config file is writable from the filesystem permissions
         Ok(())
     }

@@ -24,7 +24,7 @@ pub trait Config {
     fn aliases(&self) -> Result<crate::config_alias::AliasConfig>;
 
     /// Check if the configuration can be written to.
-    fn check_writable(&self) -> Result<()>;
+    fn check_writable(&self, hostname: &str, key: &str) -> Result<()>;
 
     /// Write the configuration.
     fn write(&self) -> Result<()>;

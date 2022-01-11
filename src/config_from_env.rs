@@ -1,40 +1,84 @@
+use std::env;
+
+use anyhow::Result;
+
+use crate::config_file::get_env_var;
+
 const OXIDE_HOST: &str = "OXIDE_HOST";
 const OXIDE_TOKEN: &str = "OXIDE_TOKEN";
 
 pub struct EnvConfig<'a> {
-    pub config: &'a (dyn crate::config::Config + 'a),
+    pub config: &'a mut (dyn crate::config::Config + 'a),
 }
 
-/*impl crate::config::Config for EnvConfig {
-    /// Returns a value from the configuration by its key.
-    fn get(&self, hostname: &str, key: &str) -> Result<String>;
-    /// Returns a value from the configuration by its key, with the source.
-    fn get_with_source(&self, hostname: &str, key: &str) -> Result<(String, String)>;
-    /// Sets a value in the configuration by its key.
-    fn set(&mut self, hostname: &str, key: &str, value: &str) -> Result<()>;
+impl crate::config::Config for EnvConfig<'_> {
+    fn get(&self, hostname: &str, key: &str) -> Result<String> {
+        let (val, _) = self.get_with_source(hostname, key)?;
+        Ok(val)
+    }
 
-    /// Remove a host.
-    fn unset_host(&mut self, key: &str) -> Result<()>;
-    /// Get the hosts.
-    fn hosts(&self) -> Result<Vec<String>>;
+    fn get_with_source(&self, hostname: &str, key: &str) -> Result<(String, String)> {
+        // If they are asking specifically for the token, return the value.
+        if key == "token" {
+            let token = get_env_var(OXIDE_TOKEN);
+            if !token.is_empty() {
+                return Ok((token, OXIDE_TOKEN.to_string()));
+            }
+        }
 
-    /// Get the default host.
-    fn default_host(&self) -> Result<String>;
-    // Get the default host with the source.
-    fn default_host_with_source(&self) -> Result<(String, String)>;
+        self.config.get_with_source(hostname, key)
+    }
 
-    /// Get the aliases.
-    fn aliases(&self) -> Result<crate::config_alias::AliasConfig>;
+    fn set(&mut self, hostname: &str, key: &str, value: &str) -> Result<()> {
+        self.config.set(hostname, key, value)
+    }
 
-    /// Check if the configuration can be written to.
-    fn check_writable(&self) -> Result<()>;
+    fn unset_host(&mut self, key: &str) -> Result<()> {
+        self.config.unset_host(key)
+    }
 
-    /// Write the configuration.
-    fn write(&self) -> Result<()>;
+    fn hosts(&self) -> Result<Vec<String>> {
+        self.config.hosts()
+    }
 
-    /// Return the string representation of the config.
-    fn config_to_string(&self) -> Result<String>;
+    fn default_host(&self) -> Result<String> {
+        let (host, _) = self.default_host_with_source()?;
+        Ok(host)
+    }
 
-    /// Return the string representation of the hosts.
-    fn hosts_to_string(&self) -> Result<String>;
-}*/
+    fn default_host_with_source(&self) -> Result<(String, String)> {
+        if let Ok(host) = env::var(OXIDE_HOST) {
+            Ok((host, OXIDE_HOST.to_string()))
+        } else {
+            self.config.default_host_with_source()
+        }
+    }
+
+    fn aliases(&self) -> Result<crate::config_alias::AliasConfig> {
+        self.config.aliases()
+    }
+
+    fn check_writable(&self, hostname: &str, key: &str) -> Result<()> {
+        // If they are asking specifically for the token, return the value.
+        if key == "token" {
+            let token = get_env_var(OXIDE_TOKEN);
+            if !token.is_empty() {
+                return Err(anyhow::anyhow!("Cannot write to env var {}", OXIDE_TOKEN));
+            }
+        }
+
+        self.config.check_writable(hostname, key)
+    }
+
+    fn write(&self) -> Result<()> {
+        self.config.write()
+    }
+
+    fn config_to_string(&self) -> Result<String> {
+        self.config.config_to_string()
+    }
+
+    fn hosts_to_string(&self) -> Result<String> {
+        self.config.hosts_to_string()
+    }
+}

@@ -187,7 +187,7 @@ fn parse_config_file(filename: &str) -> Result<(String, toml_edit::Document)> {
     }
 }
 
-fn get_env_var(key: &str) -> String {
+pub fn get_env_var(key: &str) -> String {
     match env::var(key) {
         Ok(val) => val,
         Err(_) => "".to_string(),
