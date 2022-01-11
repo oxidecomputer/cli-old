@@ -99,14 +99,14 @@ impl CmdAliasSet {
                 println!("- Adding alias for {}: %{}", self.alias, expansion);
 
                 let mut is_shell = self.shell;
-                if is_shell && !expansion.starts_with("!") {
+                if is_shell && !expansion.starts_with('!') {
                     expansion = format!("!{}", expansion);
                 }
-                is_shell = expansion.starts_with("!");
+                is_shell = expansion.starts_with('!');
 
                 // TODO: check if already exists.
 
-                let mut success_msg = format!("Added alias.");
+                let mut success_msg = "Added alias.".to_string();
                 let (old_expansion, ok) = config_aliases.get(&self.alias);
                 if ok {
                     success_msg = format!("Changed alias {} from {} to {}", self.alias, old_expansion, expansion);
