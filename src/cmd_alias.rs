@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::Parser;
+use clap::{App, IntoApp, Parser};
 
 /// Create command shortcuts.
 ///
@@ -90,8 +90,6 @@ pub struct CmdAliasSet {
 
 impl CmdAliasSet {
     pub fn run(&self, config: &mut dyn crate::config::Config) {
-        // TODO: check if valid command.
-
         let mut config_aliases = config.aliases().unwrap();
 
         match get_expansion(self) {
@@ -104,7 +102,19 @@ impl CmdAliasSet {
                 }
                 is_shell = expansion.starts_with('!');
 
-                // TODO: check if already exists.
+                // Check if already exists.
+                if valid_command(&self.alias) {
+                    eprintln!("could not create alias: {} is already an oxide command", self.alias);
+                    std::process::exit(1);
+                }
+
+                if !is_shell && valid_command(&expansion) {
+                    eprintln!(
+                        "could not create alias: {} does not correspond to an oxide command",
+                        expansion
+                    );
+                    std::process::exit(1);
+                }
 
                 let mut success_msg = "Added alias.".to_string();
                 let (old_expansion, ok) = config_aliases.get(&self.alias);
@@ -160,4 +170,19 @@ fn get_expansion(cmd: &CmdAliasSet) -> Result<String> {
     } else {
         Ok(cmd.expansion.to_string())
     }
+}
+
+fn valid_command(args: &str) -> bool {
+    let s = shlex::split(args);
+    if s.is_none() {
+        return false;
+    }
+
+    let split = s.unwrap();
+
+    // Convert our opts into a clap app.
+    let app: App = crate::Opts::into_app();
+
+    // Try to get matches.
+    app.try_get_matches_from(split).is_ok()
 }
