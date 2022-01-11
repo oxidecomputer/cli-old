@@ -260,7 +260,7 @@ impl IoStreams {
     }
 
     pub fn process_terminal_width(&mut self) -> i32 {
-        let (w, _) = tty_size().unwrap_or((DEFAULT_WIDTH, 0));
+        let (w, _) = (self.tty_size)().unwrap_or((DEFAULT_WIDTH, 0));
 
         if w == 0 {
             return DEFAULT_WIDTH;
@@ -276,9 +276,10 @@ impl IoStreams {
 
         if let Ok(i) = spec.parse::<i32>() {
             self.terminal_width_override = i;
+            return;
         }
 
-        let ts = tty_size();
+        let ts = (self.tty_size)();
         if let Ok((w, _)) = ts {
             self.terminal_width_override = w;
         } else {
@@ -365,5 +366,78 @@ fn tty_size() -> Result<(i32, i32)> {
         Ok((w.into(), h.into()))
     } else {
         Err(anyhow!("Failed to get terminal size"))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    pub struct TestItem {
+        name: String,
+        io: IoStreams,
+        arg: String,
+        want_tty: bool,
+        want_width: i32,
+    }
+
+    fn measure_width_fn() -> Result<(i32, i32)> {
+        Ok((72, 0))
+    }
+
+    fn measure_width_fails_fn() -> Result<(i32, i32)> {
+        Err(anyhow!("Failed to get terminal size"))
+    }
+
+    #[test]
+    fn test_force_terminal() {
+        let mut measure_width = IoStreams::system();
+        measure_width.tty_size = measure_width_fn;
+
+        let mut measure_width_fails = IoStreams::system();
+        measure_width_fails.tty_size = measure_width_fails_fn;
+
+        let mut apply_percentage = IoStreams::system();
+        apply_percentage.tty_size = measure_width_fn;
+
+        let tests = vec![
+            TestItem {
+                name: "explicit width".to_string(),
+                io: IoStreams::system(),
+                arg: "72".to_string(),
+                want_tty: true,
+                want_width: 72,
+            },
+            TestItem {
+                name: "measure width".to_string(),
+                io: measure_width,
+                arg: "true".to_string(),
+                want_tty: true,
+                want_width: 72,
+            },
+            /*TestItem {
+                name: "measure width fails".to_string(),
+                io: measure_width_fails,
+                arg: "true".to_string(),
+                want_tty: true,
+                want_width: 80,
+            },*/
+            TestItem {
+                name: "apply percentage".to_string(),
+                io: apply_percentage,
+                arg: "50%".to_string(),
+                want_tty: true,
+                want_width: 36,
+            },
+        ];
+
+        for mut t in tests {
+            t.io.force_terminal(&t.arg);
+            let is_tty = t.io.is_stdout_tty();
+            assert_eq!(is_tty, t.want_tty, "test {}", t.name);
+
+            let width = t.io.terminal_width();
+            assert_eq!(width, t.want_width, "test {}", t.name);
+        }
     }
 }
