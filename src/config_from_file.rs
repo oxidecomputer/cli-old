@@ -3,10 +3,12 @@ use anyhow::{anyhow, Result};
 use crate::config_alias::AliasConfig;
 
 // This type implements a Config interface and represents a config file on disk.
+#[derive(Debug, Clone)]
 pub struct FileConfig {
     pub map: crate::config_map::ConfigMap,
 }
 
+#[derive(Debug, Clone)]
 pub struct HostConfig {
     pub map: crate::config_map::ConfigMap,
     pub host: String,
@@ -51,13 +53,16 @@ impl FileConfig {
         let hosts_table = self.get_hosts_table()?;
 
         // Iterate over the hosts table and create a HostConfig for each host.
-        for (keys, _v) in hosts_table.get_values() {
-            //let host_table = v.as_table().ok_or(anyhow!("hosts entry is not a table"))?;
+        for (host, v) in hosts_table.iter() {
+            let host_config = if let toml_edit::Item::Table(t) = v {
+                t.clone()
+            } else {
+                toml_edit::Table::new()
+            };
+
             let host_config = HostConfig {
-                map: crate::config_map::ConfigMap {
-                    root: hosts_table.clone(),
-                },
-                host: keys.get(0).ok_or(anyhow!("hosts entry is not a table"))?.to_string(),
+                map: crate::config_map::ConfigMap { root: host_config },
+                host: host.to_string(),
             };
 
             host_configs.push(host_config);

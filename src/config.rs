@@ -184,6 +184,9 @@ mod test {
         let doc = c.hosts_to_string().unwrap();
 
         let expected = r#"["example.com"]
+editor = "vim"
+prompt = "disabled"
+pager = "less"
 browser = "firefox"
 
 ["oxide.computer"]
@@ -217,5 +220,23 @@ browser = """#;
 
         let doc_hosts = c.hosts_to_string().unwrap();
         assert_eq!(doc_hosts, "");
+    }
+
+    #[test]
+    fn test_parse_config() {
+        let c = crate::config::new_from_string(
+            r#"[hosts]
+
+[hosts."thing.com"]
+user = "jess"
+token = "MY_TOKEN""#,
+        )
+        .unwrap();
+
+        let user = c.get("thing.com", "user").unwrap();
+        assert_eq!(user, "jess");
+
+        let token = c.get("thing.com", "token").unwrap();
+        assert_eq!(token, "MY_TOKEN");
     }
 }

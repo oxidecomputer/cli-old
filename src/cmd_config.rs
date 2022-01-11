@@ -140,3 +140,41 @@ impl CmdConfigList {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    pub struct TestItem {
+        name: String,
+        input: String,
+        out: String,
+        wants_err: bool,
+    }
+
+    #[test]
+    fn test_cmd_config_get() {
+        let tests = vec![
+            TestItem {
+                name: "no arguments".to_string(),
+                input: "".to_string(),
+                out: "".to_string(),
+                wants_err: true,
+            },
+            TestItem {
+                name: "get key".to_string(),
+                input: "key".to_string(),
+                out: "thing".to_string(),
+                wants_err: false,
+            },
+            TestItem {
+                name: "get key with host".to_string(),
+                input: "key --host test.com".to_string(),
+                out: "".to_string(),
+                wants_err: false,
+            },
+        ];
+
+        for t in tests {}
+    }
+}

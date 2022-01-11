@@ -193,3 +193,15 @@ pub fn get_env_var(key: &str) -> String {
         Err(_) => "".to_string(),
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    /*pub struct TestItem {
+        name: String,
+        input: String,
+        out: String,
+        wants_err: bool,
+    }*/
+}
