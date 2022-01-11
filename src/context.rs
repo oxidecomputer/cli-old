@@ -40,19 +40,19 @@ mod test {
     use super::*;
 
     struct TContext {
-        orig_OXIDE_PAGER: Result<String, std::env::VarError>,
+        orig_oxide_pager_env: Result<String, std::env::VarError>,
     }
 
     impl TestContext for TContext {
         fn setup() -> TContext {
             TContext {
-                orig_OXIDE_PAGER: std::env::var("OXIDE_PAGER"),
+                orig_oxide_pager_env: std::env::var("OXIDE_PAGER"),
             }
         }
 
         fn teardown(self) {
             // Put the original env var back.
-            if let Ok(ref val) = self.orig_OXIDE_PAGER {
+            if let Ok(ref val) = self.orig_oxide_pager_env {
                 std::env::set_var("OXIDE_PAGER", val);
             } else {
                 std::env::remove_var("OXIDE_PAGER");
@@ -62,7 +62,7 @@ mod test {
 
     pub struct TestItem {
         name: String,
-        OXIDE_PAGER: String,
+        oxide_pager_env: String,
         pager: String,
         prompt: String,
         want_pager: String,
@@ -75,7 +75,7 @@ mod test {
         let tests = vec![
             TestItem {
                 name: "OXIDE_PAGER env".to_string(),
-                OXIDE_PAGER: "more".to_string(),
+                oxide_pager_env: "more".to_string(),
                 prompt: "".to_string(),
                 pager: "".to_string(),
                 want_pager: "more".to_string(),
@@ -83,7 +83,7 @@ mod test {
             },
             TestItem {
                 name: "OXIDE_PAGER env override".to_string(),
-                OXIDE_PAGER: "more".to_string(),
+                oxide_pager_env: "more".to_string(),
                 prompt: "".to_string(),
                 pager: "less".to_string(),
                 want_pager: "more".to_string(),
@@ -91,7 +91,7 @@ mod test {
             },
             TestItem {
                 name: "config pager".to_string(),
-                OXIDE_PAGER: "".to_string(),
+                oxide_pager_env: "".to_string(),
                 prompt: "".to_string(),
                 pager: "less".to_string(),
                 want_pager: "less".to_string(),
@@ -99,7 +99,7 @@ mod test {
             },
             TestItem {
                 name: "config prompt".to_string(),
-                OXIDE_PAGER: "".to_string(),
+                oxide_pager_env: "".to_string(),
                 prompt: "disabled".to_string(),
                 pager: "less".to_string(),
                 want_pager: "less".to_string(),
@@ -119,8 +119,8 @@ mod test {
                 c.set("", "prompt", &t.prompt).unwrap();
             }
 
-            if !t.OXIDE_PAGER.is_empty() {
-                std::env::set_var("OXIDE_PAGER", t.OXIDE_PAGER.clone());
+            if !t.oxide_pager_env.is_empty() {
+                std::env::set_var("OXIDE_PAGER", t.oxide_pager_env.clone());
             } else {
                 std::env::remove_var("OXIDE_PAGER");
             }

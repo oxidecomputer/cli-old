@@ -128,35 +128,35 @@ mod test {
     use super::*;
 
     struct Context {
-        orig_NO_COLOR: Result<String, std::env::VarError>,
-        orig_CLICOLOR: Result<String, std::env::VarError>,
-        orig_CLICOLOR_FORCE: Result<String, std::env::VarError>,
+        orig_no_color_env: Result<String, std::env::VarError>,
+        orig_clicolor_env: Result<String, std::env::VarError>,
+        orig_clicolor_force_env: Result<String, std::env::VarError>,
     }
 
     impl TestContext for Context {
         fn setup() -> Context {
             Context {
-                orig_NO_COLOR: std::env::var("NO_COLOR"),
-                orig_CLICOLOR: std::env::var("CLICOLOR"),
-                orig_CLICOLOR_FORCE: std::env::var("CLICOLOR_FORCE"),
+                orig_no_color_env: std::env::var("NO_COLOR"),
+                orig_clicolor_env: std::env::var("CLICOLOR"),
+                orig_clicolor_force_env: std::env::var("CLICOLOR_FORCE"),
             }
         }
 
         fn teardown(self) {
             // Put the original env var back.
-            if let Ok(ref val) = self.orig_NO_COLOR {
+            if let Ok(ref val) = self.orig_no_color_env {
                 std::env::set_var("NO_COLOR", val);
             } else {
                 std::env::remove_var("NO_COLOR");
             }
 
-            if let Ok(ref val) = self.orig_CLICOLOR {
+            if let Ok(ref val) = self.orig_clicolor_env {
                 std::env::set_var("CLICOLOR", val);
             } else {
                 std::env::remove_var("CLICOLOR");
             }
 
-            if let Ok(ref val) = self.orig_CLICOLOR_FORCE {
+            if let Ok(ref val) = self.orig_clicolor_force_env {
                 std::env::set_var("CLICOLOR_FORCE", val);
             } else {
                 std::env::remove_var("CLICOLOR_FORCE");
@@ -166,9 +166,9 @@ mod test {
 
     pub struct TestItem {
         name: String,
-        NO_COLOR: String,
-        CLICOLOR: String,
-        CLICOLOR_FORCE: String,
+        no_color_env: String,
+        clicolor_env: String,
+        clicolor_force_env: String,
         want: bool,
     }
 
@@ -178,45 +178,45 @@ mod test {
         let tests = vec![
             TestItem {
                 name: "pristine env".to_string(),
-                NO_COLOR: "".to_string(),
-                CLICOLOR: "".to_string(),
-                CLICOLOR_FORCE: "".to_string(),
+                no_color_env: "".to_string(),
+                clicolor_env: "".to_string(),
+                clicolor_force_env: "".to_string(),
                 want: false,
             },
             TestItem {
                 name: "NO_COLOR enabled".to_string(),
-                NO_COLOR: "1".to_string(),
-                CLICOLOR: "".to_string(),
-                CLICOLOR_FORCE: "".to_string(),
+                no_color_env: "1".to_string(),
+                clicolor_env: "".to_string(),
+                clicolor_force_env: "".to_string(),
                 want: true,
             },
             TestItem {
                 name: "CLICOLOR disabled".to_string(),
-                NO_COLOR: "".to_string(),
-                CLICOLOR: "0".to_string(),
-                CLICOLOR_FORCE: "".to_string(),
+                no_color_env: "".to_string(),
+                clicolor_env: "0".to_string(),
+                clicolor_force_env: "".to_string(),
                 want: true,
             },
             TestItem {
                 name: "CLICOLOR enabled".to_string(),
-                NO_COLOR: "".to_string(),
-                CLICOLOR: "1".to_string(),
-                CLICOLOR_FORCE: "".to_string(),
+                no_color_env: "".to_string(),
+                clicolor_env: "1".to_string(),
+                clicolor_force_env: "".to_string(),
                 want: false,
             },
             TestItem {
                 name: "CLICOLOR_FORCE has no effect".to_string(),
-                NO_COLOR: "".to_string(),
-                CLICOLOR: "".to_string(),
-                CLICOLOR_FORCE: "1".to_string(),
+                no_color_env: "".to_string(),
+                clicolor_env: "".to_string(),
+                clicolor_force_env: "1".to_string(),
                 want: false,
             },
         ];
 
         for t in tests {
-            std::env::set_var("NO_COLOR", t.NO_COLOR);
-            std::env::set_var("CLICOLOR", t.CLICOLOR);
-            std::env::set_var("CLICOLOR_FORCE", t.CLICOLOR_FORCE);
+            std::env::set_var("NO_COLOR", t.no_color_env);
+            std::env::set_var("CLICOLOR", t.clicolor_env);
+            std::env::set_var("CLICOLOR_FORCE", t.clicolor_force_env);
 
             let got = env_color_disabled();
             assert_eq!(got, t.want, "test {}", t.name);
@@ -229,52 +229,52 @@ mod test {
         let tests = vec![
             TestItem {
                 name: "pristine env".to_string(),
-                NO_COLOR: "".to_string(),
-                CLICOLOR: "".to_string(),
-                CLICOLOR_FORCE: "".to_string(),
+                no_color_env: "".to_string(),
+                clicolor_env: "".to_string(),
+                clicolor_force_env: "".to_string(),
                 want: false,
             },
             TestItem {
                 name: "NO_COLOR enabled".to_string(),
-                NO_COLOR: "1".to_string(),
-                CLICOLOR: "".to_string(),
-                CLICOLOR_FORCE: "".to_string(),
+                no_color_env: "1".to_string(),
+                clicolor_env: "".to_string(),
+                clicolor_force_env: "".to_string(),
                 want: false,
             },
             TestItem {
                 name: "CLICOLOR disabled".to_string(),
-                NO_COLOR: "".to_string(),
-                CLICOLOR: "0".to_string(),
-                CLICOLOR_FORCE: "".to_string(),
+                no_color_env: "".to_string(),
+                clicolor_env: "0".to_string(),
+                clicolor_force_env: "".to_string(),
                 want: false,
             },
             TestItem {
                 name: "CLICOLOR enabled".to_string(),
-                NO_COLOR: "".to_string(),
-                CLICOLOR: "1".to_string(),
-                CLICOLOR_FORCE: "".to_string(),
+                no_color_env: "".to_string(),
+                clicolor_env: "1".to_string(),
+                clicolor_force_env: "".to_string(),
                 want: false,
             },
             TestItem {
                 name: "CLICOLOR_FORCE enabled".to_string(),
-                NO_COLOR: "".to_string(),
-                CLICOLOR: "".to_string(),
-                CLICOLOR_FORCE: "1".to_string(),
+                no_color_env: "".to_string(),
+                clicolor_env: "".to_string(),
+                clicolor_force_env: "1".to_string(),
                 want: true,
             },
             TestItem {
                 name: "CLICOLOR_FORCE disabled".to_string(),
-                NO_COLOR: "".to_string(),
-                CLICOLOR: "".to_string(),
-                CLICOLOR_FORCE: "0".to_string(),
+                no_color_env: "".to_string(),
+                clicolor_env: "".to_string(),
+                clicolor_force_env: "0".to_string(),
                 want: false,
             },
         ];
 
         for t in tests {
-            std::env::set_var("NO_COLOR", t.NO_COLOR);
-            std::env::set_var("CLICOLOR", t.CLICOLOR);
-            std::env::set_var("CLICOLOR_FORCE", t.CLICOLOR_FORCE);
+            std::env::set_var("NO_COLOR", t.no_color_env);
+            std::env::set_var("CLICOLOR", t.clicolor_env);
+            std::env::set_var("CLICOLOR_FORCE", t.clicolor_force_env);
 
             let got = env_color_forced();
 
