@@ -156,6 +156,7 @@ impl CmdAliasList {
             return;
         }
 
+        // TODO: make this a table.
         for (alias, expansion) in config_aliases.list().iter() {
             println!("{}:\t{}", alias, expansion);
         }
