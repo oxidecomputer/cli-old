@@ -357,6 +357,24 @@ impl IoStreams {
 
         io
     }
+
+    pub fn test() -> Self {
+        let mut io = IoStreams::system();
+        let mut stdout_buf = std::io::Cursor::new(Vec::new());
+
+        io.out = Box::new(stdout_buf);
+
+        let mut stderr_buf = std::io::Cursor::new(Vec::new());
+        io.err_out = Box::new(stderr_buf);
+
+        io.tty_size = test_tty_size;
+
+        io
+    }
+}
+
+fn test_tty_size() -> Result<(i32, i32)> {
+    Err(anyhow::anyhow!("tty_size not implemented in tests"))
 }
 
 // tty_sdize measures the size of the controlling terminal for the current process.
