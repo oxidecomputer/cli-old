@@ -310,7 +310,7 @@ impl IoStreams {
             #[cfg(windows)]
             let enabled = ansi_term::enable_ansi_support();
             #[cfg(windows)]
-            if enabled {
+            if enabled.is_ok() {
                 assume_true_color = true;
             }
         }
