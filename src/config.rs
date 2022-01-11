@@ -86,7 +86,7 @@ pub fn validate_key(key: &str) -> Result<()> {
         }
     }
 
-    Err(anyhow!("invalid key"))
+    Err(anyhow!("invalid key: {}", key))
 }
 
 #[derive(Error, Debug)]
@@ -266,5 +266,32 @@ token = "MY_TOKEN""#,
 
         let token = c.get("example.org", "token").unwrap();
         assert_eq!(token, "EXAMPLE_TOKEN");
+    }
+
+    #[test]
+    fn test_validate_key() {
+        let result = validate_key("invalid").unwrap_err();
+        assert_eq!(result.to_string(), "invalid key: invalid");
+
+        let result = validate_key("editor");
+        assert!(result.is_ok());
+
+        let result = validate_key("browser");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_value() {
+        let result = validate_value("prompt", "invalid").unwrap_err();
+        assert_eq!(
+            result.to_string(),
+            "invalid values, valid values: [\"enabled\", \"disabled\"]"
+        );
+
+        let result = validate_value("editor", "vim");
+        assert!(result.is_ok());
+
+        let result = validate_value("browser", "firefox");
+        assert!(result.is_ok());
     }
 }
