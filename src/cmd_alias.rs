@@ -20,11 +20,11 @@ enum SubCommand {
 }
 
 impl CmdAlias {
-    pub fn run(&self, config: &mut dyn crate::config::Config) {
+    pub fn run(&self, ctx: crate::context::Context) {
         match &self.subcmd {
-            SubCommand::Delete(cmd) => cmd.run(config),
-            SubCommand::Set(cmd) => cmd.run(config),
-            SubCommand::List(cmd) => cmd.run(config),
+            SubCommand::Delete(cmd) => cmd.run(ctx),
+            SubCommand::Set(cmd) => cmd.run(ctx),
+            SubCommand::List(cmd) => cmd.run(ctx),
         }
     }
 }
@@ -38,8 +38,8 @@ pub struct CmdAliasDelete {
 }
 
 impl CmdAliasDelete {
-    pub fn run(&self, config: &mut dyn crate::config::Config) {
-        let mut alias_config = config.aliases().unwrap();
+    pub fn run(&self, ctx: crate::context::Context) {
+        let mut alias_config = ctx.config.aliases().unwrap();
 
         let (expansion, ok) = alias_config.get(&self.alias);
         if !ok {
@@ -89,8 +89,8 @@ pub struct CmdAliasSet {
 }
 
 impl CmdAliasSet {
-    pub fn run(&self, config: &mut dyn crate::config::Config) {
-        let mut config_aliases = config.aliases().unwrap();
+    pub fn run(&self, ctx: crate::context::Context) {
+        let mut config_aliases = ctx.config.aliases().unwrap();
 
         match get_expansion(self) {
             Ok(mut expansion) => {
@@ -148,8 +148,8 @@ impl CmdAliasSet {
 pub struct CmdAliasList {}
 
 impl CmdAliasList {
-    pub fn run(&self, config: &mut dyn crate::config::Config) {
-        let config_aliases = config.aliases().unwrap();
+    pub fn run(&self, ctx: crate::context::Context) {
+        let config_aliases = ctx.config.aliases().unwrap();
 
         if config_aliases.map.is_empty() {
             println!("no aliases configured");

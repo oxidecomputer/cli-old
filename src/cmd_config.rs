@@ -16,11 +16,11 @@ enum SubCommand {
 }
 
 impl CmdConfig {
-    pub fn run(&self, config: &mut dyn crate::config::Config) {
+    pub fn run(&self, ctx: crate::context::Context) {
         match &self.subcmd {
-            SubCommand::Get(cmd) => cmd.run(config),
-            SubCommand::Set(cmd) => cmd.run(config),
-            SubCommand::List(cmd) => cmd.run(config),
+            SubCommand::Get(cmd) => cmd.run(ctx),
+            SubCommand::Set(cmd) => cmd.run(ctx),
+            SubCommand::List(cmd) => cmd.run(ctx),
         }
     }
 }
@@ -38,8 +38,8 @@ pub struct CmdConfigGet {
 }
 
 impl CmdConfigGet {
-    pub fn run(&self, config: &mut dyn crate::config::Config) {
-        match config.get(&self.host, &self.key) {
+    pub fn run(&self, ctx: crate::context::Context) {
+        match ctx.config.get(&self.host, &self.key) {
             Ok(value) => println!("{}", value),
             Err(err) => {
                 eprintln!("{}", err);
@@ -65,7 +65,7 @@ pub struct CmdConfigSet {
 }
 
 impl CmdConfigSet {
-    pub fn run(&self, config: &mut dyn crate::config::Config) {
+    pub fn run(&self, ctx: crate::context::Context) {
         // Validate the key.
         match crate::config::validate_key(&self.key) {
             Ok(()) => (),
@@ -85,7 +85,7 @@ impl CmdConfigSet {
         }
 
         // Set the value.
-        match config.set(&self.host, &self.key, &self.value) {
+        match ctx.config.set(&self.host, &self.key, &self.value) {
             Ok(()) => (),
             Err(err) => {
                 eprintln!("{}", err);
@@ -94,7 +94,7 @@ impl CmdConfigSet {
         }
 
         // Write the config file.
-        match config.write() {
+        match ctx.config.write() {
             Ok(()) => (),
             Err(err) => {
                 eprintln!("{}", err);
@@ -114,15 +114,15 @@ pub struct CmdConfigList {
 }
 
 impl CmdConfigList {
-    pub fn run(&self, config: &mut dyn crate::config::Config) {
+    pub fn run(&self, ctx: crate::context::Context) {
         let host = if self.host.is_empty() {
-            config.default_host().unwrap_or_default()
+            ctx.config.default_host().unwrap_or_default()
         } else {
             self.host.to_string()
         };
 
         for option in crate::config::config_options() {
-            match config.get(&host, &option.key) {
+            match ctx.config.get(&host, &option.key) {
                 Ok(value) => println!("{}={}", option.key, value),
                 Err(err) => {
                     eprintln!("{}", err);

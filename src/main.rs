@@ -11,11 +11,10 @@ mod config_file;
 mod config_from_env;
 mod config_from_file;
 mod config_map;
+mod context;
 mod iostreams;
 
 use clap::Parser;
-
-use crate::config::Config;
 
 /// Work seamlessly with Oxide from the command line.
 ///
@@ -82,36 +81,15 @@ fn main() {
     // Let's get our configuration.
     let mut c = crate::config_file::parse_default_config().unwrap();
     let mut config = crate::config_from_env::EnvConfig::inherit_env(&mut c);
-
-    // Let's get our IO streams.
-    let mut io = crate::iostreams::IoStreams::system();
-
-    // Set the prompt.
-    let prompt = config.get("", "prompt").unwrap();
-    if prompt == "disabled" {
-        io.set_never_prompt(true)
-    }
-
-    // Set the pager.
-    // Pager precedence
-    // 1. OXIDE_PAGER
-    // 2. pager from config
-    // 3. PAGER
-    if let Ok(oxide_pager) = std::env::var("OXIDE_PAGER") {
-        io.set_pager(oxide_pager);
-    } else if let Ok(pager) = config.get("", "pager") {
-        if !pager.is_empty() {
-            io.set_pager(pager);
-        }
-    }
+    let context = crate::context::Context::new(&mut config);
 
     match opts.subcmd {
-        SubCommand::Alias(cmd) => cmd.run(&mut config),
+        SubCommand::Alias(cmd) => cmd.run(context),
         SubCommand::Completion(cmd) => {
             cmd.run();
         }
         SubCommand::Config(cmd) => {
-            cmd.run(&mut config);
+            cmd.run(context);
         }
     }
 }
