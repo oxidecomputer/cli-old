@@ -155,7 +155,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_file_config_set() {
+    fn test_file_config_set_no_host() {
         let mut c = new_blank_config().unwrap();
         assert!(c.set("", "editor", "vim").is_ok());
         assert!(c.set("", "prompt", "disabled").is_ok());
@@ -167,6 +167,25 @@ mod test {
         assert!(doc.contains("prompt = \"disabled\""));
         assert!(doc.contains("pager = \"less\""));
         assert!(doc.contains("browser = \"firefox\""));
+    }
+
+    #[test]
+    fn test_file_config_set_with_host() {
+        let mut c = new_blank_config().unwrap();
+        assert!(c.set("example.com", "editor", "vim").is_ok());
+        assert!(c.set("example.com", "prompt", "disabled").is_ok());
+        assert!(c.set("example.com", "pager", "less").is_ok());
+        assert!(c.set("example.com", "browser", "firefox").is_ok());
+        assert!(c.set("oxide.computer", "browser", "chrome").is_ok());
+
+        let doc = c.hosts_to_string().unwrap();
+
+        let expected = r#"["example.com"]
+browser = "firefox"
+
+["oxide.computer"]
+browser = "chrome""#;
+        assert_eq!(doc, expected);
     }
 
     #[test]

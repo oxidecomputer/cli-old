@@ -11,39 +11,45 @@ pub struct HostConfig {
 }
 
 impl FileConfig {
+    fn get_hosts_table(&self) -> Result<toml_edit::Table> {
+        match self.map.find_entry("hosts") {
+            Ok(hosts) => match hosts.as_table() {
+                Some(h) => {
+                    return Ok(h.clone());
+                }
+                None => {
+                    return Err(anyhow!("hosts is not an array of tables"));
+                }
+            },
+            Err(e) => {
+                if e.to_string().contains("not found") {
+                    return Ok(toml_edit::Table::new());
+                }
+
+                return Err(anyhow!("Error reading hosts table: {}", e));
+            }
+        };
+    }
+
     fn get_host_entries(&self) -> Result<Vec<HostConfig>> {
         let mut host_configs = Vec::new();
 
-        let hosts = self.map.find_entry("hosts")?;
+        let hosts_table = self.get_hosts_table()?;
 
-        // Parse the hosts as an array of tables.
-        match hosts.as_table() {
-            Some(h) => {
-                if h.is_empty() {
-                    return Ok(host_configs);
-                }
+        // Iterate over the hosts table and create a HostConfig for each host.
+        for (keys, _v) in hosts_table.get_values() {
+            //let host_table = v.as_table().ok_or(anyhow!("hosts entry is not a table"))?;
+            let host_config = HostConfig {
+                map: crate::config_map::ConfigMap {
+                    root: hosts_table.clone(),
+                },
+                host: keys.get(0).ok_or(anyhow!("hosts entry is not a table"))?.to_string(),
+            };
 
-                let hosts_table = h.clone();
-
-                // Iterate over the hosts table and create a HostConfig for each host.
-                for (keys, _v) in hosts_table.get_values() {
-                    //let host_table = v.as_table().ok_or(anyhow!("hosts entry is not a table"))?;
-                    let host_config = HostConfig {
-                        map: crate::config_map::ConfigMap {
-                            root: hosts_table.clone(),
-                        },
-                        host: keys.get(0).ok_or(anyhow!("hosts entry is not a table"))?.to_string(),
-                    };
-
-                    host_configs.push(host_config);
-                }
-
-                Ok(host_configs)
-            }
-            None => {
-                return Err(anyhow!("hosts is not an array of tables"));
-            }
+            host_configs.push(host_config);
         }
+
+        Ok(host_configs)
     }
 
     fn get_host_config(&self, hostname: &str) -> Result<HostConfig> {
@@ -66,21 +72,11 @@ impl FileConfig {
             host: hostname.to_string(),
         };
 
-        let hosts = self.map.find_entry("hosts")?;
+        let mut hosts_table = self.get_hosts_table()?;
 
-        // Parse the hosts as an array of tables.
-        match hosts.as_table() {
-            Some(h) => {
-                let mut hosts_table = h.clone();
+        hosts_table.insert(hostname, toml_edit::Item::Table(host_config.map.root.clone()));
 
-                hosts_table.insert(hostname, toml_edit::Item::Table(host_config.map.root.clone()));
-
-                Ok(host_config)
-            }
-            None => {
-                return Err(anyhow!("hosts is not an array of tables"));
-            }
-        }
+        Ok(host_config)
     }
 }
 
@@ -120,7 +116,17 @@ impl crate::config::Config for FileConfig {
             }
         };
 
-        host_config.map.set_string_value(key, value)
+        host_config.map.set_string_value(key, value)?;
+
+        // Get our hosts table.
+        let mut hosts_table = self.get_hosts_table()?;
+
+        hosts_table.insert(hostname, toml_edit::Item::Table(host_config.map.root.clone()));
+
+        // Reset the hosts.
+        self.map.root.insert("hosts", toml_edit::Item::Table(hosts_table));
+
+        Ok(())
     }
 
     fn unset_host(&mut self, hostname: &str) -> Result<()> {
@@ -128,19 +134,15 @@ impl crate::config::Config for FileConfig {
             return Ok(());
         }
 
-        let hosts = self.map.find_entry("hosts")?;
-        // Parse the hosts as an array of tables.
-        match hosts.as_table() {
-            Some(h) => {
-                let mut hosts_table = h.clone();
-                // Remove the host from the table.
-                hosts_table.remove_entry(hostname);
-                Ok(())
-            }
-            None => {
-                return Err(anyhow!("hosts is not an array of tables, cannot unset host"));
-            }
-        }
+        let mut hosts_table = self.get_hosts_table()?;
+
+        // Remove the host from the table.
+        hosts_table.remove_entry(hostname);
+
+        // Reset the hosts.
+        self.map.root.insert("hosts", toml_edit::Item::Table(hosts_table));
+
+        Ok(())
     }
 
     fn hosts(&self) -> Result<Vec<String>> {
@@ -193,18 +195,8 @@ impl crate::config::Config for FileConfig {
     }
 
     fn hosts_to_string(&self) -> Result<String> {
-        // Remove the hosts entry from the config map.
-        let mut map = self.map.clone();
+        let doc: toml_edit::Document = self.get_hosts_table()?.into();
 
-        match map.root.remove_entry("hosts") {
-            Some((_, v)) => {
-                if let toml_edit::Item::Table(h) = v {
-                    Ok(h.to_string().trim().to_string())
-                } else {
-                    Err(anyhow!("hosts is not a table"))
-                }
-            }
-            None => Ok("".to_string()),
-        }
+        Ok(doc.to_string().trim().to_string())
     }
 }
