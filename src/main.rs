@@ -4,6 +4,7 @@
 mod cmd_alias;
 mod cmd_completion;
 mod cmd_config;
+mod colors;
 mod config;
 mod config_alias;
 mod config_file;
