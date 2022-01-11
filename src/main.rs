@@ -1,6 +1,7 @@
 //! The Oxide command line tool.
 #![deny(missing_docs)]
 
+mod cmd_alias;
 mod cmd_completion;
 mod cmd_config;
 mod config;
@@ -65,6 +66,7 @@ struct Opts {
 
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
+    Alias(cmd_alias::CmdAlias),
     Completion(cmd_completion::CmdCompletion),
     Config(cmd_config::CmdConfig),
 }
@@ -78,6 +80,7 @@ fn main() {
     let mut config = crate::config_from_env::EnvConfig::inherit_env(&mut c);
 
     match opts.subcmd {
+        SubCommand::Alias(cmd) => cmd.run(&mut config),
         SubCommand::Completion(cmd) => {
             cmd.run();
         }
