@@ -158,8 +158,28 @@ impl crate::config::Config for FileConfig {
     }
 
     fn default_host(&self) -> Result<String> {
-        // TODO: implement
-        Ok("".to_string())
+        // Get all the hosts.
+        let hosts = self.hosts()?;
+
+        if hosts.len() == 0 {
+            return Err(anyhow!("No hosts found"));
+        }
+
+        // Get the first host.
+        if hosts.len() == 1 {
+            return Ok(hosts[0].to_string());
+        }
+
+        // Find the default host.
+        let host_configs = self.get_host_entries()?;
+
+        for host_config in host_configs {
+            if host_config.map.get_string_value("default")? == "true" {
+                return Ok(host_config.host);
+            }
+        }
+
+        return Err(anyhow!("No host has been set as default"));
     }
 
     fn aliases(&self) -> Result<Vec<String>> {
