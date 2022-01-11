@@ -32,20 +32,26 @@ impl CmdAlias {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdAliasDelete {
-    #[clap(name = "key", required = true)]
-    key: String,
-
-    /// Get per-host setting.
-    #[clap(short = 'H', long, default_value = "")]
-    pub host: String,
+    #[clap(name = "alias", required = true)]
+    alias: String,
 }
 
 impl CmdAliasDelete {
     pub fn run(&self, config: &mut dyn crate::config::Config) {
-        match config.get(&self.host, &self.key) {
-            Ok(value) => println!("{}", value),
-            Err(err) => {
-                eprintln!("{}", err);
+        let mut alias_config = config.aliases().unwrap();
+
+        let (expansion, ok) = alias_config.get(&self.alias);
+        if !ok {
+            eprintln!("no such alias {}", self.alias);
+            std::process::exit(1);
+        }
+
+        match alias_config.delete(&self.alias) {
+            Ok(_) => {
+                println!("Deleted alias {}; was {}", self.alias, expansion);
+            }
+            Err(e) => {
+                eprintln!("failed to delete alias {}: {}", self.alias, e);
                 std::process::exit(1);
             }
         }
