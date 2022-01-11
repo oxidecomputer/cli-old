@@ -64,6 +64,8 @@ mod test {
 
         assert!(alias_list.is_empty());
 
+        assert_eq!(aliases.get("empty"), ("".to_string(), false));
+
         // Add some aliases.
         aliases.add("alias1", "value1 thing foo").unwrap();
         aliases.add("alias2", "value2 single").unwrap();
@@ -78,6 +80,8 @@ mod test {
 
         aliases.add("alias_3", "things hi there").unwrap();
         assert_eq!(aliases.get("alias_3"), ("things hi there".to_string(), true));
+
+        assert_eq!(aliases.list().len(), 3);
 
         aliases.delete("alias_3").unwrap();
         assert_eq!(aliases.get("alias_3"), ("".to_string(), false));

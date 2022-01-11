@@ -294,5 +294,8 @@ token = "MY_TOKEN""#,
 
         let result = validate_value("browser", "firefox");
         assert!(result.is_ok());
+
+        let result = validate_value("prompt", "enabled");
+        assert!(result.is_ok());
     }
 }
