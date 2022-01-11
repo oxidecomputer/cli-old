@@ -86,11 +86,13 @@ fn main() {
     // Let's get our IO streams.
     let mut io = crate::iostreams::IoStreams::system();
 
+    // Set the prompt.
     let prompt = config.get("", "prompt").unwrap();
     if prompt == "disabled" {
         io.set_never_prompt(true)
     }
 
+    // Set the pager.
     // Pager precedence
     // 1. OXIDE_PAGER
     // 2. pager from config
