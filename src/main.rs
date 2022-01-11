@@ -3,6 +3,7 @@
 
 mod cmd_completion;
 mod config;
+mod config_alias;
 mod config_file;
 mod config_from_env;
 mod config_from_file;
