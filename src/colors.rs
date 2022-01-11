@@ -120,3 +120,165 @@ impl ColorScheme {
         self.red("✘")
     }
 }
+
+#[cfg(test)]
+mod test {
+    use test_context::{test_context, TestContext};
+
+    use super::*;
+
+    struct Context {
+        orig_NO_COLOR: Result<String, std::env::VarError>,
+        orig_CLICOLOR: Result<String, std::env::VarError>,
+        orig_CLICOLOR_FORCE: Result<String, std::env::VarError>,
+    }
+
+    impl TestContext for Context {
+        fn setup() -> Context {
+            Context {
+                orig_NO_COLOR: std::env::var("NO_COLOR"),
+                orig_CLICOLOR: std::env::var("CLICOLOR"),
+                orig_CLICOLOR_FORCE: std::env::var("CLICOLOR_FORCE"),
+            }
+        }
+
+        fn teardown(self) {
+            // Put the original env var back.
+            if let Ok(ref val) = self.orig_NO_COLOR {
+                std::env::set_var("NO_COLOR", val);
+            } else {
+                std::env::remove_var("NO_COLOR");
+            }
+
+            if let Ok(ref val) = self.orig_CLICOLOR {
+                std::env::set_var("CLICOLOR", val);
+            } else {
+                std::env::remove_var("CLICOLOR");
+            }
+
+            if let Ok(ref val) = self.orig_CLICOLOR_FORCE {
+                std::env::set_var("CLICOLOR_FORCE", val);
+            } else {
+                std::env::remove_var("CLICOLOR_FORCE");
+            }
+        }
+    }
+
+    pub struct TestItem {
+        name: String,
+        NO_COLOR: String,
+        CLICOLOR: String,
+        CLICOLOR_FORCE: String,
+        want: bool,
+    }
+
+    #[test_context(Context)]
+    #[test]
+    fn test_env_color_disabled() {
+        let tests = vec![
+            TestItem {
+                name: "pristine env".to_string(),
+                NO_COLOR: "".to_string(),
+                CLICOLOR: "".to_string(),
+                CLICOLOR_FORCE: "".to_string(),
+                want: false,
+            },
+            TestItem {
+                name: "NO_COLOR enabled".to_string(),
+                NO_COLOR: "1".to_string(),
+                CLICOLOR: "".to_string(),
+                CLICOLOR_FORCE: "".to_string(),
+                want: true,
+            },
+            TestItem {
+                name: "CLICOLOR disabled".to_string(),
+                NO_COLOR: "".to_string(),
+                CLICOLOR: "0".to_string(),
+                CLICOLOR_FORCE: "".to_string(),
+                want: true,
+            },
+            TestItem {
+                name: "CLICOLOR enabled".to_string(),
+                NO_COLOR: "".to_string(),
+                CLICOLOR: "1".to_string(),
+                CLICOLOR_FORCE: "".to_string(),
+                want: false,
+            },
+            TestItem {
+                name: "CLICOLOR_FORCE has no effect".to_string(),
+                NO_COLOR: "".to_string(),
+                CLICOLOR: "".to_string(),
+                CLICOLOR_FORCE: "1".to_string(),
+                want: false,
+            },
+        ];
+
+        for t in tests {
+            std::env::set_var("NO_COLOR", t.NO_COLOR);
+            std::env::set_var("CLICOLOR", t.CLICOLOR);
+            std::env::set_var("CLICOLOR_FORCE", t.CLICOLOR_FORCE);
+
+            let got = env_color_disabled();
+            assert_eq!(got, t.want, "test {}", t.name);
+        }
+    }
+
+    #[test_context(Context)]
+    #[test]
+    fn test_env_color_forced() {
+        let tests = vec![
+            TestItem {
+                name: "pristine env".to_string(),
+                NO_COLOR: "".to_string(),
+                CLICOLOR: "".to_string(),
+                CLICOLOR_FORCE: "".to_string(),
+                want: false,
+            },
+            TestItem {
+                name: "NO_COLOR enabled".to_string(),
+                NO_COLOR: "1".to_string(),
+                CLICOLOR: "".to_string(),
+                CLICOLOR_FORCE: "".to_string(),
+                want: false,
+            },
+            TestItem {
+                name: "CLICOLOR disabled".to_string(),
+                NO_COLOR: "".to_string(),
+                CLICOLOR: "0".to_string(),
+                CLICOLOR_FORCE: "".to_string(),
+                want: false,
+            },
+            TestItem {
+                name: "CLICOLOR enabled".to_string(),
+                NO_COLOR: "".to_string(),
+                CLICOLOR: "1".to_string(),
+                CLICOLOR_FORCE: "".to_string(),
+                want: false,
+            },
+            TestItem {
+                name: "CLICOLOR_FORCE enabled".to_string(),
+                NO_COLOR: "".to_string(),
+                CLICOLOR: "".to_string(),
+                CLICOLOR_FORCE: "1".to_string(),
+                want: true,
+            },
+            TestItem {
+                name: "CLICOLOR_FORCE disabled".to_string(),
+                NO_COLOR: "".to_string(),
+                CLICOLOR: "".to_string(),
+                CLICOLOR_FORCE: "0".to_string(),
+                want: false,
+            },
+        ];
+
+        for t in tests {
+            std::env::set_var("NO_COLOR", t.NO_COLOR);
+            std::env::set_var("CLICOLOR", t.CLICOLOR);
+            std::env::set_var("CLICOLOR_FORCE", t.CLICOLOR_FORCE);
+
+            let got = env_color_forced();
+
+            assert_eq!(got, t.want, "test {}", t.name);
+        }
+    }
+}

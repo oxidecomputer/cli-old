@@ -19,3 +19,6 @@ terminal_size = "^0.1.17"
 terminal-spinners = "^0.3.2"
 thiserror = "1"
 toml_edit = "^0.12.4"
+
+[dev-dependencies]
+test-context = "^0.1.3"
