@@ -1,4 +1,8 @@
-use std::{env, fs, io::Write, path::Path};
+use std::{
+    env, fs,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{anyhow, Context, Result};
 
@@ -15,7 +19,7 @@ const LOCAL_APP_DATA: &str = "LocalAppData";
 // 3. AppData (windows only)
 // 4. HOME
 pub fn config_dir() -> Result<String> {
-    let mut path = Path::new("").to_path_buf();
+    let path: PathBuf;
 
     let oxide_config_dir = get_env_var(OXIDE_CONFIG_DIR);
     let xdg_config_home = get_env_var(XDG_CONFIG_HOME);
@@ -51,7 +55,7 @@ pub fn config_dir() -> Result<String> {
 // 3. LocalAppData (windows only)
 // 4. HOME
 pub fn state_dir() -> Result<String> {
-    let mut path = Path::new("").to_path_buf();
+    let path: PathBuf;
 
     let xdg_state_home = get_env_var(XDG_STATE_HOME);
     let local_app_data = get_env_var(LOCAL_APP_DATA);
@@ -84,7 +88,7 @@ pub fn state_dir() -> Result<String> {
 // 3. LocalAppData (windows only)
 // 4. HOME
 pub fn data_dir() -> Result<String> {
-    let mut path = Path::new("").to_path_buf();
+    let path: PathBuf;
 
     let xdg_data_home = get_env_var(XDG_DATA_HOME);
     let local_app_data = get_env_var(LOCAL_APP_DATA);
