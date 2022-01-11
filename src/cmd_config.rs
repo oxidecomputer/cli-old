@@ -143,7 +143,7 @@ impl CmdConfigList {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    
 
     pub struct TestItem {
         name: String,
@@ -175,6 +175,6 @@ mod test {
             },
         ];
 
-        for t in tests {}
+        for _t in tests {}
     }
 }

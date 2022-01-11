@@ -243,7 +243,7 @@ impl IoStreams {
             return;
         }
 
-        let pi = self.progress_indicator.as_ref().unwrap();
+        let _pi = self.progress_indicator.as_ref().unwrap();
         // TODO: fix this.
         //pi.done();
         self.progress_indicator = None;
