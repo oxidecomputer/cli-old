@@ -2,6 +2,7 @@
 #![deny(missing_docs)]
 
 mod cmd_completion;
+mod cmd_config;
 mod config;
 mod config_alias;
 mod config_file;
@@ -9,10 +10,7 @@ mod config_from_env;
 mod config_from_file;
 mod config_map;
 
-use clap::{App, IntoApp, Parser};
-use clap_complete::generate;
-
-use std::io;
+use clap::Parser;
 
 /// Work seamlessly with Oxide from the command line.
 ///
@@ -68,6 +66,7 @@ struct Opts {
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     Completion(cmd_completion::CmdCompletion),
+    Config(cmd_config::CmdConfig),
 }
 
 fn main() {
@@ -75,11 +74,10 @@ fn main() {
 
     match opts.subcmd {
         SubCommand::Completion(cmd) => {
-            // Convert our opts into a clap app.
-            let mut app: App = Opts::into_app();
-            let name = app.get_name().to_string();
-            // Generate the completion script.
-            generate(cmd.shell, &mut app, name, &mut io::stdout());
+            cmd.run();
+        }
+        SubCommand::Config(cmd) => {
+            cmd.run();
         }
     }
 }

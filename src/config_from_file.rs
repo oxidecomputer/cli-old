@@ -16,12 +16,8 @@ impl FileConfig {
     fn get_hosts_table(&self) -> Result<toml_edit::Table> {
         match self.map.find_entry("hosts") {
             Ok(hosts) => match hosts.as_table() {
-                Some(h) => {
-                    return Ok(h.clone());
-                }
-                None => {
-                    return Err(anyhow!("hosts is not an array of tables"));
-                }
+                Some(h) => Ok(h.clone()),
+                None => Err(anyhow!("hosts is not an array of tables")),
             },
             Err(e) => {
                 if e.to_string().contains("not found") {
@@ -30,18 +26,14 @@ impl FileConfig {
 
                 return Err(anyhow!("Error reading hosts table: {}", e));
             }
-        };
+        }
     }
 
     fn get_aliases_table(&self) -> Result<toml_edit::Table> {
         match self.map.find_entry("aliases") {
             Ok(aliases) => match aliases.as_table() {
-                Some(h) => {
-                    return Ok(h.clone());
-                }
-                None => {
-                    return Err(anyhow!("aliases is not an array of tables"));
-                }
+                Some(h) => Ok(h.clone()),
+                None => Err(anyhow!("aliases is not an array of tables")),
             },
             Err(e) => {
                 if e.to_string().contains("not found") {
@@ -50,7 +42,7 @@ impl FileConfig {
 
                 return Err(anyhow!("Error reading aliases table: {}", e));
             }
-        };
+        }
     }
 
     fn get_host_entries(&self) -> Result<Vec<HostConfig>> {
@@ -220,7 +212,7 @@ impl crate::config::Config for FileConfig {
         })
     }
 
-    fn check_writable(&self, hostname: &str, key: &str) -> Result<()> {
+    fn check_writable(&self, _hostname: &str, _key: &str) -> Result<()> {
         // TODO: check if the config file is writable from the filesystem permissions
         Ok(())
     }

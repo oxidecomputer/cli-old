@@ -1,5 +1,7 @@
-use clap::Parser;
-use clap_complete::Shell;
+use std::io;
+
+use clap::{App, IntoApp, Parser};
+use clap_complete::{generate, Shell};
 
 /// Generate shell completion scripts.
 ///
@@ -51,4 +53,14 @@ use clap_complete::Shell;
 pub struct CmdCompletion {
     #[clap(short, long)]
     pub shell: Shell,
+}
+
+impl CmdCompletion {
+    pub fn run(&self) {
+        // Convert our opts into a clap app.
+        let mut app: App = crate::Opts::into_app();
+        let name = app.get_name().to_string();
+        // Generate the completion script.
+        generate(self.shell, &mut app, name, &mut io::stdout());
+    }
 }
