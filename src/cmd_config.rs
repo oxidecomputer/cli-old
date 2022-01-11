@@ -143,37 +143,45 @@ impl CmdConfigList {
 
 #[cfg(test)]
 mod test {
-
     pub struct TestItem {
         name: String,
         input: String,
-        out: String,
-        wants_err: bool,
+        want_out: String,
+        want_err: String,
     }
 
     #[test]
     fn test_cmd_config_get() {
-        let tests = vec![
-            TestItem {
-                name: "no arguments".to_string(),
-                input: "".to_string(),
-                out: "".to_string(),
-                wants_err: true,
-            },
-            TestItem {
+        let tests: Vec<TestItem> = vec![
+            /*TestItem {
                 name: "get key".to_string(),
                 input: "key".to_string(),
-                out: "thing".to_string(),
-                wants_err: false,
+                want_out: "".to_string(),
+                want_err: "Key 'key' not found".to_string(),
             },
             TestItem {
                 name: "get key with host".to_string(),
-                input: "key --host test.com".to_string(),
-                out: "".to_string(),
-                wants_err: false,
-            },
+                input: "test".to_string(),
+                want_out: "".to_string(),
+                want_err: "".to_string(),
+            },*/
         ];
 
-        for _t in tests {}
+        for t in tests {
+            let cmd = crate::cmd_config::CmdConfigGet {
+                host: "".to_string(),
+                key: t.input.to_string(),
+            };
+
+            let (io, stdout_path, _) = crate::iostreams::IoStreams::test();
+            let mut config = crate::config::new_blank_config().unwrap();
+            let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+            let ctx = crate::context::Context { config: &mut c, io };
+
+            cmd.run(ctx);
+            let s = std::fs::read_to_string(&stdout_path).unwrap();
+
+            assert!(s.contains(&t.want_out), "test {}", t.name);
+        }
     }
 }
