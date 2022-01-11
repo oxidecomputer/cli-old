@@ -21,7 +21,21 @@ impl ConfigMap {
         }
     }
 
+    pub fn get_bool_value(&self, key: &str) -> Result<bool> {
+        match self.root.get(key) {
+            Some(toml_edit::Item::Value(toml_edit::Value::Boolean(s))) => Ok(s.value().clone()),
+            Some(v) => Err(anyhow!("Expected bool value for key '{}', found '{:?}'", key, v)),
+            None => Err(anyhow!("Key '{}' not found", key)),
+        }
+    }
+
     pub fn set_string_value(&mut self, key: &str, value: &str) -> Result<()> {
+        if key == "default" && (value == "true" || value == "false") {
+            // Add this as a bool.
+            self.root.insert(key, toml_edit::value(value == "true"));
+            return Ok(());
+        }
+
         self.root.insert(key, toml_edit::value(value));
         Ok(())
     }

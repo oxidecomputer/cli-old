@@ -200,7 +200,7 @@ impl crate::config::Config for FileConfig {
         let host_configs = self.get_host_entries()?;
 
         for host_config in host_configs {
-            if host_config.map.get_string_value("default")? == "true" {
+            if host_config.map.get_bool_value("default")? {
                 return Ok((host_config.host, hosts_source));
             }
         }

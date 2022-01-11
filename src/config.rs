@@ -243,7 +243,7 @@ token = "MY_TOKEN""#,
 
     #[test]
     fn test_parse_config_multiple_hosts() {
-        let c = crate::config::new_from_string(
+        let mut c = crate::config::new_from_string(
             r#"[hosts]
 
 [hosts."example.org"]
@@ -267,6 +267,19 @@ token = "MY_TOKEN""#,
 
         let token = c.get("example.org", "token").unwrap();
         assert_eq!(token, "EXAMPLE_TOKEN");
+
+        c.set("example.org", "default", "true").unwrap();
+        assert_eq!(c.default_host().unwrap(), "example.org".to_string());
+
+        c.unset_host("thing.com").unwrap();
+        let token = c.get("thing.com", "token");
+        assert!(token.is_err());
+
+        let expected = r#"["example.org"]
+user = "new_user"
+token = "EXAMPLE_TOKEN"
+default = true"#;
+        assert_eq!(c.hosts_to_string().unwrap(), expected);
     }
 
     #[test]
