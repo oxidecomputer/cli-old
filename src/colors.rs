@@ -45,8 +45,7 @@ impl ColorScheme {
             return t.to_string();
         }
 
-        // TODO: do bold
-        t.to_string()
+        ansi_term::Style::new().bold().paint(t).to_string()
     }
 
     pub fn red(&self, t: &str) -> String {
@@ -78,8 +77,7 @@ impl ColorScheme {
             return t.to_string();
         }
 
-        // TODO: do gray
-        ansi_term::Colour::Red.paint(t).to_string()
+        ansi_term::Colour::Fixed(242).paint(t).to_string()
     }
 
     pub fn purple(&self, t: &str) -> String {
