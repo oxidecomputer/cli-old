@@ -1,11 +1,11 @@
 use crate::config_file::get_env_var;
 
 pub fn env_color_disabled() -> bool {
-    get_env_var("NO_COLOR") != "" || get_env_var("CLICOLOR") == "0"
+    !get_env_var("NO_COLOR").is_empty() || get_env_var("CLICOLOR") == "0"
 }
 
 pub fn env_color_forced() -> bool {
-    get_env_var("CLICOLOR_FORCE") != "" && get_env_var("CLICOLOR_FORCE") != "0"
+    !get_env_var("CLICOLOR_FORCE").is_empty() && get_env_var("CLICOLOR_FORCE") != "0"
 }
 
 fn is_true_color_supported() -> bool {
