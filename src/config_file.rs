@@ -1,7 +1,4 @@
-use std::env;
-use std::fs;
-use std::io::Write;
-use std::path::Path;
+use std::{env, fs, io::Write, path::Path};
 
 use anyhow::{anyhow, Context, Result};
 
@@ -137,20 +134,19 @@ pub fn hosts_file() -> Result<String> {
     }
 }
 
-fn parse_default_config() -> Result<impl crate::config::Config> {
-    let mut root = toml_edit::Document::new();
+pub fn parse_default_config() -> Result<impl crate::config::Config> {
     let config_file_path = config_file()?;
 
     // If the config file does not exist, create it.
     let path = Path::new(&config_file_path);
-    if !path.exists() {
+    let root = if !path.exists() {
         // Get the default config from a blank.
-        root = crate::config::new_blank_root()?;
+        crate::config::new_blank_root()?
     } else {
         // Get the default config from the file.
         let contents = read_config_file(&config_file_path)?;
-        root = contents.parse::<toml_edit::Document>()?;
-    }
+        contents.parse::<toml_edit::Document>()?
+    };
 
     Ok(crate::config::new_config(root))
 }

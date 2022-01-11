@@ -70,14 +70,19 @@ enum SubCommand {
 }
 
 fn main() {
+    // Parse the command line arguments.
     let opts: Opts = Opts::parse();
+
+    // Let's get our configuration.
+    let mut c = crate::config_file::parse_default_config().unwrap();
+    let mut config = crate::config_from_env::EnvConfig::inherit_env(&mut c);
 
     match opts.subcmd {
         SubCommand::Completion(cmd) => {
             cmd.run();
         }
         SubCommand::Config(cmd) => {
-            cmd.run();
+            cmd.run(&mut config);
         }
     }
 }

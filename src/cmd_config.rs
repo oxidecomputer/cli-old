@@ -16,11 +16,11 @@ enum SubCommand {
 }
 
 impl CmdConfig {
-    pub fn run(&self) {
+    pub fn run(&self, config: &mut dyn crate::config::Config) {
         match &self.subcmd {
-            SubCommand::Get(cmd) => cmd.run(),
-            SubCommand::Set(cmd) => cmd.run(),
-            SubCommand::List(cmd) => cmd.run(),
+            SubCommand::Get(cmd) => cmd.run(config),
+            SubCommand::Set(cmd) => cmd.run(config),
+            SubCommand::List(cmd) => cmd.run(config),
         }
     }
 }
@@ -38,7 +38,15 @@ pub struct CmdConfigGet {
 }
 
 impl CmdConfigGet {
-    pub fn run(&self) {}
+    pub fn run(&self, config: &mut dyn crate::config::Config) {
+        match config.get(&self.host, &self.key) {
+            Ok(value) => println!("{}", value),
+            Err(err) => {
+                eprintln!("{}", err);
+                std::process::exit(1);
+            }
+        }
+    }
 }
 
 /// Update configuration with a value for the given key.
@@ -57,7 +65,43 @@ pub struct CmdConfigSet {
 }
 
 impl CmdConfigSet {
-    pub fn run(&self) {}
+    pub fn run(&self, config: &mut dyn crate::config::Config) {
+        // Validate the key.
+        match crate::config::validate_key(&self.key) {
+            Ok(()) => (),
+            Err(_) => {
+                eprintln!("warning: '{}' is not a known configuration key", self.key);
+                std::process::exit(1);
+            }
+        }
+
+        // Validate the value.
+        match crate::config::validate_value(&self.key, &self.value) {
+            Ok(()) => (),
+            Err(e) => {
+                eprintln!("{}", e);
+                std::process::exit(1);
+            }
+        }
+
+        // Set the value.
+        match config.set(&self.host, &self.key, &self.value) {
+            Ok(()) => (),
+            Err(err) => {
+                eprintln!("{}", err);
+                std::process::exit(1);
+            }
+        }
+
+        // Write the config file.
+        match config.write() {
+            Ok(()) => (),
+            Err(err) => {
+                eprintln!("{}", err);
+                std::process::exit(1);
+            }
+        }
+    }
 }
 
 /// Print a list of configuration keys and values.
@@ -70,5 +114,21 @@ pub struct CmdConfigList {
 }
 
 impl CmdConfigList {
-    pub fn run(&self) {}
+    pub fn run(&self, config: &mut dyn crate::config::Config) {
+        let host = if self.host.is_empty() {
+            config.default_host().unwrap_or_default()
+        } else {
+            self.host.to_string()
+        };
+
+        for option in crate::config::config_options() {
+            match config.get(&host, &option.key) {
+                Ok(value) => println!("{}={}", option.key, value),
+                Err(err) => {
+                    eprintln!("{}", err);
+                    std::process::exit(1);
+                }
+            }
+        }
+    }
 }

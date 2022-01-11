@@ -11,6 +11,12 @@ pub struct EnvConfig<'a> {
     pub config: &'a mut (dyn crate::config::Config + 'a),
 }
 
+impl EnvConfig<'_> {
+    pub fn inherit_env(config: &mut dyn crate::config::Config) -> EnvConfig {
+        EnvConfig { config }
+    }
+}
+
 impl crate::config::Config for EnvConfig<'_> {
     fn get(&self, hostname: &str, key: &str) -> Result<String> {
         let (val, _) = self.get_with_source(hostname, key)?;

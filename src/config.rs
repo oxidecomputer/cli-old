@@ -79,7 +79,7 @@ pub fn config_options() -> Vec<ConfigOption> {
     ]
 }
 
-pub fn validate_key(key: String) -> Result<()> {
+pub fn validate_key(key: &str) -> Result<()> {
     for config_key in config_options() {
         if key == config_key.key {
             return Ok(());
@@ -95,7 +95,7 @@ pub enum InvalidValueError {
     ValidValues(Vec<String>),
 }
 
-pub fn validate_value(key: String, value: String) -> Result<()> {
+pub fn validate_value(key: &str, value: &str) -> Result<()> {
     let mut valid_values: Vec<String> = vec![];
 
     // Set the valid values for the key.
