@@ -188,7 +188,7 @@ impl crate::config::Config for FileConfig {
         // Get all the hosts.
         let hosts = self.hosts()?;
 
-        if hosts.len() == 0 {
+        if hosts.is_empty() {
             return Err(anyhow!("No hosts found"));
         }
 
