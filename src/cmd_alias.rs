@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use anyhow::Result;
 use clap::{App, IntoApp, Parser};
 
@@ -38,7 +40,7 @@ pub struct CmdAliasDelete {
 }
 
 impl CmdAliasDelete {
-    pub fn run(&self, ctx: crate::context::Context) {
+    pub fn run(&self, mut ctx: crate::context::Context) {
         let mut alias_config = ctx.config.aliases().unwrap();
 
         let (expansion, ok) = alias_config.get(&self.alias);
@@ -49,7 +51,15 @@ impl CmdAliasDelete {
 
         match alias_config.delete(&self.alias) {
             Ok(_) => {
-                println!("Deleted alias {}; was {}", self.alias, expansion);
+                let cs = ctx.io.color_scheme();
+                writeln!(
+                    ctx.io.err_out,
+                    "{} Deleted alias {}; was {}",
+                    cs.success_icon_with_color(ansi_term::Color::Red),
+                    self.alias,
+                    expansion
+                )
+                .unwrap();
             }
             Err(e) => {
                 eprintln!("failed to delete alias {}: {}", self.alias, e);
@@ -83,18 +93,30 @@ pub struct CmdAliasSet {
     #[clap(name = "expansion", required = true)]
     expansion: String,
 
-    /// Set per-host setting.
+    /// Declare an alias to be passed through a shell interpreter.
     #[clap(short, long)]
     pub shell: bool,
 }
 
 impl CmdAliasSet {
-    pub fn run(&self, ctx: crate::context::Context) {
+    pub fn run(&self, mut ctx: crate::context::Context) {
+        let cs = ctx.io.color_scheme();
+
         let mut config_aliases = ctx.config.aliases().unwrap();
 
         match get_expansion(self) {
             Ok(mut expansion) => {
-                println!("- Adding alias for {}: %{}", self.alias, expansion);
+                let is_terminal = ctx.io.is_stdout_tty();
+
+                if is_terminal {
+                    writeln!(
+                        ctx.io.err_out,
+                        "- Adding alias for {}: %{}",
+                        cs.bold(&self.alias),
+                        cs.bold(&expansion)
+                    )
+                    .unwrap();
+                }
 
                 let mut is_shell = self.shell;
                 if is_shell && !expansion.starts_with('!') {
@@ -116,15 +138,23 @@ impl CmdAliasSet {
                     std::process::exit(1);
                 }
 
-                let mut success_msg = "Added alias.".to_string();
+                let mut success_msg = format!("{} Added alias.", cs.success_icon());
                 let (old_expansion, ok) = config_aliases.get(&self.alias);
                 if ok {
-                    success_msg = format!("Changed alias {} from {} to {}", self.alias, old_expansion, expansion);
+                    success_msg = format!(
+                        "{} Changed alias {} from {} to {}",
+                        cs.success_icon(),
+                        cs.bold(&self.alias),
+                        cs.bold(&old_expansion),
+                        cs.bold(&expansion)
+                    );
                 }
 
                 match config_aliases.add(&self.alias, &expansion) {
                     Ok(_) => {
-                        println!("{}", success_msg);
+                        if is_terminal {
+                            writeln!(ctx.io.err_out, "{}", success_msg).unwrap();
+                        }
                     }
                     Err(e) => {
                         eprintln!("could not create alias: {}", e);
@@ -148,18 +178,24 @@ impl CmdAliasSet {
 pub struct CmdAliasList {}
 
 impl CmdAliasList {
-    pub fn run(&self, ctx: crate::context::Context) {
+    pub fn run(&self, mut ctx: crate::context::Context) {
         let config_aliases = ctx.config.aliases().unwrap();
 
         if config_aliases.map.is_empty() {
-            println!("no aliases configured");
+            if ctx.io.is_stdout_tty() {
+                writeln!(ctx.io.err_out, "no aliases configured").unwrap();
+            }
             return;
         }
 
-        // TODO: make this a table.
+        let mut tw = tabwriter::TabWriter::new(vec![]);
         for (alias, expansion) in config_aliases.list().iter() {
-            println!("{}:\t{}", alias, expansion);
+            writeln!(tw, "{}:\t{}", alias, expansion).unwrap();
         }
+        tw.flush().unwrap();
+
+        let table = String::from_utf8(tw.into_inner().unwrap()).unwrap();
+        writeln!(ctx.io.out, "{}", table).unwrap();
     }
 }
 

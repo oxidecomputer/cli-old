@@ -13,6 +13,7 @@ clap = { version = "^3.0.5", features = ["cargo", "derive", "env", "unicode"] }
 clap_complete = "^3.0.2"
 dirs = "4"
 shlex = "^1.1.0"
+tabwriter = "^1.2.1"
 termbg = "^0.3.0"
 terminal_size = "^0.1.17"
 terminal-spinners = "^0.3.2"

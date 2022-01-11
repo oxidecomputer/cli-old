@@ -110,6 +110,10 @@ impl ColorScheme {
         self.green("✔")
     }
 
+    pub fn success_icon_with_color(&self, color: ansi_term::Colour) -> String {
+        color.paint("✔").to_string()
+    }
+
     pub fn warning_icon(&self) -> String {
         self.yellow("!")
     }
