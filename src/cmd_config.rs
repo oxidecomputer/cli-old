@@ -15,8 +15,8 @@ enum SubCommand {
     List(CmdConfigList),
 }
 
-impl CmdConfig {
-    pub fn run(&self, ctx: crate::context::Context) {
+impl crate::cmd::Command for CmdConfig {
+    fn run(&self, ctx: crate::context::Context) {
         match &self.subcmd {
             SubCommand::Get(cmd) => cmd.run(ctx),
             SubCommand::Set(cmd) => cmd.run(ctx),
@@ -37,8 +37,8 @@ pub struct CmdConfigGet {
     pub host: String,
 }
 
-impl CmdConfigGet {
-    pub fn run(&self, mut ctx: crate::context::Context) {
+impl crate::cmd::Command for CmdConfigGet {
+    fn run(&self, mut ctx: crate::context::Context) {
         match ctx.config.get(&self.host, &self.key) {
             Ok(value) => writeln!(ctx.io.out, "{}", value).unwrap(),
             Err(err) => {
@@ -64,8 +64,8 @@ pub struct CmdConfigSet {
     pub host: String,
 }
 
-impl CmdConfigSet {
-    pub fn run(&self, mut ctx: crate::context::Context) {
+impl crate::cmd::Command for CmdConfigSet {
+    fn run(&self, mut ctx: crate::context::Context) {
         let cs = ctx.io.color_scheme();
 
         // Validate the key.
@@ -121,8 +121,8 @@ pub struct CmdConfigList {
     pub host: String,
 }
 
-impl CmdConfigList {
-    pub fn run(&self, mut ctx: crate::context::Context) {
+impl crate::cmd::Command for CmdConfigList {
+    fn run(&self, mut ctx: crate::context::Context) {
         let host = if self.host.is_empty() {
             ctx.config.default_host().unwrap_or_default()
         } else {
@@ -143,6 +143,8 @@ impl CmdConfigList {
 
 #[cfg(test)]
 mod test {
+    use crate::cmd::Command;
+
     pub struct TestItem {
         name: String,
         input: String,

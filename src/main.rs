@@ -1,6 +1,7 @@
 //! The Oxide command line tool.
 #![deny(missing_docs)]
 
+mod cmd;
 mod cmd_alias;
 mod cmd_completion;
 mod cmd_config;
@@ -15,6 +16,8 @@ mod context;
 mod iostreams;
 
 use clap::Parser;
+
+use crate::cmd::Command;
 
 /// Work seamlessly with Oxide from the command line.
 ///

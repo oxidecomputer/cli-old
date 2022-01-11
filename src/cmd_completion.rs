@@ -53,8 +53,8 @@ pub struct CmdCompletion {
     pub shell: Shell,
 }
 
-impl CmdCompletion {
-    pub fn run(&self, mut ctx: crate::context::Context) {
+impl crate::cmd::Command for CmdCompletion {
+    fn run(&self, mut ctx: crate::context::Context) {
         // Convert our opts into a clap app.
         let mut app: App = crate::Opts::into_app();
         let name = app.get_name().to_string();
@@ -66,6 +66,8 @@ impl CmdCompletion {
 #[cfg(test)]
 mod test {
     use clap::ArgEnum;
+
+    use crate::cmd::Command;
 
     pub struct TestItem {
         name: String,
