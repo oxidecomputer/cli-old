@@ -38,9 +38,9 @@ pub struct CmdConfigGet {
 }
 
 impl CmdConfigGet {
-    pub fn run(&self, ctx: crate::context::Context) {
+    pub fn run(&self, mut ctx: crate::context::Context) {
         match ctx.config.get(&self.host, &self.key) {
-            Ok(value) => println!("{}", value),
+            Ok(value) => writeln!(ctx.io.out, "{}", value).unwrap(),
             Err(err) => {
                 eprintln!("{}", err);
                 std::process::exit(1);
@@ -65,12 +65,20 @@ pub struct CmdConfigSet {
 }
 
 impl CmdConfigSet {
-    pub fn run(&self, ctx: crate::context::Context) {
+    pub fn run(&self, mut ctx: crate::context::Context) {
+        let cs = ctx.io.color_scheme();
+
         // Validate the key.
         match crate::config::validate_key(&self.key) {
             Ok(()) => (),
             Err(_) => {
-                eprintln!("warning: '{}' is not a known configuration key", self.key);
+                writeln!(
+                    ctx.io.err_out,
+                    "{} warning: '{}' is not a known configuration key",
+                    cs.warning_icon(),
+                    self.key
+                )
+                .unwrap();
                 std::process::exit(1);
             }
         }
@@ -114,7 +122,7 @@ pub struct CmdConfigList {
 }
 
 impl CmdConfigList {
-    pub fn run(&self, ctx: crate::context::Context) {
+    pub fn run(&self, mut ctx: crate::context::Context) {
         let host = if self.host.is_empty() {
             ctx.config.default_host().unwrap_or_default()
         } else {
@@ -123,7 +131,7 @@ impl CmdConfigList {
 
         for option in crate::config::config_options() {
             match ctx.config.get(&host, &option.key) {
-                Ok(value) => println!("{}={}", option.key, value),
+                Ok(value) => writeln!(ctx.io.out, "{}={}", option.key, value).unwrap(),
                 Err(err) => {
                     eprintln!("{}", err);
                     std::process::exit(1);
