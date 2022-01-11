@@ -52,7 +52,7 @@ impl AliasConfig<'_> {
 
 #[cfg(test)]
 mod test {
-    
+
     use crate::config::Config;
 
     #[test]

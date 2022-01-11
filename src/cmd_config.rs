@@ -143,7 +143,6 @@ impl CmdConfigList {
 
 #[cfg(test)]
 mod test {
-    
 
     pub struct TestItem {
         name: String,

@@ -358,14 +358,11 @@ impl IoStreams {
         io
     }
 
-    pub fn test() -> Self {
+    pub fn test(stdout: Box<(dyn std::io::Write)>, stderr: Box<(dyn std::io::Write)>) -> Self {
         let mut io = IoStreams::system();
-        let stdout_buf = std::io::Cursor::new(Vec::new());
 
-        io.out = Box::new(stdout_buf);
-
-        let stderr_buf = std::io::Cursor::new(Vec::new());
-        io.err_out = Box::new(stderr_buf);
+        io.out = stdout;
+        io.err_out = stderr;
 
         io.tty_size = test_tty_size;
 

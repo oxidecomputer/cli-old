@@ -1,5 +1,3 @@
-use std::io;
-
 use clap::{App, IntoApp, Parser};
 use clap_complete::{generate, Shell};
 
@@ -51,16 +49,90 @@ use clap_complete::{generate, Shell};
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdCompletion {
-    #[clap(short, long)]
+    #[clap(short, long, default_value = "bash")]
     pub shell: Shell,
 }
 
 impl CmdCompletion {
-    pub fn run(&self) {
+    pub fn run(&self, mut ctx: crate::context::Context) {
         // Convert our opts into a clap app.
         let mut app: App = crate::Opts::into_app();
         let name = app.get_name().to_string();
         // Generate the completion script.
-        generate(self.shell, &mut app, name, &mut io::stdout());
+        generate(self.shell, &mut app, name, &mut ctx.io.out);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use clap::ArgEnum;
+
+    pub struct TestItem {
+        name: String,
+        input: String,
+        want_out: String,
+        want_err: String,
+    }
+
+    #[test]
+    fn test_cmd_completion_get() {
+        let tests = vec![
+            TestItem {
+                name: "bash completion".to_string(),
+                input: "bash".to_string(),
+                want_out: "complete -F _oxide -o bashdefault -o default oxide".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "zsh completion".to_string(),
+                input: "zsh".to_string(),
+                want_out: "#compdef oxide".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "fish completion".to_string(),
+                input: "fish".to_string(),
+                want_out: "complete -c oxide ".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "PowerShell completion".to_string(),
+                input: "powershell".to_string(),
+                want_out: "Register-ArgumentCompleter".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "unsupported shell".to_string(),
+                input: "csh".to_string(),
+                want_out: "".to_string(),
+                want_err: "Invalid variant: csh".to_string(),
+            },
+        ];
+
+        for t in tests {
+            if let Err(e) = clap_complete::Shell::from_str(&t.input, true) {
+                assert_eq!(e.to_string(), t.want_err, "test {}", t.name);
+                continue;
+            }
+
+            let cmd = crate::cmd_completion::CmdCompletion {
+                shell: clap_complete::Shell::from_str(&t.input, true).unwrap(),
+            };
+
+            let stdout_path = tempfile::NamedTempFile::new().unwrap();
+            let stderr_path = tempfile::NamedTempFile::new().unwrap();
+            let stdout = std::fs::File::create(&stdout_path).unwrap();
+            let stderr = std::fs::File::create(&stderr_path).unwrap();
+
+            let io = crate::iostreams::IoStreams::test(Box::new(stdout), Box::new(stderr));
+            let mut config = crate::config::new_blank_config().unwrap();
+            let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+            let ctx = crate::context::Context { config: &mut c, io };
+
+            cmd.run(ctx);
+            let s = std::fs::read_to_string(&stdout_path).unwrap();
+
+            assert!(s.contains(&t.want_out), "test {}", t.name);
+        }
     }
 }

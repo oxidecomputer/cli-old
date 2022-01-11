@@ -81,15 +81,15 @@ fn main() {
     // Let's get our configuration.
     let mut c = crate::config_file::parse_default_config().unwrap();
     let mut config = crate::config_from_env::EnvConfig::inherit_env(&mut c);
-    let context = crate::context::Context::new(&mut config);
+    let ctx = crate::context::Context::new(&mut config);
 
     match opts.subcmd {
-        SubCommand::Alias(cmd) => cmd.run(context),
+        SubCommand::Alias(cmd) => cmd.run(ctx),
         SubCommand::Completion(cmd) => {
-            cmd.run();
+            cmd.run(ctx);
         }
         SubCommand::Config(cmd) => {
-            cmd.run(context);
+            cmd.run(ctx);
         }
     }
 }
