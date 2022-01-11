@@ -21,8 +21,8 @@ enum SubCommand {
     List(CmdAliasList),
 }
 
-impl CmdAlias {
-    pub fn run(&self, ctx: crate::context::Context) {
+impl crate::cmd::Command for CmdAlias {
+    fn run(&self, ctx: crate::context::Context) {
         match &self.subcmd {
             SubCommand::Delete(cmd) => cmd.run(ctx),
             SubCommand::Set(cmd) => cmd.run(ctx),
@@ -39,8 +39,8 @@ pub struct CmdAliasDelete {
     alias: String,
 }
 
-impl CmdAliasDelete {
-    pub fn run(&self, mut ctx: crate::context::Context) {
+impl crate::cmd::Command for CmdAliasDelete {
+    fn run(&self, mut ctx: crate::context::Context) {
         let mut alias_config = ctx.config.aliases().unwrap();
 
         let (expansion, ok) = alias_config.get(&self.alias);
@@ -98,8 +98,8 @@ pub struct CmdAliasSet {
     pub shell: bool,
 }
 
-impl CmdAliasSet {
-    pub fn run(&self, mut ctx: crate::context::Context) {
+impl crate::cmd::Command for CmdAliasSet {
+    fn run(&self, mut ctx: crate::context::Context) {
         let cs = ctx.io.color_scheme();
 
         let mut config_aliases = ctx.config.aliases().unwrap();
@@ -177,8 +177,8 @@ impl CmdAliasSet {
 #[clap(verbatim_doc_comment)]
 pub struct CmdAliasList {}
 
-impl CmdAliasList {
-    pub fn run(&self, mut ctx: crate::context::Context) {
+impl crate::cmd::Command for CmdAliasList {
+    fn run(&self, mut ctx: crate::context::Context) {
         let config_aliases = ctx.config.aliases().unwrap();
 
         if config_aliases.map.is_empty() {
