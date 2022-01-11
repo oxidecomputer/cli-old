@@ -143,7 +143,7 @@ pub fn parse_default_config() -> Result<impl crate::config::Config> {
 
     // If the config file does not exist, create it.
     let path = Path::new(&config_file_path);
-    let root = if !path.exists() {
+    let mut root = if !path.exists() {
         // Get the default config from a blank.
         crate::config::new_blank_root()?
     } else {
@@ -151,6 +151,16 @@ pub fn parse_default_config() -> Result<impl crate::config::Config> {
         let contents = read_config_file(&config_file_path)?;
         contents.parse::<toml_edit::Document>()?
     };
+
+    // Parse the hosts file.
+    let hosts_file_path = hosts_file()?;
+    let path = Path::new(&hosts_file_path);
+    if path.exists() {
+        let contents = read_config_file(&hosts_file_path)?;
+        let doc = contents.parse::<toml_edit::Document>()?;
+        let hosts = doc.as_table().clone();
+        root.insert("hosts", toml_edit::Item::Table(hosts));
+    }
 
     Ok(crate::config::new_config(root))
 }

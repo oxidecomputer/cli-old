@@ -239,4 +239,32 @@ token = "MY_TOKEN""#,
         let token = c.get("thing.com", "token").unwrap();
         assert_eq!(token, "MY_TOKEN");
     }
+
+    #[test]
+    fn test_parse_config_multiple_hosts() {
+        let c = crate::config::new_from_string(
+            r#"[hosts]
+
+[hosts."example.org"]
+user = "new_user"
+token = "EXAMPLE_TOKEN"
+
+[hosts."thing.com"]
+user = "jess"
+token = "MY_TOKEN""#,
+        )
+        .unwrap();
+
+        let user = c.get("thing.com", "user").unwrap();
+        assert_eq!(user, "jess");
+
+        let token = c.get("thing.com", "token").unwrap();
+        assert_eq!(token, "MY_TOKEN");
+
+        let user = c.get("example.org", "user").unwrap();
+        assert_eq!(user, "new_user");
+
+        let token = c.get("example.org", "token").unwrap();
+        assert_eq!(token, "EXAMPLE_TOKEN");
+    }
 }
