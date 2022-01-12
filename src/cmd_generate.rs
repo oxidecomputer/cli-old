@@ -160,8 +160,31 @@ mod test {
     use clap::{arg, App, AppSettings};
     use pretty_assertions::assert_eq;
 
+    use crate::cmd::Command;
+
     #[test]
     fn test_generate_markdown() {
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
+        let mut ctx = crate::context::Context { config: &mut c, io };
+
+        let cmd = crate::cmd_generate::CmdGenerateMarkdown { dir: "".to_string() };
+
+        cmd.run(&mut ctx).unwrap();
+
+        let stdout = std::fs::read_to_string(stdout_path).unwrap();
+        let stderr = std::fs::read_to_string(stderr_path).unwrap();
+
+        assert!(stdout.contains("<dt><code>-H/--host</code></dt>"), "");
+        assert!(stdout.contains("### About"), "");
+
+        assert_eq!(stderr, "");
+    }
+
+    #[test]
+    fn test_generate_markdown_sub_subcommands() {
         let mut config = crate::config::new_blank_config().unwrap();
         let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
 
