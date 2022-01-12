@@ -16,8 +16,8 @@ pub struct CmdAlias {
 
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
-    Delete(CmdAliasDelete),
     Set(CmdAliasSet),
+    Delete(CmdAliasDelete),
     List(CmdAliasList),
 }
 
@@ -52,7 +52,7 @@ impl crate::cmd::Command for CmdAliasDelete {
             Ok(_) => {
                 let cs = ctx.io.color_scheme();
                 writeln!(
-                    ctx.io.err_out,
+                    ctx.io.out,
                     "{} Deleted alias {}; was {}",
                     cs.success_icon_with_color(ansi_term::Color::Red),
                     self.alias,
@@ -105,16 +105,12 @@ impl crate::cmd::Command for CmdAliasSet {
 
         match get_expansion(self) {
             Ok(mut expansion) => {
-                let is_terminal = ctx.io.is_stdout_tty();
-
-                if is_terminal {
-                    writeln!(
-                        ctx.io.err_out,
-                        "- Adding alias for {}: %{}",
-                        cs.bold(&self.alias),
-                        cs.bold(&expansion)
-                    )?;
-                }
+                writeln!(
+                    ctx.io.out,
+                    "- Adding alias for {}: {}",
+                    cs.bold(&self.alias),
+                    cs.bold(&expansion)
+                )?;
 
                 let mut is_shell = self.shell;
                 if is_shell && !expansion.starts_with('!') {
@@ -148,9 +144,7 @@ impl crate::cmd::Command for CmdAliasSet {
 
                 match config_aliases.add(&self.alias, &expansion) {
                     Ok(_) => {
-                        if is_terminal {
-                            writeln!(ctx.io.err_out, "{}", success_msg)?;
-                        }
+                        writeln!(ctx.io.out, "{}", success_msg)?;
                     }
                     Err(e) => {
                         bail!("could not create alias: {}", e);
@@ -178,9 +172,7 @@ impl crate::cmd::Command for CmdAliasList {
         let config_aliases = ctx.config.aliases()?;
 
         if config_aliases.map.is_empty() {
-            if ctx.io.is_stdout_tty() {
-                writeln!(ctx.io.err_out, "no aliases configured")?;
-            }
+            writeln!(ctx.io.out, "no aliases configured")?;
             return Ok(());
         }
 
@@ -220,4 +212,122 @@ fn valid_command(args: &str) -> bool {
 
     // Try to get matches.
     app.try_get_matches_from(split).is_ok()
+}
+
+#[cfg(test)]
+mod test {
+    use crate::cmd::Command;
+
+    pub struct TestItem {
+        name: String,
+        cmd: crate::cmd_alias::SubCommand,
+        want_out: String,
+        want_err: String,
+    }
+
+    #[test]
+    fn test_cmd_config() {
+        let tests: Vec<TestItem> = vec![
+            TestItem {
+                name: "list empty".to_string(),
+                cmd: crate::cmd_alias::SubCommand::List(crate::cmd_alias::CmdAliasList {}),
+                want_out: "no aliases configured\n".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "add an alias".to_string(),
+                cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
+                    alias: "cs".to_string(),
+                    expansion: "config set".to_string(),
+                    shell: false,
+                }),
+                want_out: "- Adding alias for cs: config set\n✔ Added alias.\n".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "update an alias".to_string(),
+                cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
+                    alias: "cs".to_string(),
+                    expansion: "config get".to_string(),
+                    shell: false,
+                }),
+                want_out: "- Adding alias for cs: config get\n✔ Changed alias cs from config set to config get\n"
+                    .to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "add an alias with shell".to_string(),
+                cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
+                    alias: "cp".to_string(),
+                    expansion: "config list".to_string(),
+                    shell: true,
+                }),
+                want_out: "- Adding alias for cp: config list\n✔ Added alias.\n".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "list all".to_string(),
+                cmd: crate::cmd_alias::SubCommand::List(crate::cmd_alias::CmdAliasList {}),
+                want_out: "cs:   \"config get\"\ncp:   \"!config list\"\n\n".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "delete an alias".to_string(),
+                cmd: crate::cmd_alias::SubCommand::Delete(crate::cmd_alias::CmdAliasDelete {
+                    alias: "cp".to_string(),
+                }),
+                want_out: "Deleted alias cp; was !config list".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "delete an alias not exist".to_string(),
+                cmd: crate::cmd_alias::SubCommand::Delete(crate::cmd_alias::CmdAliasDelete {
+                    alias: "thing".to_string(),
+                }),
+                want_out: "".to_string(),
+                want_err: "no such alias thing".to_string(),
+            },
+            TestItem {
+                name: "list after delete".to_string(),
+                cmd: crate::cmd_alias::SubCommand::List(crate::cmd_alias::CmdAliasList {}),
+                want_out: "cs:   \"config get\"\n".to_string(),
+                want_err: "".to_string(),
+            },
+        ];
+
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        for t in tests {
+            let (mut io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
+            io.set_stdout_tty(false);
+            io.set_color_enabled(false);
+            let mut ctx = crate::context::Context { config: &mut c, io };
+
+            let cmd_alias = crate::cmd_alias::CmdAlias { subcmd: t.cmd };
+            match cmd_alias.run(&mut ctx) {
+                Ok(()) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert!(
+                        stdout.contains(&t.want_out),
+                        "test {} ->\nstdout: {}\nwant: {}",
+                        t.name,
+                        stdout,
+                        t.want_out
+                    );
+                    assert!(stdout.is_empty() == t.want_out.is_empty(), "test {}", t.name);
+                    assert!(stderr.is_empty(), "test {}", t.name);
+                }
+                Err(err) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert_eq!(stdout, t.want_out, "test {}", t.name);
+                    assert!(err.to_string().contains(&t.want_err), "test {}", t.name);
+                    assert!(err.to_string().is_empty() == t.want_err.is_empty(), "test {}", t.name);
+                    assert!(stderr.is_empty(), "test {}", t.name);
+                }
+            }
+        }
+    }
 }
