@@ -451,9 +451,7 @@ default = true"#;
         for t in tests {
             let result = c.expand_alias(t.args);
 
-            if result.is_ok() {
-                let (expanded, is_shell) = result.unwrap();
-
+            if let Ok((expanded, is_shell)) = result {
                 assert_eq!(expanded, t.want_expanded, "test: {}", t.name);
                 assert_eq!(is_shell, t.want_is_shell, "test: {}", t.name);
                 assert!(t.want_err.is_empty(), "test: {}", t.name);
