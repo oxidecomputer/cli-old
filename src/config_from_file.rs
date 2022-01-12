@@ -247,7 +247,7 @@ impl crate::config::Config for FileConfig {
         }
 
         // Get the additional arguments.
-        let mut additional_args = args.clone();
+        let mut additional_args = args;
         additional_args.remove(0); // Remove the first argument.
         additional_args.remove(0); // Remove the second argument.
 
@@ -271,7 +271,7 @@ impl crate::config::Config for FileConfig {
 
         let mut extra_args: Vec<String> = vec![];
         for (i, a) in additional_args.iter().enumerate() {
-            if !expansion.contains("$") {
+            if !expansion.contains('$') {
                 extra_args.push(a.clone());
             } else {
                 expansion = expansion.replace(&format!("${}", i + 1), a);
