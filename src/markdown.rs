@@ -31,7 +31,9 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
     // We don't need the header since our renderer will do that for us.
     //doc.header(app.get_name().to_string(), pulldown_cmark::HeadingLevel::H2);
 
-    if let Some(about) = app.get_about() {
+    if let Some(about) = app.get_long_about() {
+        doc.paragraph(about.to_string());
+    } else if let Some(about) = app.get_about() {
         doc.paragraph(about.to_string());
     }
 
