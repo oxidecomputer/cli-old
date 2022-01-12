@@ -358,7 +358,7 @@ impl IoStreams {
         io
     }
 
-    // TODO: can this function only be compiled for tests?
+    #[cfg(test)]
     pub fn test() -> (Self, String, String) {
         let mut io = IoStreams::system();
 
@@ -378,7 +378,7 @@ impl IoStreams {
     }
 }
 
-// TODO: can this function only be compiled for tests?
+#[cfg(test)]
 fn test_tty_size() -> Result<(i32, i32)> {
     Err(anyhow::anyhow!("tty_size not implemented in tests"))
 }
