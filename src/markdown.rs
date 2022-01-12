@@ -40,9 +40,7 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
     // We don't need the header since our renderer will do that for us.
     //doc.header(app.get_name().to_string(), pulldown_cmark::HeadingLevel::H2);
 
-    if let Some(about) = app.get_long_about() {
-        doc.paragraph(about.to_string());
-    } else if let Some(about) = app.get_about() {
+    if let Some(about) = app.get_about() {
         doc.paragraph(about.to_string());
     }
 
@@ -102,6 +100,19 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
     }
 
     // TODO: add examples
+
+    if let Some(about) = app.get_long_about() {
+        doc.header("About".to_string(), pulldown_cmark::HeadingLevel::H3);
+
+        doc.paragraph(
+            about
+                .to_string()
+                .trim_start_matches(app.get_about().unwrap_or_default())
+                .trim_start_matches('.')
+                .trim()
+                .to_string(),
+        );
+    }
 
     // Check if the command has a parent.
     if !(title == app.get_name() || title.trim_start_matches("oxide ") == app.get_name()) {
