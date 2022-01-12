@@ -21,18 +21,22 @@ impl Default for Man {
 }
 
 /// Generate manpage for your application using the most common default values.
-pub fn generate_manpage<'a>(app: &clap::App<'a>, buf: &mut dyn Write) {
+pub fn generate_manpage<'a>(app: &clap::App<'a>, buf: &mut dyn Write, title: &str, root: &clap::App) {
     let man = Man::default();
-    man.render(app, buf);
+    man.render(app, buf, title, root);
 }
 
 impl Man {
     /// Write the manpage to a buffer.
-    pub fn render(self, app: &clap::App, buf: &mut dyn std::io::Write) {
-        let mut page = Roff::new(app.get_name(), self.get_section())
-            .source(&format!("{} {}", app.get_name(), app.get_version().unwrap_or_default()))
-            .section("Name", [&about(app)])
-            .section("Synopsis", [&synopsis(app)])
+    pub fn render(self, app: &clap::App, buf: &mut dyn std::io::Write, title: &str, root: &clap::App) {
+        let mut page = Roff::new(root.get_name(), self.get_section())
+            .source(&format!(
+                "{} {}",
+                root.get_name(),
+                root.get_version().unwrap_or_default()
+            ))
+            .section("Name", [&about(app, title)])
+            .section("Synopsis", [&synopsis(app, title)])
             .section("Description", &description(app));
 
         if let Some(manual) = &self.manual {
@@ -44,7 +48,10 @@ impl Man {
         }
 
         if app_has_subcommands(app) {
-            page = page.section(&subcommand_heading(app), &subcommands(app, self.get_section().value()))
+            page = page.section(
+                &subcommand_heading(app),
+                &subcommands(app, self.get_section().value(), title),
+            )
         }
 
         if app.get_after_long_help().is_some() || app.get_after_help().is_some() {
@@ -55,12 +62,12 @@ impl Man {
             page = page.section(&title, &[section]);
         }
 
-        if app_has_version(app) {
-            page = page.section("Version", &[version(app)]);
+        if app_has_version(root) {
+            page = page.section("Version", &[version(root)]);
         }
 
-        if app.get_author().is_some() {
-            page = page.section("Author(s)", &[app.get_author().unwrap_or_default()]);
+        if root.get_author().is_some() {
+            page = page.section("Author(s)", &[root.get_author().unwrap_or_default()]);
         }
 
         buf.write_all(page.render().as_bytes()).unwrap();
@@ -90,10 +97,11 @@ fn subcommand_heading(app: &clap::App) -> String {
     }
 }
 
-fn about(app: &clap::App) -> String {
+fn about(app: &clap::App, title: &str) -> String {
+    let t = title.replace(' ', "-");
     match app.get_about().or_else(|| app.get_long_about()) {
-        Some(about) => format!("{} - {}", app.get_name(), about),
-        None => app.get_name().to_string(),
+        Some(about) => format!("{} - {}", t, about),
+        None => t.to_string(),
     }
 }
 
@@ -107,10 +115,10 @@ fn description(app: &clap::App) -> Vec<String> {
     }
 }
 
-fn synopsis(app: &clap::App) -> String {
+fn synopsis(app: &clap::App, title: &str) -> String {
     let mut res = String::new();
 
-    res.push_str(&italic(app.get_name()));
+    res.push_str(&italic(title));
     res.push(' ');
 
     for opt in app.get_arguments() {
@@ -208,11 +216,11 @@ fn options(app: &clap::App) -> Vec<String> {
     res
 }
 
-fn subcommands(app: &clap::App, section: i8) -> Vec<String> {
+fn subcommands(app: &clap::App, section: i8, title: &str) -> Vec<String> {
     app.get_subcommands()
         .filter(|s| !s.is_set(AppSettings::Hidden))
         .map(|command| {
-            let name = format!("{}-{}({})", app.get_name(), command.get_name(), section);
+            let name = format!("{}-{}({})", title.replace(' ', "-"), command.get_name(), section);
 
             let mut body = match command.get_about().or_else(|| command.get_long_about()) {
                 Some(about) => about

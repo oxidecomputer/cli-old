@@ -117,39 +117,37 @@ impl crate::cmd::Command for CmdGenerateManPages {
             fs::create_dir_all(&self.dir).with_context(|| format!("failed to create directory {}", self.dir))?;
         }
 
-        self.generate(ctx, &app, app.get_name())?;
+        self.generate(ctx, &app, "", &app)?;
 
         Ok(())
     }
 }
 
 impl CmdGenerateManPages {
-    fn generate(&self, ctx: &mut crate::context::Context, app: &App, parent: &str) -> Result<()> {
+    fn generate(&self, ctx: &mut crate::context::Context, app: &App, parent: &str, root: &clap::App) -> Result<()> {
         let mut p = parent.to_string();
         if !p.is_empty() {
             p = format!("{}-{}", p, app.get_name());
+        } else {
+            p = app.get_name().to_string();
         }
 
         let filename = format!("{}.1", p);
-        writeln!(
-            ctx.io.out,
-            "Generating man page for `{}` -> {}",
-            p.replace('-', " "),
-            filename
-        )?;
+        let title = p.replace('-', " ");
+        writeln!(ctx.io.out, "Generating man page for `{}` -> {}", title, filename)?;
 
         if self.dir.is_empty() {
-            crate::man::generate_manpage(app, &mut ctx.io.out);
+            crate::man::generate_manpage(app, &mut ctx.io.out, &title, root);
         } else {
             let p = std::path::Path::new(&self.dir).join(filename);
             let mut file = std::fs::File::create(p)?;
-            crate::man::generate_manpage(app, &mut file);
+            crate::man::generate_manpage(app, &mut file, &title, root);
         }
 
         // Iterate over all the subcommands and generate the documentation.
         for subcmd in app.get_subcommands() {
             // Make it recursive.
-            self.generate(ctx, subcmd, &p)?;
+            self.generate(ctx, subcmd, &p, root)?;
         }
 
         Ok(())
