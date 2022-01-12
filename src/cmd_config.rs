@@ -11,9 +11,9 @@ pub struct CmdConfig {
 
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
-    Get(CmdConfigGet),
     Set(CmdConfigSet),
     List(CmdConfigList),
+    Get(CmdConfigGet),
 }
 
 impl crate::cmd::Command for CmdConfig {
@@ -146,9 +146,19 @@ mod test {
     fn test_cmd_config() {
         let tests: Vec<TestItem> = vec![
             TestItem {
-                name: "set a key".to_string(),
+                name: "set a key unknown".to_string(),
                 cmd: crate::cmd_config::SubCommand::Set(crate::cmd_config::CmdConfigSet {
                     key: "foo".to_string(),
+                    value: "bar".to_string(),
+                    host: "".to_string(),
+                }),
+                want_out: "".to_string(),
+                want_err: "\u{1b}[33m!\u{1b}[0m warning: 'foo' is not a known configuration key".to_string(),
+            },
+            TestItem {
+                name: "set a key".to_string(),
+                cmd: crate::cmd_config::SubCommand::Set(crate::cmd_config::CmdConfigSet {
+                    key: "browser".to_string(),
                     value: "bar".to_string(),
                     host: "".to_string(),
                 }),
@@ -158,8 +168,8 @@ mod test {
             TestItem {
                 name: "set a key with host".to_string(),
                 cmd: crate::cmd_config::SubCommand::Set(crate::cmd_config::CmdConfigSet {
-                    key: "weird".to_string(),
-                    value: "science".to_string(),
+                    key: "prompt".to_string(),
+                    value: "disabled".to_string(),
                     host: "example.org".to_string(),
                 }),
                 want_out: "".to_string(),
@@ -168,19 +178,19 @@ mod test {
             TestItem {
                 name: "get a key we set".to_string(),
                 cmd: crate::cmd_config::SubCommand::Get(crate::cmd_config::CmdConfigGet {
-                    key: "foo".to_string(),
+                    key: "browser".to_string(),
                     host: "".to_string(),
                 }),
-                want_out: "".to_string(),
+                want_out: "bar\n".to_string(),
                 want_err: "".to_string(),
             },
             TestItem {
                 name: "get a key we set with host".to_string(),
                 cmd: crate::cmd_config::SubCommand::Get(crate::cmd_config::CmdConfigGet {
-                    key: "weird".to_string(),
+                    key: "prompt".to_string(),
                     host: "example.org".to_string(),
                 }),
-                want_out: "".to_string(),
+                want_out: "disabled\n".to_string(),
                 want_err: "".to_string(),
             },
             TestItem {
@@ -190,14 +200,15 @@ mod test {
                     host: "".to_string(),
                 }),
                 want_out: "".to_string(),
-                want_err: "".to_string(),
+                want_err: "Key 'blah' not found".to_string(),
             },
         ];
 
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
         for t in tests {
             let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
-            let mut config = crate::config::new_blank_config().unwrap();
-            let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
             let mut ctx = crate::context::Context { config: &mut c, io };
 
             let cmd_config = crate::cmd_config::CmdConfig { subcmd: t.cmd };
@@ -212,7 +223,8 @@ mod test {
                     let stdout = std::fs::read_to_string(stdout_path).unwrap();
                     let stderr = std::fs::read_to_string(stderr_path).unwrap();
                     assert_eq!(stdout, t.want_out, "test {}", t.name);
-                    assert_eq!(stderr, t.want_err, "test {}", t.name);
+                    assert_eq!(err.to_string(), t.want_err, "test {}", t.name);
+                    assert!(stderr.is_empty(), "test {}", t.name);
                 }
             }
         }
