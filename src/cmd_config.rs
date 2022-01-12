@@ -1,3 +1,4 @@
+use anyhow::{bail, Result};
 use clap::Parser;
 
 /// Manage configuration for oxide.
@@ -16,7 +17,7 @@ enum SubCommand {
 }
 
 impl crate::cmd::Command for CmdConfig {
-    fn run(&self, ctx: crate::context::Context) {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         match &self.subcmd {
             SubCommand::Get(cmd) => cmd.run(ctx),
             SubCommand::Set(cmd) => cmd.run(ctx),
@@ -38,14 +39,15 @@ pub struct CmdConfigGet {
 }
 
 impl crate::cmd::Command for CmdConfigGet {
-    fn run(&self, mut ctx: crate::context::Context) {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         match ctx.config.get(&self.host, &self.key) {
             Ok(value) => writeln!(ctx.io.out, "{}", value).unwrap(),
             Err(err) => {
-                eprintln!("{}", err);
-                std::process::exit(1);
+                bail!("{}", err);
             }
         }
+
+        Ok(())
     }
 }
 
@@ -65,50 +67,37 @@ pub struct CmdConfigSet {
 }
 
 impl crate::cmd::Command for CmdConfigSet {
-    fn run(&self, mut ctx: crate::context::Context) {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let cs = ctx.io.color_scheme();
 
         // Validate the key.
         match crate::config::validate_key(&self.key) {
             Ok(()) => (),
             Err(_) => {
-                writeln!(
-                    ctx.io.err_out,
+                bail!(
                     "{} warning: '{}' is not a known configuration key",
                     cs.warning_icon(),
                     self.key
-                )
-                .unwrap();
-                std::process::exit(1);
+                );
             }
         }
 
         // Validate the value.
-        match crate::config::validate_value(&self.key, &self.value) {
-            Ok(()) => (),
-            Err(e) => {
-                eprintln!("{}", e);
-                std::process::exit(1);
-            }
+        if let Err(err) = crate::config::validate_value(&self.key, &self.value) {
+            bail!("{}", err);
         }
 
         // Set the value.
-        match ctx.config.set(&self.host, &self.key, &self.value) {
-            Ok(()) => (),
-            Err(err) => {
-                eprintln!("{}", err);
-                std::process::exit(1);
-            }
+        if let Err(err) = ctx.config.set(&self.host, &self.key, &self.value) {
+            bail!("{}", err);
         }
 
         // Write the config file.
-        match ctx.config.write() {
-            Ok(()) => (),
-            Err(err) => {
-                eprintln!("{}", err);
-                std::process::exit(1);
-            }
+        if let Err(err) = ctx.config.write() {
+            bail!("{}", err);
         }
+
+        Ok(())
     }
 }
 
@@ -122,7 +111,7 @@ pub struct CmdConfigList {
 }
 
 impl crate::cmd::Command for CmdConfigList {
-    fn run(&self, mut ctx: crate::context::Context) {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let host = if self.host.is_empty() {
             ctx.config.default_host().unwrap_or_default()
         } else {
@@ -133,11 +122,12 @@ impl crate::cmd::Command for CmdConfigList {
             match ctx.config.get(&host, &option.key) {
                 Ok(value) => writeln!(ctx.io.out, "{}={}", option.key, value).unwrap(),
                 Err(err) => {
-                    eprintln!("{}", err);
-                    std::process::exit(1);
+                    bail!("{}", err);
                 }
             }
         }
+
+        Ok(())
     }
 }
 
@@ -147,43 +137,84 @@ mod test {
 
     pub struct TestItem {
         name: String,
-        input: String,
+        cmd: crate::cmd_config::SubCommand,
         want_out: String,
         want_err: String,
     }
 
     #[test]
-    fn test_cmd_config_get() {
+    fn test_cmd_config() {
         let tests: Vec<TestItem> = vec![
-            /*TestItem {
-                name: "get key".to_string(),
-                input: "key".to_string(),
-                want_out: "".to_string(),
-                want_err: "Key 'key' not found".to_string(),
-            },
             TestItem {
-                name: "get key with host".to_string(),
-                input: "test".to_string(),
+                name: "set a key".to_string(),
+                cmd: crate::cmd_config::SubCommand::Set(crate::cmd_config::CmdConfigSet {
+                    key: "foo".to_string(),
+                    value: "bar".to_string(),
+                    host: "".to_string(),
+                }),
                 want_out: "".to_string(),
                 want_err: "".to_string(),
-            },*/
+            },
+            TestItem {
+                name: "set a key with host".to_string(),
+                cmd: crate::cmd_config::SubCommand::Set(crate::cmd_config::CmdConfigSet {
+                    key: "weird".to_string(),
+                    value: "science".to_string(),
+                    host: "example.org".to_string(),
+                }),
+                want_out: "".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "get a key we set".to_string(),
+                cmd: crate::cmd_config::SubCommand::Get(crate::cmd_config::CmdConfigGet {
+                    key: "foo".to_string(),
+                    host: "".to_string(),
+                }),
+                want_out: "".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "get a key we set with host".to_string(),
+                cmd: crate::cmd_config::SubCommand::Get(crate::cmd_config::CmdConfigGet {
+                    key: "weird".to_string(),
+                    host: "example.org".to_string(),
+                }),
+                want_out: "".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "get a non existent key".to_string(),
+                cmd: crate::cmd_config::SubCommand::Get(crate::cmd_config::CmdConfigGet {
+                    key: "blah".to_string(),
+                    host: "".to_string(),
+                }),
+                want_out: "".to_string(),
+                want_err: "".to_string(),
+            },
         ];
 
         for t in tests {
-            let cmd = crate::cmd_config::CmdConfigGet {
-                host: "".to_string(),
-                key: t.input.to_string(),
-            };
-
-            let (io, stdout_path, _) = crate::iostreams::IoStreams::test();
+            let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
             let mut config = crate::config::new_blank_config().unwrap();
             let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
-            let ctx = crate::context::Context { config: &mut c, io };
+            let mut ctx = crate::context::Context { config: &mut c, io };
 
-            cmd.run(ctx);
-            let s = std::fs::read_to_string(&stdout_path).unwrap();
-
-            assert!(s.contains(&t.want_out), "test {}", t.name);
+            let cmd_config = crate::cmd_config::CmdConfig { subcmd: t.cmd };
+            match cmd_config.run(&mut ctx) {
+                Ok(()) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert_eq!(stdout, t.want_out, "test {}", t.name);
+                    assert_eq!(stderr, t.want_err, "test {}", t.name);
+                }
+                Err(err) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert_eq!(stdout, t.want_out, "test {}", t.name);
+                    assert_eq!(stderr, t.want_err, "test {}", t.name);
+                }
+            }
         }
     }
 }

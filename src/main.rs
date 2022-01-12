@@ -17,8 +17,6 @@ mod iostreams;
 
 use clap::Parser;
 
-use crate::cmd::Command;
-
 /// Work seamlessly with Oxide from the command line.
 ///
 /// Environment variables that can be used with oxide
@@ -84,15 +82,18 @@ fn main() {
     // Let's get our configuration.
     let mut c = crate::config_file::parse_default_config().unwrap();
     let mut config = crate::config_from_env::EnvConfig::inherit_env(&mut c);
-    let ctx = crate::context::Context::new(&mut config);
+    let mut ctx = crate::context::Context::new(&mut config);
 
     match opts.subcmd {
-        SubCommand::Alias(cmd) => cmd.run(ctx),
-        SubCommand::Completion(cmd) => {
-            cmd.run(ctx);
-        }
-        SubCommand::Config(cmd) => {
-            cmd.run(ctx);
-        }
+        SubCommand::Alias(cmd) => run_cmd(&cmd, &mut ctx),
+        SubCommand::Completion(cmd) => run_cmd(&cmd, &mut ctx),
+        SubCommand::Config(cmd) => run_cmd(&cmd, &mut ctx),
+    }
+}
+
+fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context) {
+    if let Err(err) = cmd.run(ctx) {
+        writeln!(ctx.io.err_out, "{}", err).unwrap();
+        std::process::exit(1);
     }
 }

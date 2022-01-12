@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::{App, IntoApp, Parser};
 use clap_complete::{generate, Shell};
 
@@ -54,12 +55,14 @@ pub struct CmdCompletion {
 }
 
 impl crate::cmd::Command for CmdCompletion {
-    fn run(&self, mut ctx: crate::context::Context) {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         // Convert our opts into a clap app.
         let mut app: App = crate::Opts::into_app();
         let name = app.get_name().to_string();
         // Generate the completion script.
         generate(self.shell, &mut app, name, &mut ctx.io.out);
+
+        Ok(())
     }
 }
 
@@ -121,15 +124,21 @@ mod test {
                 shell: clap_complete::Shell::from_str(&t.input, true).unwrap(),
             };
 
-            let (io, stdout_path, _) = crate::iostreams::IoStreams::test();
+            let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
             let mut config = crate::config::new_blank_config().unwrap();
             let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
-            let ctx = crate::context::Context { config: &mut c, io };
+            let mut ctx = crate::context::Context { config: &mut c, io };
 
-            cmd.run(ctx);
-            let s = std::fs::read_to_string(&stdout_path).unwrap();
+            cmd.run(&mut ctx).unwrap();
 
-            assert!(s.contains(&t.want_out), "test {}", t.name);
+            let stdout = std::fs::read_to_string(&stdout_path).unwrap();
+            let stderr = std::fs::read_to_string(&stderr_path).unwrap();
+
+            assert_eq!(stdout.is_empty(), t.want_out.is_empty());
+            assert!(stdout.contains(&t.want_out), "test {}", t.name);
+
+            assert_eq!(stderr.is_empty(), t.want_err.is_empty());
+            assert!(stderr.contains(&t.want_err), "test {}", t.name);
         }
     }
 }

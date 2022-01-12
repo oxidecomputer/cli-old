@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::{App, IntoApp, Parser};
 
 /// Create command shortcuts.
@@ -22,7 +22,7 @@ enum SubCommand {
 }
 
 impl crate::cmd::Command for CmdAlias {
-    fn run(&self, ctx: crate::context::Context) {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         match &self.subcmd {
             SubCommand::Delete(cmd) => cmd.run(ctx),
             SubCommand::Set(cmd) => cmd.run(ctx),
@@ -40,13 +40,12 @@ pub struct CmdAliasDelete {
 }
 
 impl crate::cmd::Command for CmdAliasDelete {
-    fn run(&self, mut ctx: crate::context::Context) {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let mut alias_config = ctx.config.aliases().unwrap();
 
         let (expansion, ok) = alias_config.get(&self.alias);
         if !ok {
-            eprintln!("no such alias {}", self.alias);
-            std::process::exit(1);
+            bail!("no such alias {}", self.alias);
         }
 
         match alias_config.delete(&self.alias) {
@@ -62,10 +61,11 @@ impl crate::cmd::Command for CmdAliasDelete {
                 .unwrap();
             }
             Err(e) => {
-                eprintln!("failed to delete alias {}: {}", self.alias, e);
-                std::process::exit(1);
+                bail!("failed to delete alias {}: {}", self.alias, e);
             }
         }
+
+        Ok(())
     }
 }
 
@@ -99,7 +99,7 @@ pub struct CmdAliasSet {
 }
 
 impl crate::cmd::Command for CmdAliasSet {
-    fn run(&self, mut ctx: crate::context::Context) {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let cs = ctx.io.color_scheme();
 
         let mut config_aliases = ctx.config.aliases().unwrap();
@@ -126,16 +126,14 @@ impl crate::cmd::Command for CmdAliasSet {
 
                 // Check if already exists.
                 if valid_command(&self.alias) {
-                    eprintln!("could not create alias: {} is already an oxide command", self.alias);
-                    std::process::exit(1);
+                    bail!("could not create alias: {} is already an oxide command", self.alias);
                 }
 
                 if !is_shell && valid_command(&expansion) {
-                    eprintln!(
+                    bail!(
                         "could not create alias: {} does not correspond to an oxide command",
                         expansion
                     );
-                    std::process::exit(1);
                 }
 
                 let mut success_msg = format!("{} Added alias.", cs.success_icon());
@@ -157,16 +155,16 @@ impl crate::cmd::Command for CmdAliasSet {
                         }
                     }
                     Err(e) => {
-                        eprintln!("could not create alias: {}", e);
-                        std::process::exit(1);
+                        bail!("could not create alias: {}", e);
                     }
                 }
             }
             Err(e) => {
-                eprintln!("failed to parse expansion {}: {}", self.expansion, e);
-                std::process::exit(1);
+                bail!("failed to parse expansion {}: {}", self.expansion, e);
             }
         }
+
+        Ok(())
     }
 }
 
@@ -178,14 +176,14 @@ impl crate::cmd::Command for CmdAliasSet {
 pub struct CmdAliasList {}
 
 impl crate::cmd::Command for CmdAliasList {
-    fn run(&self, mut ctx: crate::context::Context) {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let config_aliases = ctx.config.aliases().unwrap();
 
         if config_aliases.map.is_empty() {
             if ctx.io.is_stdout_tty() {
                 writeln!(ctx.io.err_out, "no aliases configured").unwrap();
             }
-            return;
+            return Ok(());
         }
 
         let mut tw = tabwriter::TabWriter::new(vec![]);
@@ -196,6 +194,8 @@ impl crate::cmd::Command for CmdAliasList {
 
         let table = String::from_utf8(tw.into_inner().unwrap()).unwrap();
         writeln!(ctx.io.out, "{}", table).unwrap();
+
+        Ok(())
     }
 }
 
