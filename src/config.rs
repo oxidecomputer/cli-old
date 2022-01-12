@@ -316,4 +316,150 @@ default = true"#;
         let result = validate_value("prompt", "enabled");
         assert!(result.is_ok());
     }
+
+    pub struct TestItem {
+        name: String,
+        args: Vec<String>,
+        want_expanded: Vec<String>,
+        want_is_shell: bool,
+        want_err: String,
+    }
+
+    #[test]
+    fn test_expand_alias() {
+        let tests: Vec<TestItem> = vec![
+            TestItem {
+                name: "no arguments".to_string(),
+                args: vec![],
+                want_expanded: vec![],
+                want_is_shell: false,
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "too few arguments".to_string(),
+                args: vec!["oxide".to_string()],
+                want_expanded: vec![],
+                want_is_shell: false,
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "no expansion".to_string(),
+                args: vec!["oxide".to_string(), "config".to_string(), "set".to_string()],
+                want_expanded: vec!["config".to_string(), "set".to_string()],
+                want_is_shell: false,
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "simple expansion".to_string(),
+                args: vec!["oxide".to_string(), "cs".to_string()],
+                want_expanded: vec!["config".to_string(), "set".to_string()],
+                want_is_shell: false,
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "adding arguments after expansion".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "cs".to_string(),
+                    "foo".to_string(),
+                    "bar".to_string(),
+                ],
+                want_expanded: vec![
+                    "config".to_string(),
+                    "set".to_string(),
+                    "foo".to_string(),
+                    "bar".to_string(),
+                ],
+                want_is_shell: false,
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "not enough arguments for expansion".to_string(),
+                args: vec!["oxide".to_string(), "ca".to_string()],
+                want_expanded: vec![],
+                want_is_shell: false,
+                want_err: "not enough arguments for alias: config set $1 $2".to_string(),
+            },
+            TestItem {
+                name: "not enough arguments for expansion, again".to_string(),
+                args: vec!["oxide".to_string(), "ca".to_string(), "foo".to_string()],
+                want_expanded: vec![],
+                want_is_shell: false,
+                want_err: "not enough arguments for alias: config set foo $2".to_string(),
+            },
+            TestItem {
+                name: "satisfy expansion arguments".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "ca".to_string(),
+                    "foo".to_string(),
+                    "bar".to_string(),
+                ],
+                want_expanded: vec![
+                    "config".to_string(),
+                    "set".to_string(),
+                    "foo".to_string(),
+                    "bar".to_string(),
+                ],
+                want_is_shell: false,
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "mixed positional and non-positional arguments".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "ca".to_string(),
+                    "foo".to_string(),
+                    "bar".to_string(),
+                    "-H".to_string(),
+                    "example.org".to_string(),
+                ],
+                want_expanded: vec![
+                    "config".to_string(),
+                    "set".to_string(),
+                    "foo".to_string(),
+                    "bar".to_string(),
+                    "-H".to_string(),
+                    "example.org".to_string(),
+                ],
+                want_is_shell: false,
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "dolla dolla bills in expansion".to_string(),
+                args: vec!["oxide".to_string(), "ci".to_string(), "$foo$".to_string()],
+                want_expanded: vec![
+                    "config".to_string(),
+                    "set".to_string(),
+                    "$foo$".to_string(),
+                    "$foo$".to_string(),
+                ],
+                want_is_shell: false,
+                want_err: "".to_string(),
+            },
+        ];
+
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        // Add the aliases we need for our tests.
+        let mut aliases = c.aliases().unwrap();
+        aliases.add("cs", "config set").unwrap();
+        aliases.add("ca", "config set $1 $2").unwrap();
+        aliases.add("ci", "config set $1 $1").unwrap();
+
+        for t in tests {
+            let result = c.expand_alias(t.args);
+
+            if result.is_ok() {
+                let (expanded, is_shell) = result.unwrap();
+
+                assert_eq!(expanded, t.want_expanded, "test: {}", t.name);
+                assert_eq!(is_shell, t.want_is_shell, "test: {}", t.name);
+                assert!(t.want_err.is_empty(), "test: {}", t.name);
+            } else {
+                assert_eq!(result.unwrap_err().to_string(), t.want_err, "test: {}", t.name);
+            }
+        }
+    }
 }

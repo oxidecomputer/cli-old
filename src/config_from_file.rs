@@ -278,7 +278,10 @@ impl crate::config::Config for FileConfig {
             }
         }
 
-        // TODO: do lingering.
+        let lingering = regex::Regex::new(r"\$\d")?;
+        if lingering.is_match(&expansion) {
+            return Err(anyhow!("not enough arguments for alias: {}", expansion));
+        }
 
         let mut new_args = shlex::split(&expansion).unwrap();
         new_args.append(&mut extra_args);
