@@ -226,6 +226,65 @@ impl crate::config::Config for FileConfig {
         Ok(())
     }
 
+    fn expand_alias(&mut self, args: Vec<String>, find_sh_fn: fn() -> Result<String>) -> Result<(Vec<String>, bool)> {
+        let mut is_shell = false;
+
+        if args.len() < 2 {
+            // The command is lacking a subcommand.
+            return Ok((Vec::new(), is_shell));
+        }
+
+        let mut expanded = args.clone();
+        expanded.remove(0); // Remove the first argument.
+
+        // Get our aliases.
+        let aliases = self.aliases()?;
+
+        // Expand the alias.
+        let (mut expansion, ok) = aliases.get(expanded.first().unwrap());
+        if !ok {
+            return Ok((expanded, is_shell));
+        }
+
+        // Get the additional arguments.
+        let mut additional_args = args.clone();
+        additional_args.remove(0); // Remove the first argument.
+        additional_args.remove(0); // Remove the second argument.
+
+        if expansion.starts_with('!') {
+            is_shell = true;
+
+            // Find the shell.
+            let sh_path = find_sh_fn()?;
+
+            expanded = vec![sh_path, "-c".to_string(), expansion.trim_start_matches('!').to_string()];
+
+            if !additional_args.is_empty() {
+                // Add the additional arguments.
+                expanded.push("--".to_string());
+                expanded.append(&mut additional_args);
+            }
+
+            return Ok((expanded, is_shell));
+        }
+
+        let mut extra_args: Vec<String> = vec![];
+        for (i, a) in additional_args.iter().enumerate() {
+            if !expansion.contains("$") {
+                extra_args.push(a.clone());
+            } else {
+                expansion = expansion.replace(&format!("${}", i + 1), a);
+            }
+        }
+
+        // TODO: do lingering.
+
+        let mut new_args = shlex::split(&expansion).unwrap();
+        new_args.append(&mut extra_args);
+
+        Ok((new_args, is_shell))
+    }
+
     fn check_writable(&self, _hostname: &str, _key: &str) -> Result<()> {
         // TODO: check if the config file is writable from the filesystem permissions
         Ok(())

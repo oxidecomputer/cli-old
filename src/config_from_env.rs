@@ -74,6 +74,10 @@ impl crate::config::Config for EnvConfig<'_> {
         self.config.save_aliases(aliases)
     }
 
+    fn expand_alias(&mut self, args: Vec<String>, find_sh_fn: fn() -> Result<String>) -> Result<(Vec<String>, bool)> {
+        self.config.expand_alias(args, find_sh_fn)
+    }
+
     fn check_writable(&self, hostname: &str, key: &str) -> Result<()> {
         // If they are asking specifically for the token, return the value.
         if key == "token" {

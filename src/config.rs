@@ -22,7 +22,12 @@ pub trait Config {
 
     /// Get the aliases.
     fn aliases(&mut self) -> Result<crate::config_alias::AliasConfig>;
+    /// Save the aliases to our config.
     fn save_aliases(&mut self, aliases: &crate::config_map::ConfigMap) -> Result<()>;
+    /// expand_alias processes argv to see if it should be rewritten according to a user's aliases. The
+    /// second return value indicates whether the alias should be executed in a new shell process instead
+    /// of running `oxide` itself.
+    fn expand_alias(&mut self, args: Vec<String>, find_sh_fn: fn() -> Result<String>) -> Result<(Vec<String>, bool)>;
 
     /// Check if the configuration can be written to.
     fn check_writable(&self, hostname: &str, key: &str) -> Result<()>;
