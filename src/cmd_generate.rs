@@ -62,10 +62,24 @@ impl CmdGenerateMarkdown {
             }
 
             let filename = format!("{}.md", p);
-            println!("Generating markdown for `{}` -> {}", p.replace('_', " "), filename);
+            let title = p.replace('_', " ");
+            println!("Generating markdown for `{}` -> {}", title, filename);
 
             // Generate the markdown.
-            let markdown = app_to_md(app, 2)?;
+            let mut markdown = app_to_md(app, 2)?;
+            // Add our header information.
+            markdown = format!(
+                r#"---
+title: "{}"
+description: "{}"
+layout: manual
+---
+
+{}"#,
+                title,
+                app.get_about().unwrap_or_default(),
+                markdown
+            );
             if self.dir.is_empty() {
                 // TODO: glamorize markdown to the shell.
                 writeln!(ctx.io.out, "{}", markdown)?;
@@ -75,7 +89,6 @@ impl CmdGenerateMarkdown {
                 file.write_all(markdown.as_bytes())?;
             }
 
-            // Make it recursive.
             self.generate(ctx, subcmd, &p)?;
         }
 
