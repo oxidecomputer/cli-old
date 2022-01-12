@@ -41,7 +41,7 @@ pub struct CmdAliasDelete {
 
 impl crate::cmd::Command for CmdAliasDelete {
     fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let mut alias_config = ctx.config.aliases().unwrap();
+        let mut alias_config = ctx.config.aliases()?;
 
         let (expansion, ok) = alias_config.get(&self.alias);
         if !ok {
@@ -57,8 +57,7 @@ impl crate::cmd::Command for CmdAliasDelete {
                     cs.success_icon_with_color(ansi_term::Color::Red),
                     self.alias,
                     expansion
-                )
-                .unwrap();
+                )?;
             }
             Err(e) => {
                 bail!("failed to delete alias {}: {}", self.alias, e);
@@ -102,7 +101,7 @@ impl crate::cmd::Command for CmdAliasSet {
     fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let cs = ctx.io.color_scheme();
 
-        let mut config_aliases = ctx.config.aliases().unwrap();
+        let mut config_aliases = ctx.config.aliases()?;
 
         match get_expansion(self) {
             Ok(mut expansion) => {
@@ -114,8 +113,7 @@ impl crate::cmd::Command for CmdAliasSet {
                         "- Adding alias for {}: %{}",
                         cs.bold(&self.alias),
                         cs.bold(&expansion)
-                    )
-                    .unwrap();
+                    )?;
                 }
 
                 let mut is_shell = self.shell;
@@ -151,7 +149,7 @@ impl crate::cmd::Command for CmdAliasSet {
                 match config_aliases.add(&self.alias, &expansion) {
                     Ok(_) => {
                         if is_terminal {
-                            writeln!(ctx.io.err_out, "{}", success_msg).unwrap();
+                            writeln!(ctx.io.err_out, "{}", success_msg)?;
                         }
                     }
                     Err(e) => {
@@ -177,23 +175,23 @@ pub struct CmdAliasList {}
 
 impl crate::cmd::Command for CmdAliasList {
     fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let config_aliases = ctx.config.aliases().unwrap();
+        let config_aliases = ctx.config.aliases()?;
 
         if config_aliases.map.is_empty() {
             if ctx.io.is_stdout_tty() {
-                writeln!(ctx.io.err_out, "no aliases configured").unwrap();
+                writeln!(ctx.io.err_out, "no aliases configured")?;
             }
             return Ok(());
         }
 
         let mut tw = tabwriter::TabWriter::new(vec![]);
         for (alias, expansion) in config_aliases.list().iter() {
-            writeln!(tw, "{}:\t{}", alias, expansion).unwrap();
+            writeln!(tw, "{}:\t{}", alias, expansion)?;
         }
-        tw.flush().unwrap();
+        tw.flush()?;
 
-        let table = String::from_utf8(tw.into_inner().unwrap()).unwrap();
-        writeln!(ctx.io.out, "{}", table).unwrap();
+        let table = String::from_utf8(tw.into_inner()?)?;
+        writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
     }
@@ -215,7 +213,7 @@ fn valid_command(args: &str) -> bool {
         return false;
     }
 
-    let split = s.unwrap();
+    let split = s.unwrap_or_default();
 
     // Convert our opts into a clap app.
     let app: App = crate::Opts::into_app();

@@ -41,7 +41,7 @@ pub struct CmdConfigGet {
 impl crate::cmd::Command for CmdConfigGet {
     fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         match ctx.config.get(&self.host, &self.key) {
-            Ok(value) => writeln!(ctx.io.out, "{}", value).unwrap(),
+            Ok(value) => writeln!(ctx.io.out, "{}", value)?,
             Err(err) => {
                 bail!("{}", err);
             }
@@ -120,7 +120,7 @@ impl crate::cmd::Command for CmdConfigList {
 
         for option in crate::config::config_options() {
             match ctx.config.get(&host, &option.key) {
-                Ok(value) => writeln!(ctx.io.out, "{}={}", option.key, value).unwrap(),
+                Ok(value) => writeln!(ctx.io.out, "{}={}", option.key, value)?,
                 Err(err) => {
                     bail!("{}", err);
                 }
