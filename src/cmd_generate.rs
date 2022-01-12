@@ -46,7 +46,7 @@ impl crate::cmd::Command for CmdGenerateMarkdown {
             fs::create_dir_all(&self.dir).with_context(|| format!("failed to create directory {}", self.dir))?;
         }
 
-        self.generate(ctx, &app, app.get_name())?;
+        self.generate(ctx, &app, "")?;
 
         Ok(())
     }
@@ -54,41 +54,43 @@ impl crate::cmd::Command for CmdGenerateMarkdown {
 
 impl CmdGenerateMarkdown {
     fn generate(&self, ctx: &mut crate::context::Context, app: &App, parent: &str) -> Result<()> {
-        // Iterate over all the subcommands and generate the documentation.
-        for subcmd in app.get_subcommands() {
-            let mut p = parent.to_string();
-            if !p.is_empty() {
-                p = format!("{}_{}", p, subcmd.get_name());
-            }
+        let mut p = parent.to_string();
+        if !p.is_empty() {
+            p = format!("{}_{}", p, app.get_name());
+        } else {
+            p = app.get_name().to_string();
+        }
 
-            let filename = format!("{}.md", p);
-            let title = p.replace('_', " ");
-            println!("Generating markdown for `{}` -> {}", title, filename);
+        let filename = format!("{}.md", p);
+        let title = p.replace('_', " ");
+        println!("Generating markdown for `{}` -> {}", title, filename);
 
-            // Generate the markdown.
-            let mut markdown = app_to_md(app, 2)?;
-            // Add our header information.
-            markdown = format!(
-                r#"---
+        // Generate the markdown.
+        let m = app_to_md(app, 2)?;
+        // Add our header information.
+        let markdown = format!(
+            r#"---
 title: "{}"
 description: "{}"
 layout: manual
 ---
 
 {}"#,
-                title,
-                app.get_about().unwrap_or_default(),
-                markdown
-            );
-            if self.dir.is_empty() {
-                // TODO: glamorize markdown to the shell.
-                writeln!(ctx.io.out, "{}", markdown)?;
-            } else {
-                let p = std::path::Path::new(&self.dir).join(filename);
-                let mut file = std::fs::File::create(p)?;
-                file.write_all(markdown.as_bytes())?;
-            }
+            title,
+            app.get_about().unwrap_or_default(),
+            m
+        );
+        if self.dir.is_empty() {
+            // TODO: glamorize markdown to the shell.
+            writeln!(ctx.io.out, "{}", markdown)?;
+        } else {
+            let p = std::path::Path::new(&self.dir).join(filename);
+            let mut file = std::fs::File::create(p)?;
+            file.write_all(markdown.as_bytes())?;
+        }
 
+        // Iterate over all the subcommands and generate the documentation.
+        for subcmd in app.get_subcommands() {
             self.generate(ctx, subcmd, &p)?;
         }
 
