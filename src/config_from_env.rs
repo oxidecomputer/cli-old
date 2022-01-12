@@ -74,8 +74,8 @@ impl crate::config::Config for EnvConfig<'_> {
         self.config.save_aliases(aliases)
     }
 
-    fn expand_alias(&mut self, args: Vec<String>, find_sh_fn: fn() -> Result<String>) -> Result<(Vec<String>, bool)> {
-        self.config.expand_alias(args, find_sh_fn)
+    fn expand_alias(&mut self, args: Vec<String>) -> Result<(Vec<String>, bool)> {
+        self.config.expand_alias(args)
     }
 
     fn check_writable(&self, hostname: &str, key: &str) -> Result<()> {
