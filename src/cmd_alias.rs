@@ -199,32 +199,39 @@ fn get_expansion(cmd: &CmdAliasSet) -> Result<String> {
     }
 }
 
+/// Check if a set of arguments is a valid `oxide` command.
 fn valid_command(args: &str) -> bool {
     let s = shlex::split(args);
     if s.is_none() {
         return false;
     }
 
-    let split = s.unwrap_or_default();
-
     // Convert our opts into a clap app.
-    let mut app: App = crate::Opts::into_app();
+    let app: App = crate::Opts::into_app();
+    let mut split = vec![app.get_name().to_string()];
+    split.append(&mut s.unwrap_or_default());
 
     // Try to get matches.
-    for s in split {
-        if s.is_empty() {
-            continue;
+    match app.try_get_matches_from(split) {
+        Ok(_) => {
+            // If we get here, we have a valid command.
+            true
         }
-
-        let result = app.find_subcommand(&s);
-        if app.find_subcommand(&s).is_none() {
-            return false;
+        Err(err) => {
+            match err.kind {
+                // These come from here: https://docs.rs/clap/latest/clap/enum.ErrorKind.html#variant.DisplayHelp
+                // We basically want to ignore any errors that are valid commands but invalid args.
+                clap::ErrorKind::DisplayHelp => true,
+                clap::ErrorKind::DisplayVersion => true,
+                clap::ErrorKind::MissingRequiredArgument => true,
+                clap::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand => true,
+                _ => {
+                    // If we get here, we have an invalid command.
+                    false
+                }
+            }
         }
-
-        app = result.unwrap().clone();
     }
-
-    true
 }
 
 #[cfg(test)]
@@ -279,6 +286,18 @@ mod test {
                 want_err: "".to_string(),
             },
             TestItem {
+                name: "add an alias with expandable args".to_string(),
+                cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
+                    alias: "cs".to_string(),
+                    expansion: "config set $1 $2".to_string(),
+                    shell: false,
+                }),
+                want_out:
+                    "- Adding alias for cs: config set $1 $2\n✔ Changed alias cs from config get to config set $1 $2"
+                        .to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
                 name: "add already command".to_string(),
                 cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
                     alias: "config".to_string(),
@@ -323,7 +342,7 @@ mod test {
             TestItem {
                 name: "list after delete".to_string(),
                 cmd: crate::cmd_alias::SubCommand::List(crate::cmd_alias::CmdAliasList {}),
-                want_out: "cs:   \"config get\"\n".to_string(),
+                want_out: "cs:   \"config set $1 $2\"\n".to_string(),
                 want_err: "".to_string(),
             },
         ];
