@@ -27,10 +27,11 @@ impl MarkdownDocument<'_> {
     }
 
     fn link_in_list(&mut self, text: String, url: String) {
-        let link = pulldown_cmark::Tag::Link(pulldown_cmark::LinkType::Inline, url.into(), text.into());
+        let link = pulldown_cmark::Tag::Link(pulldown_cmark::LinkType::Inline, url.into(), "".into());
 
         self.0.push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::Item));
         self.0.push(pulldown_cmark::Event::Start(link.clone()));
+        self.0.push(pulldown_cmark::Event::Text(text.into()));
         self.0.push(pulldown_cmark::Event::End(link));
         self.0.push(pulldown_cmark::Event::End(pulldown_cmark::Tag::Item));
     }
