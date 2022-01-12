@@ -118,13 +118,13 @@ mod test {
         ];
 
         for t in tests {
-            if let Err(e) = clap_complete::Shell::from_str(&t.input, true) {
+            if let Err(e) = clap_generate::Shell::from_str(&t.input, true) {
                 assert_eq!(e.to_string(), t.want_err, "test {}", t.name);
                 continue;
             }
 
             let cmd = crate::cmd_completion::CmdCompletion {
-                shell: clap_complete::Shell::from_str(&t.input, true).unwrap(),
+                shell: clap_generate::Shell::from_str(&t.input, true).unwrap(),
             };
 
             let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();

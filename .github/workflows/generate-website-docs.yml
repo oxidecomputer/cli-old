@@ -5,12 +5,10 @@ on:
   pull_request:
     paths:
       - .github/workflows/generate-website-docs.yml
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/generate-website-docs.yml
 name: generate-website-docs
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   generate-website-docs:
     name: make-release
@@ -69,11 +67,11 @@ jobs:
           git rebase origin/main || exit 0
           export NEW_BRANCH="update-docs-${VERSION}"
           git checkout -b "$NEW_BRANCH"
-          git push origin "$NEW_BRANCH"
+          git push -f origin "$NEW_BRANCH"
           gh pr create --title "Update CLI docs for ${VERSION}" \
               --body "Updating the generated cli docs" \
               --head "$NEW_BRANCH" \
-              --base main
+              --base main || true
         env:
           GITHUB_TOKEN: ${{secrets.PAT_GITHUB}}
 

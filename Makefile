@@ -9,6 +9,8 @@ NAME := oxide
 # Set the build dir, where built cross-compiled binaries will be output
 BUILDDIR := ${PREFIX}/cross
 
+GENERATED_DOCS_DIR := ${PREFIX}/generated_docs
+
 # These are chosen from: https://doc.rust-lang.org/nightly/rustc/platform-support.html
 CROSS_TARGETS := x86_64-unknown-linux-musl \
 				 x86_64-apple-darwin \
@@ -80,6 +82,7 @@ AUTHORS:
 clean: ## Cleanup any build binaries or packages.
 	@echo "+ $@"
 	$(RM) -r $(BUILDDIR)
+	$(RM) -r $(GENERATED_DOCS_DIR)
 
 build: Cargo.toml $(wildcard src/*.rs) ## Build the Rust crate.
 	cargo build
@@ -89,12 +92,11 @@ gen-docs: gen-md gen-man ## Generate all the docs.
 
 .PHONY: gen-md
 gen-md: build  ## Generate the markdown documentation.
-	cargo build
-	$(CURDIR)/target/debug/oxide generate markdown --dir generated_docs/md
+	$(CURDIR)/target/debug/oxide generate markdown --dir $(GENERATED_DOCS_DIR)/md
 
 .PHONY: gen-man
 gen-man: build ## Generate the man pages.
-	$(CURDIR)/target/debug/oxide generate man-pages --dir generated_docs/man
+	$(CURDIR)/target/debug/oxide generate man-pages --dir $(GENERATED_DOCS_DIR)/man
 
 .PHONY: help
 help:
