@@ -1,4 +1,5 @@
 use std::fs;
+use std::io::Write;
 
 use anyhow::{Context, Result};
 use clap::{App, IntoApp, Parser};
@@ -37,7 +38,7 @@ pub struct CmdGenerateMarkdown {
 }
 
 impl crate::cmd::Command for CmdGenerateMarkdown {
-    fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let app: App = crate::Opts::into_app();
 
         // Make sure the output directory exists.
@@ -45,7 +46,7 @@ impl crate::cmd::Command for CmdGenerateMarkdown {
             fs::create_dir_all(&self.dir).with_context(|| format!("failed to create directory {}", self.dir))?;
         }
 
-        generate_markdown(self, &app, app.get_name())?;
+        generate_markdown(ctx, self, &app, app.get_name())?;
 
         Ok(())
     }
@@ -61,7 +62,7 @@ pub struct CmdGenerateManPages {
 }
 
 impl crate::cmd::Command for CmdGenerateManPages {
-    fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let app: App = crate::Opts::into_app();
 
         // Make sure the output directory exists.
@@ -69,31 +70,50 @@ impl crate::cmd::Command for CmdGenerateManPages {
             fs::create_dir_all(&self.dir).with_context(|| format!("failed to create directory {}", self.dir))?;
         }
 
-        generate_man_pages(self, &app, app.get_name());
+        generate_man_pages(ctx, self, &app, app.get_name())?;
 
         Ok(())
     }
 }
 
-fn generate_man_pages(cmd: &CmdGenerateManPages, app: &App, parent: &str) {
+fn generate_man_pages(
+    ctx: &mut crate::context::Context,
+    cmd: &CmdGenerateManPages,
+    app: &App,
+    parent: &str,
+) -> Result<()> {
     // Iterate over all the subcommands and generate the documentation.
     for s in app.get_subcommands() {
         let mut subcmd = s.clone();
         let mut p = parent.to_string();
         if !p.is_empty() {
-            p = format!("{}_{}", p, subcmd.get_name());
+            p = format!("{}-{}", p, subcmd.get_name());
         }
 
-        println!("Generating man page for `{}` -> {}.1", p.replace('_', " "), p);
+        let filename = format!("{}.1", p);
+        println!("Generating man page for `{}` -> {}", p.replace('-', " "), filename);
 
-        clap_man::generate_manpage(&mut subcmd, &mut std::io::stdout());
+        if cmd.dir.is_empty() {
+            clap_man::generate_manpage(&mut subcmd, &mut ctx.io.out);
+        } else {
+            let p = std::path::Path::new(&cmd.dir).join(filename);
+            let mut file = std::fs::File::create(p)?;
+            clap_man::generate_manpage(&mut subcmd, &mut file);
+        }
 
         // Make it recursive.
-        generate_man_pages(cmd, &subcmd, &p);
+        generate_man_pages(ctx, cmd, &subcmd, &p)?;
     }
+
+    Ok(())
 }
 
-fn generate_markdown(cmd: &CmdGenerateMarkdown, app: &App, parent: &str) -> Result<()> {
+fn generate_markdown(
+    ctx: &mut crate::context::Context,
+    cmd: &CmdGenerateMarkdown,
+    app: &App,
+    parent: &str,
+) -> Result<()> {
     // Iterate over all the subcommands and generate the documentation.
     for subcmd in app.get_subcommands() {
         let mut p = parent.to_string();
@@ -101,14 +121,21 @@ fn generate_markdown(cmd: &CmdGenerateMarkdown, app: &App, parent: &str) -> Resu
             p = format!("{}_{}", p, subcmd.get_name());
         }
 
-        println!("Generating markdown for `{}` -> {}.md", p.replace('_', " "), p);
+        let filename = format!("{}.md", p);
+        println!("Generating markdown for `{}` -> {}", p.replace('_', " "), filename);
 
         // Generate the markdown.
         let markdown = app_to_md(app, 2)?;
-        println!("{}", markdown);
+        if cmd.dir.is_empty() {
+            writeln!(ctx.io.out, "{}", markdown)?;
+        } else {
+            let p = std::path::Path::new(&cmd.dir).join(filename);
+            let mut file = std::fs::File::create(p)?;
+            file.write_all(markdown.as_bytes())?;
+        }
 
         // Make it recursive.
-        generate_markdown(cmd, subcmd, &p)?;
+        generate_markdown(ctx, cmd, subcmd, &p)?;
     }
 
     Ok(())
