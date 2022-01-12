@@ -252,6 +252,8 @@ impl crate::config::Config for FileConfig {
         additional_args.remove(0); // Remove the second argument.
 
         if expansion.starts_with('!') {
+            is_shell = true;
+
             expanded = vec![
                 "sh".to_string(),
                 "-c".to_string(),
