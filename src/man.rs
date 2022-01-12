@@ -27,40 +27,6 @@ pub fn generate_manpage<'a>(app: &mut clap::App<'a>, buf: &mut dyn Write) {
 }
 
 impl Man {
-    /// Create a new builder for man pages.
-    pub fn new() -> Self {
-        Man {
-            section: None,
-            manual: None,
-            sections: Vec::new(),
-        }
-    }
-
-    /// Add section for your man page, see [`Section`].
-    pub fn section(mut self, section: ManSection) -> Self {
-        self.section = Some(section);
-        self
-    }
-
-    /// Set manual for where the document comes from.
-    ///
-    /// The most common being `General Commands Manual`.
-    pub fn manual(mut self, manual: impl Into<String>) -> Self {
-        self.manual = Some(manual.into());
-        self
-    }
-
-    /// Add a custom section to the man pages.
-    pub fn custom_section<'a, I, C>(mut self, title: impl Into<String>, content: I) -> Self
-    where
-        I: IntoIterator<Item = &'a C>,
-        C: Troffable + 'a,
-    {
-        self.sections
-            .push((title.into(), content.into_iter().map(Troffable::render).collect()));
-        self
-    }
-
     /// Write the manpage to a buffer.
     pub fn render(self, app: &mut clap::App, buf: &mut dyn std::io::Write) {
         app._build_all();
@@ -300,7 +266,7 @@ fn short_option(opt: char) -> String {
 }
 
 fn long_option(opt: &str) -> String {
-    format!("--{}", bold(&opt.to_string()))
+    format!("--{}", bold(opt))
 }
 
 fn option_environment(opt: &clap::Arg) -> Option<String> {
