@@ -77,7 +77,8 @@ impl crate::cmd::Command for CmdGenerateManPages {
 
 fn generate_man_pages(cmd: &CmdGenerateManPages, app: &App, parent: &str) {
     // Iterate over all the subcommands and generate the documentation.
-    for subcmd in app.get_subcommands() {
+    for s in app.get_subcommands() {
+        let mut subcmd = s.clone();
         let mut p = parent.to_string();
         if !p.is_empty() {
             p = format!("{}_{}", p, subcmd.get_name());
@@ -85,8 +86,10 @@ fn generate_man_pages(cmd: &CmdGenerateManPages, app: &App, parent: &str) {
 
         println!("Generating man page for `{}` -> {}.1", p.replace('_', " "), p);
 
+        clap_man::generate_manpage(&mut subcmd, &mut std::io::stdout());
+
         // Make it recursive.
-        generate_man_pages(cmd, subcmd, &p);
+        generate_man_pages(cmd, &subcmd, &p);
     }
 }
 
@@ -113,8 +116,8 @@ fn generate_markdown(cmd: &CmdGenerateMarkdown, app: &App, parent: &str) -> Resu
 
 struct MarkdownDocument<'a>(Vec<pulldown_cmark::Event<'a>>);
 
-impl<'a> MarkdownDocument<'a> {
-    fn header(&mut self, text: &'a str, level: pulldown_cmark::HeadingLevel) {
+impl MarkdownDocument<'_> {
+    fn header(&mut self, text: String, level: pulldown_cmark::HeadingLevel) {
         self.0.push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::Heading(
             level,
             None,
@@ -128,7 +131,7 @@ impl<'a> MarkdownDocument<'a> {
         )));
     }
 
-    fn paragraph(&mut self, text: &'a str) {
+    fn paragraph(&mut self, text: String) {
         self.0
             .push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::Paragraph));
         self.0.push(pulldown_cmark::Event::Text(text.into()));
@@ -148,34 +151,26 @@ fn to_heading_level(item: i32) -> pulldown_cmark::HeadingLevel {
     }
 }
 
-fn do_markdown<'a>(doc: &mut MarkdownDocument<'a>, app: &'a App, level: i32, skip_header: bool) {
+fn do_markdown(doc: &mut MarkdownDocument, app: &App, level: i32, skip_header: bool) {
     if !skip_header {
-        doc.header(app.get_name(), to_heading_level(level));
+        doc.header(app.get_name().to_string(), to_heading_level(level));
     }
 
     if let Some(about) = app.get_about() {
-        doc.paragraph(about);
+        doc.paragraph(about.to_string());
     }
 
-    /*
-     * TODO: fix
-     * if let Some(author) = app.author {
+    if let Some(author) = app.get_author() {
         doc.paragraph(format!("Author: {}", author));
     }
 
-    if let Some(version) = app.version_short {
-        let msg = if let Some(msg) = app.version_message {
-            format!(" ({})", msg)
-        } else {
-            "".into()
-        };
-        doc.paragraph(format!("Version: {}{}", version, msg));
+    if let Some(version) = app.get_version() {
+        doc.paragraph(format!("Version: {}", version));
     }
-    */
 
     let args = app.get_arguments().collect::<Vec<&clap::Arg>>();
     if !args.is_empty() {
-        doc.paragraph("Arguments:");
+        doc.paragraph("Arguments:".to_string());
         doc.0
             .push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::List(None)));
 
@@ -228,7 +223,7 @@ fn do_markdown<'a>(doc: &mut MarkdownDocument<'a>, app: &'a App, level: i32, ski
     }
 
     if app.has_subcommands() {
-        doc.header("Subcommands", to_heading_level(level + 1));
+        doc.header("Subcommands".to_string(), to_heading_level(level + 1));
 
         for cmd in app.get_subcommands() {
             do_markdown(doc, cmd, level + 2, false);

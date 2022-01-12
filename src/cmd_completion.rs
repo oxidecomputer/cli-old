@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{App, IntoApp, Parser};
-use clap_complete::{generate, Shell};
+use clap_generate::{generate, Shell};
 
 /// Generate shell completion scripts.
 ///
@@ -72,6 +72,8 @@ mod test {
     use clap::ArgEnum;
 
     use crate::cmd::Command;
+
+    use pretty_assertions::assert_eq;
 
     pub struct TestItem {
         name: String,

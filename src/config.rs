@@ -162,6 +162,7 @@ pub fn new_blank_config() -> Result<impl Config> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_file_config_set_no_host() {

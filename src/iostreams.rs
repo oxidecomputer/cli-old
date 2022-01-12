@@ -396,6 +396,7 @@ fn tty_size() -> Result<(i32, i32)> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     pub struct TestItem {
         name: String,

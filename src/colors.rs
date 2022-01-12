@@ -123,6 +123,7 @@ impl ColorScheme {
 
 #[cfg(test)]
 mod test {
+    use pretty_assertions::assert_eq;
     use test_context::{test_context, TestContext};
 
     use super::*;

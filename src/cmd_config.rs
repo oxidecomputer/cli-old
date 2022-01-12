@@ -137,6 +137,8 @@ impl crate::cmd::Command for CmdConfigList {
 
 #[cfg(test)]
 mod test {
+    use pretty_assertions::assert_eq;
+
     use crate::cmd::Command;
 
     pub struct TestItem {

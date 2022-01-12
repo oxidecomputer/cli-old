@@ -52,6 +52,7 @@ impl AliasConfig<'_> {
 
 #[cfg(test)]
 mod test {
+    use pretty_assertions::assert_eq;
 
     use crate::config::Config;
 
