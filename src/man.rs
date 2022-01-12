@@ -62,6 +62,19 @@ impl Man {
             page = page.section(&title, &[section]);
         }
 
+        // Check if the command has a parent, for the see also section.
+        let mut split = title.split(' ').collect::<Vec<&str>>();
+        if title != root.get_name() {
+            // Get the parent command.
+            // Iterate if more than one, thats why we have a list.
+            if split.len() > 1 {
+                // Remove the last element, since that is the command name.
+                split.pop();
+
+                page = page.section("See also", &see_also(split));
+            }
+        }
+
         if app_has_version(root) {
             page = page.section("Version", &[version(root)]);
         }
@@ -239,6 +252,22 @@ fn subcommands(app: &clap::App, section: i8, title: &str) -> Vec<String> {
 
 fn version(app: &clap::App) -> String {
     format!("v{}", app.get_long_version().or_else(|| app.get_version()).unwrap())
+}
+
+fn see_also(split: Vec<&str>) -> Vec<String> {
+    let mut result: Vec<String> = vec![];
+    for (i, _) in split.iter().enumerate() {
+        let mut p = split.clone();
+        p.truncate(i + 1);
+        let parent = p.join("-");
+
+        // TODO: we could print the description here as well, instead of empty.
+        let empty: Vec<String> = vec![];
+
+        result.push(list(&[bold(&&format!("{}(1)", parent))], &empty));
+    }
+
+    result
 }
 
 fn after_help(app: &clap::App) -> Vec<String> {

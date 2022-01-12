@@ -132,7 +132,7 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
 
             for (i, _) in split.iter().enumerate() {
                 if i < 1 {
-                    // We don't care about the first or second commands.
+                    // We don't care about the first command.
                     continue;
                 }
 

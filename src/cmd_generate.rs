@@ -124,6 +124,7 @@ impl crate::cmd::Command for CmdGenerateManPages {
 }
 
 impl CmdGenerateManPages {
+    // TODO: having the root like this sucks, clean this up.
     fn generate(&self, ctx: &mut crate::context::Context, app: &App, parent: &str, root: &clap::App) -> Result<()> {
         let mut p = parent.to_string();
         if !p.is_empty() {
@@ -155,8 +156,40 @@ impl CmdGenerateManPages {
 }
 
 #[cfg(test)]
+fn test_app() -> clap::App<'static> {
+    // Define our app.
+    clap::App::new("git")
+        .about("A fictional versioning CLI")
+        .setting(clap::AppSettings::SubcommandRequiredElseHelp)
+        .setting(clap::AppSettings::AllowExternalSubcommands)
+        .setting(clap::AppSettings::AllowInvalidUtf8ForExternalSubcommands)
+        .subcommand(
+            App::new("clone")
+                .about("Clones repos")
+                .arg(clap::arg!(<REMOTE> "The remote to clone"))
+                .setting(clap::AppSettings::ArgRequiredElseHelp),
+        )
+        .subcommand(
+            clap::App::new("push")
+                .about("pushes things")
+                .arg(clap::arg!(<REMOTE> "The remote to target"))
+                .setting(clap::AppSettings::ArgRequiredElseHelp),
+        )
+        .subcommand(
+            clap::App::new("add")
+                .about("adds things")
+                .setting(clap::AppSettings::ArgRequiredElseHelp)
+                .arg(clap::arg!(<PATH> ... "Stuff to add").allow_invalid_utf8(true))
+                .subcommand(
+                    clap::App::new("new")
+                        .about("subcommand for adding new stuff")
+                        .subcommand(clap::App::new("foo").about("sub subcommand")),
+                ),
+        )
+}
+
+#[cfg(test)]
 mod test {
-    use clap::{arg, App, AppSettings};
     use pretty_assertions::assert_eq;
 
     use crate::cmd::Command;
@@ -192,35 +225,7 @@ mod test {
 
         let cmd = crate::cmd_generate::CmdGenerateMarkdown { dir: "".to_string() };
 
-        // Define our app.
-        let app = App::new("git")
-            .about("A fictional versioning CLI")
-            .setting(AppSettings::SubcommandRequiredElseHelp)
-            .setting(AppSettings::AllowExternalSubcommands)
-            .setting(AppSettings::AllowInvalidUtf8ForExternalSubcommands)
-            .subcommand(
-                App::new("clone")
-                    .about("Clones repos")
-                    .arg(arg!(<REMOTE> "The remote to clone"))
-                    .setting(AppSettings::ArgRequiredElseHelp),
-            )
-            .subcommand(
-                App::new("push")
-                    .about("pushes things")
-                    .arg(arg!(<REMOTE> "The remote to target"))
-                    .setting(AppSettings::ArgRequiredElseHelp),
-            )
-            .subcommand(
-                App::new("add")
-                    .about("adds things")
-                    .setting(AppSettings::ArgRequiredElseHelp)
-                    .arg(arg!(<PATH> ... "Stuff to add").allow_invalid_utf8(true))
-                    .subcommand(
-                        App::new("new")
-                            .about("subcommand for adding new stuff")
-                            .subcommand(App::new("foo").about("sub subcommand")),
-                    ),
-            );
+        let app = crate::cmd_generate::test_app();
 
         cmd.generate(&mut ctx, &app, "").unwrap();
 
@@ -378,6 +383,33 @@ sub subcommand
 
         let stdout = std::fs::read_to_string(stdout_path).unwrap();
         let stderr = std::fs::read_to_string(stderr_path).unwrap();
+
+        assert_eq!(stdout, expected);
+        assert_eq!(stderr, "");
+    }
+
+    #[test]
+    fn test_generate_man_pages_sub_subcommands() {
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
+        let mut ctx = crate::context::Context { config: &mut c, io };
+
+        let cmd = crate::cmd_generate::CmdGenerateManPages { dir: "".to_string() };
+
+        // Define our app.
+        let app = crate::cmd_generate::test_app();
+
+        cmd.generate(&mut ctx, &app, "", &app).unwrap();
+
+        let expected = r#"
+"#;
+
+        let stdout = std::fs::read_to_string(stdout_path).unwrap();
+        let stderr = std::fs::read_to_string(stderr_path).unwrap();
+
+        println!("{}", stdout);
 
         assert_eq!(stdout, expected);
         assert_eq!(stderr, "");
