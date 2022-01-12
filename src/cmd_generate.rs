@@ -67,6 +67,7 @@ impl CmdGenerateMarkdown {
             // Generate the markdown.
             let markdown = app_to_md(app, 2)?;
             if self.dir.is_empty() {
+                // TODO: glamorize markdown to the shell.
                 writeln!(ctx.io.out, "{}", markdown)?;
             } else {
                 let p = std::path::Path::new(&self.dir).join(filename);

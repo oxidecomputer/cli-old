@@ -4,3 +4,5 @@
 /cross
 # For the ci when we cross compile.
 /osxcross
+# Where our generated docs will go.
+/generated_docs

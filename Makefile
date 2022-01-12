@@ -81,6 +81,21 @@ clean: ## Cleanup any build binaries or packages.
 	@echo "+ $@"
 	$(RM) -r $(BUILDDIR)
 
+build: Cargo.toml $(wildcard src/*.rs) ## Build the Rust crate.
+	cargo build
+
+.PHONY: gen-docs
+gen-docs: gen-md gen-man ## Generate all the docs.
+
+.PHONY: gen-md
+gen-md: build  ## Generate the markdown documentation.
+	cargo build
+	$(CURDIR)/target/debug/oxide generate markdown --dir generated_docs/md
+
+.PHONY: gen-man
+gen-man: build ## Generate the man pages.
+	$(CURDIR)/target/debug/oxide generate man-pages --dir generated_docs/man
+
 .PHONY: help
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | sed 's/^[^:]*://g' | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
