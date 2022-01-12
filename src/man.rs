@@ -114,7 +114,7 @@ fn about(app: &clap::App, title: &str) -> String {
     let t = title.replace(' ', "-");
     match app.get_about().or_else(|| app.get_long_about()) {
         Some(about) => format!("{} - {}", t, about),
-        None => t.to_string(),
+        None => t,
     }
 }
 
@@ -264,7 +264,7 @@ fn see_also(split: Vec<&str>) -> Vec<String> {
         // TODO: we could print the description here as well, instead of empty.
         let empty: Vec<String> = vec![];
 
-        result.push(list(&[bold(&&format!("{}(1)", parent))], &empty));
+        result.push(list(&[bold(&format!("{}(1)", parent))], &empty));
     }
 
     result
