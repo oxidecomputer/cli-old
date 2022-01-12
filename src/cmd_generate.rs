@@ -37,8 +37,8 @@ pub struct CmdGenerateMarkdown {
 }
 
 impl crate::cmd::Command for CmdGenerateMarkdown {
-    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let mut app: App = crate::Opts::into_app();
+    fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        let app: App = crate::Opts::into_app();
 
         // Make sure the output directory exists.
         if !self.dir.is_empty() {
@@ -61,8 +61,8 @@ pub struct CmdGenerateManPages {
 }
 
 impl crate::cmd::Command for CmdGenerateManPages {
-    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let mut app: App = crate::Opts::into_app();
+    fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        let app: App = crate::Opts::into_app();
 
         // Make sure the output directory exists.
         if !self.dir.is_empty() {
@@ -189,12 +189,12 @@ fn do_markdown<'a>(doc: &mut MarkdownDocument<'a>, app: &'a App, level: i32, ski
 
             let mut def = String::new();
             if let Some(short) = arg.get_short() {
-                def.push_str("-");
+                def.push('-');
                 def.push(short);
             }
             if let Some(long) = arg.get_long() {
                 if arg.get_short().is_some() {
-                    def.push_str("/");
+                    def.push('/');
                 }
                 def.push_str("--");
                 def.push_str(long);
@@ -203,7 +203,7 @@ fn do_markdown<'a>(doc: &mut MarkdownDocument<'a>, app: &'a App, level: i32, ski
             if arg.is_set(clap::ArgSettings::TakesValue) {
                 def.push_str("=<");
                 def.push_str(arg.get_name());
-                def.push_str(">");
+                def.push('>');
             }
 
             doc.0.push(pulldown_cmark::Event::Text(def.into()));
@@ -228,7 +228,7 @@ fn do_markdown<'a>(doc: &mut MarkdownDocument<'a>, app: &'a App, level: i32, ski
     }
 
     if app.has_subcommands() {
-        doc.header("Subcommands".into(), to_heading_level(level + 1));
+        doc.header("Subcommands", to_heading_level(level + 1));
 
         for cmd in app.get_subcommands() {
             do_markdown(doc, cmd, level + 2, false);
