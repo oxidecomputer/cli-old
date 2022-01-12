@@ -21,16 +21,14 @@ impl Default for Man {
 }
 
 /// Generate manpage for your application using the most common default values.
-pub fn generate_manpage<'a>(app: &mut clap::App<'a>, buf: &mut dyn Write) {
+pub fn generate_manpage<'a>(app: &clap::App<'a>, buf: &mut dyn Write) {
     let man = Man::default();
     man.render(app, buf);
 }
 
 impl Man {
     /// Write the manpage to a buffer.
-    pub fn render(self, app: &mut clap::App, buf: &mut dyn std::io::Write) {
-        app._build_all();
-
+    pub fn render(self, app: &clap::App, buf: &mut dyn std::io::Write) {
         let mut page = Roff::new(app.get_name(), self.get_section())
             .source(&format!("{} {}", app.get_name(), app.get_version().unwrap_or_default()))
             .section("Name", [&about(app)])

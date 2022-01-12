@@ -37,7 +37,8 @@ pub struct CmdGenerateMarkdown {
 
 impl crate::cmd::Command for CmdGenerateMarkdown {
     fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let app: App = crate::Opts::into_app();
+        let mut app: App = crate::Opts::into_app();
+        app._build_all();
 
         // Make sure the output directory exists.
         if !self.dir.is_empty() {
@@ -108,7 +109,8 @@ pub struct CmdGenerateManPages {
 
 impl crate::cmd::Command for CmdGenerateManPages {
     fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let app: App = crate::Opts::into_app();
+        let mut app: App = crate::Opts::into_app();
+        app._build_all();
 
         // Make sure the output directory exists.
         if !self.dir.is_empty() {
@@ -123,32 +125,31 @@ impl crate::cmd::Command for CmdGenerateManPages {
 
 impl CmdGenerateManPages {
     fn generate(&self, ctx: &mut crate::context::Context, app: &App, parent: &str) -> Result<()> {
+        let mut p = parent.to_string();
+        if !p.is_empty() {
+            p = format!("{}-{}", p, app.get_name());
+        }
+
+        let filename = format!("{}.1", p);
+        writeln!(
+            ctx.io.out,
+            "Generating man page for `{}` -> {}",
+            p.replace('-', " "),
+            filename
+        )?;
+
+        if self.dir.is_empty() {
+            crate::man::generate_manpage(app, &mut ctx.io.out);
+        } else {
+            let p = std::path::Path::new(&self.dir).join(filename);
+            let mut file = std::fs::File::create(p)?;
+            crate::man::generate_manpage(app, &mut file);
+        }
+
         // Iterate over all the subcommands and generate the documentation.
-        for s in app.get_subcommands() {
-            let mut subcmd = s.clone();
-            let mut p = parent.to_string();
-            if !p.is_empty() {
-                p = format!("{}-{}", p, subcmd.get_name());
-            }
-
-            let filename = format!("{}.1", p);
-            writeln!(
-                ctx.io.out,
-                "Generating man page for `{}` -> {}",
-                p.replace('-', " "),
-                filename
-            )?;
-
-            if self.dir.is_empty() {
-                crate::man::generate_manpage(&mut subcmd, &mut ctx.io.out);
-            } else {
-                let p = std::path::Path::new(&self.dir).join(filename);
-                let mut file = std::fs::File::create(p)?;
-                crate::man::generate_manpage(&mut subcmd, &mut file);
-            }
-
+        for subcmd in app.get_subcommands() {
             // Make it recursive.
-            self.generate(ctx, &subcmd, &p)?;
+            self.generate(ctx, subcmd, &p)?;
         }
 
         Ok(())
