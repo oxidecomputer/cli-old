@@ -46,7 +46,37 @@ impl crate::cmd::Command for CmdGenerateMarkdown {
             fs::create_dir_all(&self.dir).with_context(|| format!("failed to create directory {}", self.dir))?;
         }
 
-        generate_markdown(ctx, self, &app, app.get_name())?;
+        self.generate(ctx, &app, app.get_name())?;
+
+        Ok(())
+    }
+}
+
+impl CmdGenerateMarkdown {
+    fn generate(&self, ctx: &mut crate::context::Context, app: &App, parent: &str) -> Result<()> {
+        // Iterate over all the subcommands and generate the documentation.
+        for subcmd in app.get_subcommands() {
+            let mut p = parent.to_string();
+            if !p.is_empty() {
+                p = format!("{}_{}", p, subcmd.get_name());
+            }
+
+            let filename = format!("{}.md", p);
+            println!("Generating markdown for `{}` -> {}", p.replace('_', " "), filename);
+
+            // Generate the markdown.
+            let markdown = app_to_md(app, 2)?;
+            if self.dir.is_empty() {
+                writeln!(ctx.io.out, "{}", markdown)?;
+            } else {
+                let p = std::path::Path::new(&self.dir).join(filename);
+                let mut file = std::fs::File::create(p)?;
+                file.write_all(markdown.as_bytes())?;
+            }
+
+            // Make it recursive.
+            self.generate(ctx, subcmd, &p)?;
+        }
 
         Ok(())
     }
@@ -70,75 +100,39 @@ impl crate::cmd::Command for CmdGenerateManPages {
             fs::create_dir_all(&self.dir).with_context(|| format!("failed to create directory {}", self.dir))?;
         }
 
-        generate_man_pages(ctx, self, &app, app.get_name())?;
+        self.generate(ctx, &app, app.get_name())?;
 
         Ok(())
     }
 }
 
-fn generate_man_pages(
-    ctx: &mut crate::context::Context,
-    cmd: &CmdGenerateManPages,
-    app: &App,
-    parent: &str,
-) -> Result<()> {
-    // Iterate over all the subcommands and generate the documentation.
-    for s in app.get_subcommands() {
-        let mut subcmd = s.clone();
-        let mut p = parent.to_string();
-        if !p.is_empty() {
-            p = format!("{}-{}", p, subcmd.get_name());
+impl CmdGenerateManPages {
+    fn generate(&self, ctx: &mut crate::context::Context, app: &App, parent: &str) -> Result<()> {
+        // Iterate over all the subcommands and generate the documentation.
+        for s in app.get_subcommands() {
+            let mut subcmd = s.clone();
+            let mut p = parent.to_string();
+            if !p.is_empty() {
+                p = format!("{}-{}", p, subcmd.get_name());
+            }
+
+            let filename = format!("{}.1", p);
+            println!("Generating man page for `{}` -> {}", p.replace('-', " "), filename);
+
+            if self.dir.is_empty() {
+                clap_man::generate_manpage(&mut subcmd, &mut ctx.io.out);
+            } else {
+                let p = std::path::Path::new(&self.dir).join(filename);
+                let mut file = std::fs::File::create(p)?;
+                clap_man::generate_manpage(&mut subcmd, &mut file);
+            }
+
+            // Make it recursive.
+            self.generate(ctx, &subcmd, &p)?;
         }
 
-        let filename = format!("{}.1", p);
-        println!("Generating man page for `{}` -> {}", p.replace('-', " "), filename);
-
-        if cmd.dir.is_empty() {
-            clap_man::generate_manpage(&mut subcmd, &mut ctx.io.out);
-        } else {
-            let p = std::path::Path::new(&cmd.dir).join(filename);
-            let mut file = std::fs::File::create(p)?;
-            clap_man::generate_manpage(&mut subcmd, &mut file);
-        }
-
-        // Make it recursive.
-        generate_man_pages(ctx, cmd, &subcmd, &p)?;
+        Ok(())
     }
-
-    Ok(())
-}
-
-fn generate_markdown(
-    ctx: &mut crate::context::Context,
-    cmd: &CmdGenerateMarkdown,
-    app: &App,
-    parent: &str,
-) -> Result<()> {
-    // Iterate over all the subcommands and generate the documentation.
-    for subcmd in app.get_subcommands() {
-        let mut p = parent.to_string();
-        if !p.is_empty() {
-            p = format!("{}_{}", p, subcmd.get_name());
-        }
-
-        let filename = format!("{}.md", p);
-        println!("Generating markdown for `{}` -> {}", p.replace('_', " "), filename);
-
-        // Generate the markdown.
-        let markdown = app_to_md(app, 2)?;
-        if cmd.dir.is_empty() {
-            writeln!(ctx.io.out, "{}", markdown)?;
-        } else {
-            let p = std::path::Path::new(&cmd.dir).join(filename);
-            let mut file = std::fs::File::create(p)?;
-            file.write_all(markdown.as_bytes())?;
-        }
-
-        // Make it recursive.
-        generate_markdown(ctx, cmd, subcmd, &p)?;
-    }
-
-    Ok(())
 }
 
 struct MarkdownDocument<'a>(Vec<pulldown_cmark::Event<'a>>);
