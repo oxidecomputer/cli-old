@@ -265,15 +265,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "clap_man"
-version = "0.1.0"
-source = "git+https://github.com/sondr3/clap?branch=generate-man#2f6f21c26ae37a5b2bd446f5f7416e1c594f8fe7"
-dependencies = [
- "clap",
- "roff",
-]
-
-[[package]]
 name = "combine"
 version = "4.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -748,13 +739,13 @@ dependencies = [
  "atty",
  "clap",
  "clap_generate",
- "clap_man",
  "dirs",
  "heck 0.4.0",
  "pretty_assertions",
  "pulldown-cmark",
  "pulldown-cmark-to-cmark",
  "regex",
+ "roff",
  "shlex",
  "tabwriter",
  "tempfile",

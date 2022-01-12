@@ -22,6 +22,7 @@ mod config_from_file;
 mod config_map;
 mod context;
 mod iostreams;
+mod man;
 mod markdown;
 
 use clap::Parser;

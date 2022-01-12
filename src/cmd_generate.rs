@@ -140,11 +140,11 @@ impl CmdGenerateManPages {
             )?;
 
             if self.dir.is_empty() {
-                clap_man::generate_manpage(&mut subcmd, &mut ctx.io.out);
+                crate::man::generate_manpage(&mut subcmd, &mut ctx.io.out);
             } else {
                 let p = std::path::Path::new(&self.dir).join(filename);
                 let mut file = std::fs::File::create(p)?;
-                clap_man::generate_manpage(&mut subcmd, &mut file);
+                crate::man::generate_manpage(&mut subcmd, &mut file);
             }
 
             // Make it recursive.
