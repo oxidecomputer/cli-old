@@ -25,6 +25,15 @@ impl MarkdownDocument<'_> {
         self.0.push(pulldown_cmark::Event::Text(text.into()));
         self.0.push(pulldown_cmark::Event::End(pulldown_cmark::Tag::Paragraph));
     }
+
+    fn link_in_list(&mut self, text: String, url: String) {
+        let link = pulldown_cmark::Tag::Link(pulldown_cmark::LinkType::Inline, url.into(), text.into());
+
+        self.0.push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::Item));
+        self.0.push(pulldown_cmark::Event::Start(link.clone()));
+        self.0.push(pulldown_cmark::Event::End(link));
+        self.0.push(pulldown_cmark::Event::End(pulldown_cmark::Tag::Item));
+    }
 }
 
 fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
@@ -44,18 +53,10 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
             .push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::List(None)));
 
         for cmd in app.get_subcommands() {
-            let link = format!(
-                r#"[{} {}](./{}_{})"#,
-                title,
-                cmd.get_name(),
-                title.replace(' ', "_"),
-                cmd.get_name()
+            doc.link_in_list(
+                format!("{} {}", title, cmd.get_name()),
+                format!("./{}_{}", title.replace(' ', "_"), cmd.get_name()),
             );
-
-            doc.0.push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::Item));
-            // TODO: make the link a real link type.
-            doc.0.push(pulldown_cmark::Event::Text(link.into()));
-            doc.0.push(pulldown_cmark::Event::End(pulldown_cmark::Tag::Item));
         }
 
         doc.0.push(pulldown_cmark::Event::End(pulldown_cmark::Tag::List(None)));
@@ -112,14 +113,7 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
         // Get the parent command.
         // TODO: iterate if more than one, thats why we have a list.
         let parent = title.trim_end_matches(app.get_name()).trim();
-        let link = format!(r#"[{}](./{})"#, parent, parent.replace(' ', "_"));
-
-        doc.0.push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::Item));
-        // TODO: make the link a real link type.
-        doc.0.push(pulldown_cmark::Event::Text(link.into()));
-        doc.0.push(pulldown_cmark::Event::End(pulldown_cmark::Tag::Item));
-
-        doc.0.push(pulldown_cmark::Event::End(pulldown_cmark::Tag::List(None)));
+        doc.link_in_list(parent.into(), format!("./{}", parent.replace(' ', "_")));
     }
 }
 
