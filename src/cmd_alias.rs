@@ -301,7 +301,7 @@ mod test {
             TestItem {
                 name: "list all".to_string(),
                 cmd: crate::cmd_alias::SubCommand::List(crate::cmd_alias::CmdAliasList {}),
-                want_out: "\"!config list\"\n\n".to_string(),
+                want_out: "\"!config list\"\n".to_string(),
                 want_err: "".to_string(),
             },
             TestItem {
