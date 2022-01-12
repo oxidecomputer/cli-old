@@ -389,6 +389,26 @@ sub subcommand
     }
 
     #[test]
+    fn test_generate_man_pages() {
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
+        let mut ctx = crate::context::Context { config: &mut c, io };
+
+        let cmd = crate::cmd_generate::CmdGenerateManPages { dir: "".to_string() };
+
+        cmd.run(&mut ctx).unwrap();
+
+        let stdout = std::fs::read_to_string(stdout_path).unwrap();
+        let stderr = std::fs::read_to_string(stderr_path).unwrap();
+
+        assert!(stdout.contains("oxide(1)"), "");
+
+        assert_eq!(stderr, "");
+    }
+
+    #[test]
     fn test_generate_man_pages_sub_subcommands() {
         let mut config = crate::config::new_blank_config().unwrap();
         let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
