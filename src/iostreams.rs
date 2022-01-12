@@ -383,7 +383,7 @@ fn test_tty_size() -> Result<(i32, i32)> {
     Err(anyhow::anyhow!("tty_size not implemented in tests"))
 }
 
-// tty_sdize measures the size of the controlling terminal for the current process.
+// tty_size measures the size of the controlling terminal for the current process.
 fn tty_size() -> Result<(i32, i32)> {
     let size = terminal_size();
     if let Some((Width(w), Height(h))) = size {
