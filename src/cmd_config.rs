@@ -122,7 +122,11 @@ impl crate::cmd::Command for CmdConfigList {
             match ctx.config.get(&host, &option.key) {
                 Ok(value) => writeln!(ctx.io.out, "{}={}", option.key, value)?,
                 Err(err) => {
-                    bail!("{}", err);
+                    if host.is_empty() {
+                        // Only bail if the host is empty, since some hosts may not have
+                        // all the options.
+                        bail!("{}", err);
+                    }
                 }
             }
         }
@@ -145,6 +149,12 @@ mod test {
     #[test]
     fn test_cmd_config() {
         let tests: Vec<TestItem> = vec![
+            TestItem {
+                name: "list empty".to_string(),
+                cmd: crate::cmd_config::SubCommand::List(crate::cmd_config::CmdConfigList { host: "".to_string() }),
+                want_out: "editor=\nprompt=enabled\npager=\nbrowser=\n".to_string(),
+                want_err: "".to_string(),
+            },
             TestItem {
                 name: "set a key unknown".to_string(),
                 cmd: crate::cmd_config::SubCommand::Set(crate::cmd_config::CmdConfigSet {
@@ -202,6 +212,12 @@ mod test {
                 want_out: "".to_string(),
                 want_err: "Key 'blah' not found".to_string(),
             },
+            TestItem {
+                name: "list all".to_string(),
+                cmd: crate::cmd_config::SubCommand::List(crate::cmd_config::CmdConfigList { host: "".to_string() }),
+                want_out: "prompt=disabled\n".to_string(),
+                want_err: "".to_string(),
+            },
         ];
 
         let mut config = crate::config::new_blank_config().unwrap();
@@ -217,7 +233,7 @@ mod test {
                     let stdout = std::fs::read_to_string(stdout_path).unwrap();
                     let stderr = std::fs::read_to_string(stderr_path).unwrap();
                     assert_eq!(stdout, t.want_out, "test {}", t.name);
-                    assert_eq!(stderr, t.want_err, "test {}", t.name);
+                    assert!(stderr.is_empty(), "test {}", t.name);
                 }
                 Err(err) => {
                     let stdout = std::fs::read_to_string(stdout_path).unwrap();
