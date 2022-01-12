@@ -64,7 +64,7 @@ jobs:
           git rebase origin/main || exit 0
           export NEW_BRANCH="update-docs-${VERSION}"
           git checkout -b "$NEW_BRANCH"
-          git push origin "$NEW_BRANCH"
+          git push -f origin "$NEW_BRANCH"
           gh pr create --title "Update CLI docs for ${VERSION}" \
               --body "Updating the generated cli docs" \
               --head "$NEW_BRANCH" \
