@@ -50,6 +50,7 @@ use clap_complete::{generate, Shell};
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdCompletion {
+    /// Shell type: {bash|zsh|fish|powershell}
     #[clap(short, long, default_value = "bash")]
     pub shell: Shell,
 }

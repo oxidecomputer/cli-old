@@ -1,10 +1,18 @@
 //! The Oxide command line tool.
 #![deny(missing_docs)]
 
+// Always export the cmd_* modules as public so that it tells us when we are
+// missing docs.
+
 mod cmd;
-mod cmd_alias;
-mod cmd_completion;
-mod cmd_config;
+/// The alias command.
+pub mod cmd_alias;
+/// The completion command.
+pub mod cmd_completion;
+/// The config command.
+pub mod cmd_config;
+/// The generate command.
+pub mod cmd_generate;
 mod colors;
 mod config;
 mod config_alias;
@@ -61,7 +69,7 @@ use clap::Parser;
 #[clap(version = clap::crate_version!(), author = clap::crate_authors!("\n"))]
 struct Opts {
     /// Print debug info
-    #[clap(short, long)]
+    #[clap(short, long, global = true)]
     debug: bool,
 
     #[clap(subcommand)]
@@ -73,6 +81,7 @@ enum SubCommand {
     Alias(cmd_alias::CmdAlias),
     Completion(cmd_completion::CmdCompletion),
     Config(cmd_config::CmdConfig),
+    Generate(cmd_generate::CmdGenerate),
 }
 
 fn main() {
@@ -88,6 +97,7 @@ fn main() {
         SubCommand::Alias(cmd) => run_cmd(&cmd, &mut ctx),
         SubCommand::Completion(cmd) => run_cmd(&cmd, &mut ctx),
         SubCommand::Config(cmd) => run_cmd(&cmd, &mut ctx),
+        SubCommand::Generate(cmd) => run_cmd(&cmd, &mut ctx),
     }
 }
 
