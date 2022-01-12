@@ -226,7 +226,7 @@ impl crate::config::Config for FileConfig {
         Ok(())
     }
 
-    fn expand_alias(&mut self, args: Vec<String>, find_sh_fn: fn() -> Result<String>) -> Result<(Vec<String>, bool)> {
+    fn expand_alias(&mut self, args: Vec<String>) -> Result<(Vec<String>, bool)> {
         let mut is_shell = false;
 
         if args.len() < 2 {
@@ -252,12 +252,11 @@ impl crate::config::Config for FileConfig {
         additional_args.remove(0); // Remove the second argument.
 
         if expansion.starts_with('!') {
-            is_shell = true;
-
-            // Find the shell.
-            let sh_path = find_sh_fn()?;
-
-            expanded = vec![sh_path, "-c".to_string(), expansion.trim_start_matches('!').to_string()];
+            expanded = vec![
+                "sh".to_string(),
+                "-c".to_string(),
+                expansion.trim_start_matches('!').to_string(),
+            ];
 
             if !additional_args.is_empty() {
                 // Add the additional arguments.
