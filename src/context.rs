@@ -29,6 +29,13 @@ impl Context<'_> {
             }
         }
 
+        // Check if we should force use the tty.
+        if let Ok(oxide_force_tty) = std::env::var("OXIDE_FORCE_TTY") {
+            if !oxide_force_tty.is_empty() {
+                io.force_terminal(&oxide_force_tty);
+            }
+        }
+
         Context { config, io }
     }
 }
@@ -41,12 +48,14 @@ mod test {
 
     struct TContext {
         orig_oxide_pager_env: Result<String, std::env::VarError>,
+        orig_oxide_force_tty_env: Result<String, std::env::VarError>,
     }
 
     impl TestContext for TContext {
         fn setup() -> TContext {
             TContext {
                 orig_oxide_pager_env: std::env::var("OXIDE_PAGER"),
+                orig_oxide_force_tty_env: std::env::var("OXIDE_FORCE_TTY"),
             }
         }
 
@@ -57,16 +66,24 @@ mod test {
             } else {
                 std::env::remove_var("OXIDE_PAGER");
             }
+
+            if let Ok(ref val) = self.orig_oxide_force_tty_env {
+                std::env::set_var("OXIDE_FORCE_TTY", val);
+            } else {
+                std::env::remove_var("OXIDE_FORCE_TTY");
+            }
         }
     }
 
     pub struct TestItem {
         name: String,
         oxide_pager_env: String,
+        oxide_force_tty_env: String,
         pager: String,
         prompt: String,
         want_pager: String,
         want_prompt: String,
+        want_terminal_width_override: i32,
     }
 
     #[test_context(TContext)]
@@ -76,34 +93,52 @@ mod test {
             TestItem {
                 name: "OXIDE_PAGER env".to_string(),
                 oxide_pager_env: "more".to_string(),
+                oxide_force_tty_env: "".to_string(),
                 prompt: "".to_string(),
                 pager: "".to_string(),
                 want_pager: "more".to_string(),
                 want_prompt: "enabled".to_string(),
+                want_terminal_width_override: 0,
             },
             TestItem {
                 name: "OXIDE_PAGER env override".to_string(),
                 oxide_pager_env: "more".to_string(),
+                oxide_force_tty_env: "".to_string(),
                 prompt: "".to_string(),
                 pager: "less".to_string(),
                 want_pager: "more".to_string(),
                 want_prompt: "enabled".to_string(),
+                want_terminal_width_override: 0,
             },
             TestItem {
                 name: "config pager".to_string(),
                 oxide_pager_env: "".to_string(),
+                oxide_force_tty_env: "".to_string(),
                 prompt: "".to_string(),
                 pager: "less".to_string(),
                 want_pager: "less".to_string(),
                 want_prompt: "enabled".to_string(),
+                want_terminal_width_override: 0,
             },
             TestItem {
                 name: "config prompt".to_string(),
                 oxide_pager_env: "".to_string(),
+                oxide_force_tty_env: "".to_string(),
                 prompt: "disabled".to_string(),
                 pager: "less".to_string(),
                 want_pager: "less".to_string(),
                 want_prompt: "disabled".to_string(),
+                want_terminal_width_override: 0,
+            },
+            TestItem {
+                name: "OXIDE_FORCE_TTY env".to_string(),
+                oxide_pager_env: "".to_string(),
+                oxide_force_tty_env: "120".to_string(),
+                prompt: "disabled".to_string(),
+                pager: "less".to_string(),
+                want_pager: "less".to_string(),
+                want_prompt: "disabled".to_string(),
+                want_terminal_width_override: 120,
             },
         ];
 
@@ -125,14 +160,34 @@ mod test {
                 std::env::remove_var("OXIDE_PAGER");
             }
 
+            if !t.oxide_force_tty_env.is_empty() {
+                std::env::set_var("OXIDE_FORCE_TTY", t.oxide_force_tty_env.clone());
+            } else {
+                std::env::remove_var("OXIDE_FORCE_TTY");
+            }
+
             let ctx = Context::new(&mut c);
 
-            assert_eq!(ctx.io.get_pager(), t.want_pager);
+            assert_eq!(ctx.io.get_pager(), t.want_pager, "test: {}", t.name);
 
-            assert_eq!(ctx.io.get_never_prompt(), t.want_prompt == "disabled");
+            assert_eq!(
+                ctx.io.get_never_prompt(),
+                t.want_prompt == "disabled",
+                "test {}",
+                t.name
+            );
 
-            assert_eq!(ctx.config.get("", "pager").unwrap(), t.want_pager);
-            assert_eq!(ctx.config.get("", "prompt").unwrap(), t.want_prompt);
+            assert_eq!(ctx.config.get("", "pager").unwrap(), t.want_pager, "test: {}", t.name);
+            assert_eq!(ctx.config.get("", "prompt").unwrap(), t.want_prompt, "test: {}", t.name);
+
+            if t.want_terminal_width_override > 0 {
+                assert_eq!(
+                    ctx.io.terminal_width(),
+                    t.want_terminal_width_override,
+                    "test: {}",
+                    t.name
+                );
+            }
         }
     }
 }
