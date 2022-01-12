@@ -70,10 +70,9 @@ impl crate::cmd::Command for CmdCompletion {
 #[cfg(test)]
 mod test {
     use clap::ArgEnum;
+    use pretty_assertions::assert_eq;
 
     use crate::cmd::Command;
-
-    use pretty_assertions::assert_eq;
 
     pub struct TestItem {
         name: String,
@@ -130,7 +129,11 @@ mod test {
             let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
             let mut config = crate::config::new_blank_config().unwrap();
             let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
-            let mut ctx = crate::context::Context { config: &mut c, io };
+            let mut ctx = crate::context::Context {
+                config: &mut c,
+                io,
+                debug: false,
+            };
 
             cmd.run(&mut ctx).unwrap();
 

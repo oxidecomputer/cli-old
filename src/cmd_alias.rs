@@ -335,7 +335,11 @@ mod test {
             let (mut io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
             io.set_stdout_tty(false);
             io.set_color_enabled(false);
-            let mut ctx = crate::context::Context { config: &mut c, io };
+            let mut ctx = crate::context::Context {
+                config: &mut c,
+                io,
+                debug: false,
+            };
 
             let cmd_alias = crate::cmd_alias::CmdAlias { subcmd: t.cmd };
             match cmd_alias.run(&mut ctx) {

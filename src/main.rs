@@ -91,6 +91,7 @@ fn main() {
     let mut c = crate::config_file::parse_default_config().unwrap();
     let mut config = crate::config_from_env::EnvConfig::inherit_env(&mut c);
     let mut ctx = crate::context::Context::new(&mut config);
+    ctx.debug = opts.debug;
 
     match opts.subcmd {
         SubCommand::Alias(cmd) => run_cmd(&cmd, &mut ctx),

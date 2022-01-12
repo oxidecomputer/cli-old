@@ -3,6 +3,7 @@ use crate::config::Config;
 pub struct Context<'a> {
     pub config: &'a mut (dyn Config + 'a),
     pub io: crate::iostreams::IoStreams,
+    pub debug: bool,
 }
 
 impl Context<'_> {
@@ -36,7 +37,11 @@ impl Context<'_> {
             }
         }
 
-        Context { config, io }
+        Context {
+            config,
+            io,
+            debug: false,
+        }
     }
 }
 

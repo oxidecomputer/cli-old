@@ -227,7 +227,11 @@ mod test {
 
         for t in tests {
             let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
-            let mut ctx = crate::context::Context { config: &mut c, io };
+            let mut ctx = crate::context::Context {
+                config: &mut c,
+                io,
+                debug: false,
+            };
 
             let cmd_config = crate::cmd_config::CmdConfig { subcmd: t.cmd };
             match cmd_config.run(&mut ctx) {

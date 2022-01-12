@@ -200,7 +200,11 @@ mod test {
         let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
 
         let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
-        let mut ctx = crate::context::Context { config: &mut c, io };
+        let mut ctx = crate::context::Context {
+            config: &mut c,
+            io,
+            debug: false,
+        };
 
         let cmd = crate::cmd_generate::CmdGenerateMarkdown { dir: "".to_string() };
 
@@ -221,7 +225,11 @@ mod test {
         let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
 
         let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
-        let mut ctx = crate::context::Context { config: &mut c, io };
+        let mut ctx = crate::context::Context {
+            config: &mut c,
+            io,
+            debug: false,
+        };
 
         let cmd = crate::cmd_generate::CmdGenerateMarkdown { dir: "".to_string() };
 
@@ -394,7 +402,11 @@ sub subcommand
         let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
 
         let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
-        let mut ctx = crate::context::Context { config: &mut c, io };
+        let mut ctx = crate::context::Context {
+            config: &mut c,
+            io,
+            debug: true,
+        };
 
         let cmd = crate::cmd_generate::CmdGenerateManPages { dir: "".to_string() };
 
@@ -414,7 +426,11 @@ sub subcommand
         let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
 
         let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
-        let mut ctx = crate::context::Context { config: &mut c, io };
+        let mut ctx = crate::context::Context {
+            config: &mut c,
+            io,
+            debug: true,
+        };
 
         let cmd = crate::cmd_generate::CmdGenerateManPages { dir: "".to_string() };
 
