@@ -6,6 +6,9 @@ on:
     paths:
       - .github/workflows/generate-website-docs.yml
 name: generate-website-docs
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   generate-website-docs:
     name: make-release
