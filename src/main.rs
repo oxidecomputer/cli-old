@@ -68,7 +68,7 @@ use clap::Parser;
 #[clap(version = clap::crate_version!(), author = clap::crate_authors!("\n"))]
 struct Opts {
     /// Print debug info
-    #[clap(short, long, global = true)]
+    #[clap(short, long, global = true, env)]
     debug: bool,
 
     #[clap(subcommand)]
