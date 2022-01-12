@@ -403,13 +403,189 @@ sub subcommand
 
         cmd.generate(&mut ctx, &app, "", &app).unwrap();
 
-        let expected = r#"
+        let expected = r#"Generating man page for `git` -> git.1
+.TH "GIT" "1" "" "git " "General Commands Manual"
+.ss \n[.ss] 0
+.nh
+.ad l
+.SH "NAME"
+git \- A fictional versioning CLI
+.SH "SYNOPSIS"
+\fIgit\fP [\-\-help] [\-\-version] <subcommands>
+.SH "DESCRIPTION"
+
+.sp
+A fictional versioning CLI
+.SH "OPTIONS"
+.TP
+\-\-\fBhelp\fP
+Print help information
+.TP
+\-\-\fBversion\fP
+Print version information
+
+.SH "SUBCOMMANDS"
+.TP
+\fBgit\-clone(1)\fP
+Clones repos
+.TP
+\fBgit\-push(1)\fP
+pushes things
+.TP
+\fBgit\-add(1)\fP
+adds things
+
+Generating man page for `git clone` -> git-clone.1
+.TH "GIT" "1" "" "git " "General Commands Manual"
+.ss \n[.ss] 0
+.nh
+.ad l
+.SH "NAME"
+git\-clone \- Clones repos
+.SH "SYNOPSIS"
+\fIgit clone\fP [\-\-help] [\-\-version] <REMOTE>
+.SH "DESCRIPTION"
+
+.sp
+Clones repos
+.SH "OPTIONS"
+.TP
+\-\-\fBhelp\fP
+Print help information
+.TP
+\-\-\fBversion\fP
+Print version information
+.TP
+\fB<REMOTE>\fP
+The remote to clone
+.SH "SEE ALSO"
+.TP
+\fBgit(1)\fP
+
+Generating man page for `git push` -> git-push.1
+.TH "GIT" "1" "" "git " "General Commands Manual"
+.ss \n[.ss] 0
+.nh
+.ad l
+.SH "NAME"
+git\-push \- pushes things
+.SH "SYNOPSIS"
+\fIgit push\fP [\-\-help] [\-\-version] <REMOTE>
+.SH "DESCRIPTION"
+
+.sp
+pushes things
+.SH "OPTIONS"
+.TP
+\-\-\fBhelp\fP
+Print help information
+.TP
+\-\-\fBversion\fP
+Print version information
+.TP
+\fB<REMOTE>\fP
+The remote to target
+.SH "SEE ALSO"
+.TP
+\fBgit(1)\fP
+
+Generating man page for `git add` -> git-add.1
+.TH "GIT" "1" "" "git " "General Commands Manual"
+.ss \n[.ss] 0
+.nh
+.ad l
+.SH "NAME"
+git\-add \- adds things
+.SH "SYNOPSIS"
+\fIgit add\fP [\-\-help] [\-\-version] <PATH> [subcommands]
+.SH "DESCRIPTION"
+
+.sp
+adds things
+.SH "OPTIONS"
+.TP
+\-\-\fBhelp\fP
+Print help information
+.TP
+\-\-\fBversion\fP
+Print version information
+.TP
+\fB<PATH>\fP
+Stuff to add
+.SH "SUBCOMMANDS"
+.TP
+\fBgit\-add\-new(1)\fP
+subcommand for adding new stuff
+
+.SH "SEE ALSO"
+.TP
+\fBgit(1)\fP
+
+Generating man page for `git add new` -> git-add-new.1
+.TH "GIT" "1" "" "git " "General Commands Manual"
+.ss \n[.ss] 0
+.nh
+.ad l
+.SH "NAME"
+git\-add\-new \- subcommand for adding new stuff
+.SH "SYNOPSIS"
+\fIgit add new\fP [\-\-help] [\-\-version] [subcommands]
+.SH "DESCRIPTION"
+
+.sp
+subcommand for adding new stuff
+.SH "OPTIONS"
+.TP
+\-\-\fBhelp\fP
+Print help information
+.TP
+\-\-\fBversion\fP
+Print version information
+
+.SH "SUBCOMMANDS"
+.TP
+\fBgit\-add\-new\-foo(1)\fP
+sub subcommand
+
+.SH "SEE ALSO"
+.TP
+\fBgit(1)\fP
+.TP
+\fBgit\-add(1)\fP
+
+Generating man page for `git add new foo` -> git-add-new-foo.1
+.TH "GIT" "1" "" "git " "General Commands Manual"
+.ss \n[.ss] 0
+.nh
+.ad l
+.SH "NAME"
+git\-add\-new\-foo \- sub subcommand
+.SH "SYNOPSIS"
+\fIgit add new foo\fP [\-\-help] [\-\-version]
+.SH "DESCRIPTION"
+
+.sp
+sub subcommand
+.SH "OPTIONS"
+.TP
+\-\-\fBhelp\fP
+Print help information
+.TP
+\-\-\fBversion\fP
+Print version information
+
+.SH "SEE ALSO"
+.TP
+\fBgit(1)\fP
+.TP
+\fBgit\-add(1)\fP
+.TP
+\fBgit\-add\-new(1)\fP
+
 "#;
 
         let stdout = std::fs::read_to_string(stdout_path).unwrap();
         let stderr = std::fs::read_to_string(stderr_path).unwrap();
-
-        println!("{}", stdout);
 
         assert_eq!(stdout, expected);
         assert_eq!(stderr, "");

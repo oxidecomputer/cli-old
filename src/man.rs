@@ -163,7 +163,7 @@ fn synopsis(app: &clap::App, title: &str) -> String {
         ));
     }
 
-    res
+    res.trim().to_string()
 }
 
 fn options(app: &clap::App) -> Vec<String> {
