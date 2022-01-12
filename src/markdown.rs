@@ -116,16 +116,34 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
     }
 
     // Check if the command has a parent.
-    if !(title == app.get_name() || title.trim_start_matches("oxide ") == app.get_name()) {
+    let mut split = title.split(' ').collect::<Vec<&str>>();
+    let first = format!("{} ", split.first().unwrap());
+    if !(title == app.get_name() || title.trim_start_matches(&first) == app.get_name()) {
         doc.header("See also".to_string(), pulldown_cmark::HeadingLevel::H3);
 
         doc.0
             .push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::List(None)));
 
         // Get the parent command.
-        // TODO: iterate if more than one, thats why we have a list.
-        let parent = title.trim_end_matches(app.get_name()).trim();
-        doc.link_in_list(parent.into(), format!("./{}", parent.replace(' ', "_")));
+        // Iterate if more than one, thats why we have a list.
+        if split.len() > 2 {
+            // Remove the last element, since that is the command name.
+            split.pop();
+
+            for (i, _) in split.iter().enumerate() {
+                if i < 1 {
+                    // We don't care about the first or second commands.
+                    continue;
+                }
+
+                let mut p = split.clone();
+                p.truncate(i + 1);
+                let parent = p.join(" ");
+                doc.link_in_list(parent.to_string(), format!("./{}", parent.replace(' ', "_")));
+            }
+        }
+
+        doc.0.push(pulldown_cmark::Event::End(pulldown_cmark::Tag::List(None)));
     }
 }
 

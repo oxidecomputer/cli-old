@@ -61,7 +61,7 @@ impl CmdGenerateMarkdown {
 
         let filename = format!("{}.md", p);
         let title = p.replace('_', " ");
-        println!("Generating markdown for `{}` -> {}", title, filename);
+        writeln!(ctx.io.out, "Generating markdown for `{}` -> {}", title, filename)?;
 
         // Generate the markdown.
         let m = crate::markdown::app_to_markdown(app, &title)?;
@@ -132,7 +132,12 @@ impl CmdGenerateManPages {
             }
 
             let filename = format!("{}.1", p);
-            println!("Generating man page for `{}` -> {}", p.replace('-', " "), filename);
+            writeln!(
+                ctx.io.out,
+                "Generating man page for `{}` -> {}",
+                p.replace('-', " "),
+                filename
+            )?;
 
             if self.dir.is_empty() {
                 clap_man::generate_manpage(&mut subcmd, &mut ctx.io.out);
@@ -147,5 +152,212 @@ impl CmdGenerateManPages {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use clap::{arg, App, AppSettings};
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn test_generate_markdown() {
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        let (io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
+        let mut ctx = crate::context::Context { config: &mut c, io };
+
+        let cmd = crate::cmd_generate::CmdGenerateMarkdown { dir: "".to_string() };
+
+        // Define our app.
+        let app = App::new("git")
+            .about("A fictional versioning CLI")
+            .setting(AppSettings::SubcommandRequiredElseHelp)
+            .setting(AppSettings::AllowExternalSubcommands)
+            .setting(AppSettings::AllowInvalidUtf8ForExternalSubcommands)
+            .subcommand(
+                App::new("clone")
+                    .about("Clones repos")
+                    .arg(arg!(<REMOTE> "The remote to clone"))
+                    .setting(AppSettings::ArgRequiredElseHelp),
+            )
+            .subcommand(
+                App::new("push")
+                    .about("pushes things")
+                    .arg(arg!(<REMOTE> "The remote to target"))
+                    .setting(AppSettings::ArgRequiredElseHelp),
+            )
+            .subcommand(
+                App::new("add")
+                    .about("adds things")
+                    .setting(AppSettings::ArgRequiredElseHelp)
+                    .arg(arg!(<PATH> ... "Stuff to add").allow_invalid_utf8(true))
+                    .subcommand(
+                        App::new("new")
+                            .about("subcommand for adding new stuff")
+                            .subcommand(App::new("foo").about("sub subcommand")),
+                    ),
+            );
+
+        cmd.generate(&mut ctx, &app, "").unwrap();
+
+        let expected = r#"Generating markdown for `git` -> git.md
+---
+title: "git"
+description: "A fictional versioning CLI"
+layout: manual
+---
+
+A fictional versioning CLI
+
+### Subcommands
+
+* [git clone](./git_clone)
+* [git push](./git_push)
+* [git add](./git_add)
+
+### Options
+
+<dl class="flags">
+   <dt><code>--help</code></dt>
+   <dd>Print help information</dd>
+
+   <dt><code>--version</code></dt>
+   <dd>Print version information</dd>
+</dl>
+
+
+Generating markdown for `git clone` -> git_clone.md
+---
+title: "git clone"
+description: "Clones repos"
+layout: manual
+---
+
+Clones repos
+
+### Options
+
+<dl class="flags">
+   <dt><code>--help</code></dt>
+   <dd>Print help information</dd>
+
+   <dt><code>--version</code></dt>
+   <dd>Print version information</dd>
+
+   <dt><code></code></dt>
+   <dd>The remote to clone</dd>
+</dl>
+
+
+Generating markdown for `git push` -> git_push.md
+---
+title: "git push"
+description: "pushes things"
+layout: manual
+---
+
+pushes things
+
+### Options
+
+<dl class="flags">
+   <dt><code>--help</code></dt>
+   <dd>Print help information</dd>
+
+   <dt><code>--version</code></dt>
+   <dd>Print version information</dd>
+
+   <dt><code></code></dt>
+   <dd>The remote to target</dd>
+</dl>
+
+
+Generating markdown for `git add` -> git_add.md
+---
+title: "git add"
+description: "adds things"
+layout: manual
+---
+
+adds things
+
+### Subcommands
+
+* [git add new](./git_add_new)
+
+### Options
+
+<dl class="flags">
+   <dt><code>--help</code></dt>
+   <dd>Print help information</dd>
+
+   <dt><code>--version</code></dt>
+   <dd>Print version information</dd>
+
+   <dt><code></code></dt>
+   <dd>Stuff to add</dd>
+</dl>
+
+
+Generating markdown for `git add new` -> git_add_new.md
+---
+title: "git add new"
+description: "subcommand for adding new stuff"
+layout: manual
+---
+
+subcommand for adding new stuff
+
+### Subcommands
+
+* [git add new foo](./git_add_new_foo)
+
+### Options
+
+<dl class="flags">
+   <dt><code>--help</code></dt>
+   <dd>Print help information</dd>
+
+   <dt><code>--version</code></dt>
+   <dd>Print version information</dd>
+</dl>
+
+
+### See also
+
+* [git add](./git_add)
+Generating markdown for `git add new foo` -> git_add_new_foo.md
+---
+title: "git add new foo"
+description: "sub subcommand"
+layout: manual
+---
+
+sub subcommand
+
+### Options
+
+<dl class="flags">
+   <dt><code>--help</code></dt>
+   <dd>Print help information</dd>
+
+   <dt><code>--version</code></dt>
+   <dd>Print version information</dd>
+</dl>
+
+
+### See also
+
+* [git add](./git_add)
+* [git add new](./git_add_new)
+"#;
+
+        let stdout = std::fs::read_to_string(stdout_path).unwrap();
+        let stderr = std::fs::read_to_string(stderr_path).unwrap();
+
+        assert_eq!(stdout, expected);
+        assert_eq!(stderr, "");
     }
 }
