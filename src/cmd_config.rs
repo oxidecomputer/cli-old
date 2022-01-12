@@ -153,7 +153,7 @@ mod test {
                     host: "".to_string(),
                 }),
                 want_out: "".to_string(),
-                want_err: "\u{1b}[33m!\u{1b}[0m warning: 'foo' is not a known configuration key".to_string(),
+                want_err: "warning: 'foo' is not a known configuration key".to_string(),
             },
             TestItem {
                 name: "set a key".to_string(),
@@ -223,7 +223,7 @@ mod test {
                     let stdout = std::fs::read_to_string(stdout_path).unwrap();
                     let stderr = std::fs::read_to_string(stderr_path).unwrap();
                     assert_eq!(stdout, t.want_out, "test {}", t.name);
-                    assert_eq!(err.to_string(), t.want_err, "test {}", t.name);
+                    assert!(err.to_string().contains(&t.want_err), "test {}", t.name);
                     assert!(stderr.is_empty(), "test {}", t.name);
                 }
             }
