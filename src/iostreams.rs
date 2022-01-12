@@ -69,12 +69,6 @@ impl IoStreams {
             return self.terminal_theme.to_string();
         }
 
-        let style = get_env_var("GLAMOUR_STYLE");
-        if !style.is_empty() && style != "auto" {
-            self.terminal_theme = "none".to_string();
-            return self.terminal_theme.to_string();
-        }
-
         let timeout = std::time::Duration::from_millis(100);
         match termbg::theme(timeout) {
             Ok(theme) => {
@@ -395,8 +389,9 @@ fn tty_size() -> Result<(i32, i32)> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use pretty_assertions::assert_eq;
+
+    use super::*;
 
     pub struct TestItem {
         name: String,

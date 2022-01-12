@@ -45,9 +45,6 @@ use clap::Parser;
 /// OXIDE_PAGER, PAGER (in order of precedence): a terminal paging program to send
 /// standard output to, e.g. "less".
 ///
-/// GLAMOUR_STYLE: the style to use for rendering Markdown. See
-/// <https://github.com/charmbracelet/glamour#styles>
-///
 /// NO_COLOR: set to any value to avoid printing ANSI escape sequences for color output.
 ///
 /// CLICOLOR: set to "0" to disable printing ANSI colors in output.
