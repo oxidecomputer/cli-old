@@ -27,18 +27,6 @@ impl MarkdownDocument<'_> {
     }
 }
 
-fn to_heading_level(item: i32) -> pulldown_cmark::HeadingLevel {
-    match item {
-        1 => pulldown_cmark::HeadingLevel::H1,
-        2 => pulldown_cmark::HeadingLevel::H2,
-        3 => pulldown_cmark::HeadingLevel::H3,
-        4 => pulldown_cmark::HeadingLevel::H4,
-        5 => pulldown_cmark::HeadingLevel::H5,
-        6 => pulldown_cmark::HeadingLevel::H6,
-        _ => unreachable!(),
-    }
-}
-
 fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
     // We don't need the header since our renderer will do that for us.
     //doc.header(app.get_name().to_string(), pulldown_cmark::HeadingLevel::H2);
@@ -55,10 +43,11 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
 
         for cmd in app.get_subcommands() {
             let link = format!(
-                r#"[{} {}](./{})"#,
+                r#"[{} {}](./{}_{})"#,
                 title,
                 cmd.get_name(),
-                format!("{}_{}", title.replace(" ", "_"), cmd.get_name())
+                title.replace(' ', "_"),
+                cmd.get_name()
             );
 
             doc.0.push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::Item));
@@ -78,7 +67,7 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
 
         for (i, arg) in args.iter().enumerate() {
             if i > 0 {
-                html.push_str("\n");
+                html.push('\n');
             }
             let mut def = String::new();
 
@@ -100,7 +89,7 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
    <dd>{}</dd>
 "#,
                 def,
-                arg.get_help().unwrap_or_default().to_string()
+                arg.get_help().unwrap_or_default()
             ));
         }
 
@@ -121,7 +110,7 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
         // Get the parent command.
         // TODO: iterate if more than one, thats why we have a list.
         let parent = title.trim_end_matches(app.get_name()).trim();
-        let link = format!(r#"[{}](./{})"#, parent, parent.replace(" ", "_"));
+        let link = format!(r#"[{}](./{})"#, parent, parent.replace(' ', "_"));
 
         doc.0.push(pulldown_cmark::Event::Start(pulldown_cmark::Tag::Item));
         // TODO: make the link a real link type.
