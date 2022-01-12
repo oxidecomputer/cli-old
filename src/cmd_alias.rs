@@ -206,10 +206,21 @@ fn valid_command(args: &str) -> bool {
         return false;
     }
 
+    let mut args = s.unwrap_or_default();
+    if args.is_empty() {
+        return false;
+    }
+
+    let mut split: Vec<String> = vec![];
+    let first = args.first().unwrap();
+    if first != "oxide" {
+        split.push("oxide".to_string());
+    }
+    // Add out args.
+    split.append(&mut args);
+
     // Convert our opts into a clap app.
     let app: App = crate::Opts::into_app();
-    let mut split = vec![app.get_name().to_string()];
-    split.append(&mut s.unwrap_or_default());
 
     // Try to get matches.
     match app.try_get_matches_from(split) {
