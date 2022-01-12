@@ -105,13 +105,6 @@ impl crate::cmd::Command for CmdAliasSet {
 
         match get_expansion(self) {
             Ok(mut expansion) => {
-                writeln!(
-                    ctx.io.out,
-                    "- Adding alias for {}: {}",
-                    cs.bold(&self.alias),
-                    cs.bold(&expansion)
-                )?;
-
                 let mut is_shell = self.shell;
                 if is_shell && !expansion.starts_with('!') {
                     expansion = format!("!{}", expansion);
@@ -123,12 +116,19 @@ impl crate::cmd::Command for CmdAliasSet {
                     bail!("could not create alias: {} is already an oxide command", self.alias);
                 }
 
-                if !is_shell && valid_command(&expansion) {
+                if !is_shell && !valid_command(&expansion) {
                     bail!(
                         "could not create alias: {} does not correspond to an oxide command",
                         expansion
                     );
                 }
+
+                writeln!(
+                    ctx.io.out,
+                    "- Adding alias for {}: {}",
+                    cs.bold(&self.alias),
+                    cs.bold(&expansion)
+                )?;
 
                 let mut success_msg = format!("{} Added alias.", cs.success_icon());
                 let (old_expansion, ok) = config_aliases.get(&self.alias);
@@ -208,10 +208,23 @@ fn valid_command(args: &str) -> bool {
     let split = s.unwrap_or_default();
 
     // Convert our opts into a clap app.
-    let app: App = crate::Opts::into_app();
+    let mut app: App = crate::Opts::into_app();
 
     // Try to get matches.
-    app.try_get_matches_from(split).is_ok()
+    for s in split {
+        if s.is_empty() {
+            continue;
+        }
+
+        let result = app.find_subcommand(&s);
+        if app.find_subcommand(&s).is_none() {
+            return false;
+        }
+
+        app = result.unwrap().clone();
+    }
+
+    true
 }
 
 #[cfg(test)]
@@ -262,8 +275,28 @@ mod test {
                     expansion: "config list".to_string(),
                     shell: true,
                 }),
-                want_out: "- Adding alias for cp: config list\n✔ Added alias.\n".to_string(),
+                want_out: "- Adding alias for cp: !config list\n✔ Added alias.\n".to_string(),
                 want_err: "".to_string(),
+            },
+            TestItem {
+                name: "add already command".to_string(),
+                cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
+                    alias: "config".to_string(),
+                    expansion: "alias set".to_string(),
+                    shell: false,
+                }),
+                want_out: "".to_string(),
+                want_err: "could not create alias: config is already an oxide command".to_string(),
+            },
+            TestItem {
+                name: "add does not exist".to_string(),
+                cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
+                    alias: "cp".to_string(),
+                    expansion: "dne thing".to_string(),
+                    shell: false,
+                }),
+                want_out: "".to_string(),
+                want_err: "could not create alias: dne thing does not correspond to an oxide command".to_string(),
             },
             TestItem {
                 name: "list all".to_string(),
@@ -322,10 +355,22 @@ mod test {
                 Err(err) => {
                     let stdout = std::fs::read_to_string(stdout_path).unwrap();
                     let stderr = std::fs::read_to_string(stderr_path).unwrap();
-                    assert_eq!(stdout, t.want_out, "test {}", t.name);
-                    assert!(err.to_string().contains(&t.want_err), "test {}", t.name);
-                    assert!(err.to_string().is_empty() == t.want_err.is_empty(), "test {}", t.name);
+                    assert!(
+                        err.to_string().contains(&t.want_err),
+                        "test {} -> err: {}\nwant_err: {}",
+                        t.name,
+                        err,
+                        t.want_err
+                    );
+                    assert!(
+                        err.to_string().is_empty() == t.want_err.is_empty(),
+                        "test {} -> err: {}\nwant_err: {}",
+                        t.name,
+                        err,
+                        t.want_err
+                    );
                     assert!(stderr.is_empty(), "test {}", t.name);
+                    assert!(stdout.contains(&t.want_out), "test {}", t.name);
                 }
             }
         }

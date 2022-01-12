@@ -19,11 +19,11 @@ use clap::Parser;
 
 /// Work seamlessly with Oxide from the command line.
 ///
-/// Environment variables that can be used with oxide
+/// Environment variables that can be used with oxide.
 ///
-/// OXIDE_TOKEN, OXIDE_API_TOKEN (in order of precedence): an authentication token
-/// for Oxide API requests. Setting this avoids being prompted to authenticate
-/// and takes precedence over previously stored credentials.
+/// OXIDE_TOKEN: an authentication token for Oxide API requests. Setting this
+/// avoids being prompted to authenticate and takes precedence over previously
+/// stored credentials.
 ///
 /// OXIDE_HOST: specify the Oxide hostname for commands that would otherwise assume
 /// the "api.oxide.computer" host.
