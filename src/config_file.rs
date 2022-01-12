@@ -29,8 +29,7 @@ pub fn config_dir() -> Result<String> {
         path = Path::new(&oxide_config_dir).to_path_buf();
     } else if !xdg_config_home.is_empty() {
         path = Path::new(&xdg_config_home).join("oxide");
-    } else if !app_data.is_empty() {
-        // TODO: make sure we are on windows
+    } else if !app_data.is_empty() && std::env::consts::OS == "windows" {
         path = Path::new(&app_data).join("Oxide CLI");
     } else {
         match dirs::home_dir() {
@@ -62,8 +61,7 @@ pub fn state_dir() -> Result<String> {
 
     if !xdg_state_home.is_empty() {
         path = Path::new(&xdg_state_home).join("oxide");
-    } else if !local_app_data.is_empty() {
-        // TODO: make sure we are on windows
+    } else if !local_app_data.is_empty() && std::env::consts::OS == "windows" {
         path = Path::new(&local_app_data).join("Oxide CLI");
     } else {
         match dirs::home_dir() {
@@ -95,8 +93,7 @@ pub fn data_dir() -> Result<String> {
 
     if !xdg_data_home.is_empty() {
         path = Path::new(&xdg_data_home).join("oxide");
-    } else if !local_app_data.is_empty() {
-        // TODO: make sure we are on windows
+    } else if !local_app_data.is_empty() && std::env::consts::OS == "windows" {
         path = Path::new(&local_app_data).join("Oxide CLI");
     } else {
         match dirs::home_dir() {
@@ -206,7 +203,6 @@ pub fn get_env_var(key: &str) -> String {
 
 #[cfg(test)]
 mod test {
-    
 
     /*pub struct TestItem {
         name: String,
