@@ -200,7 +200,7 @@ fn get_expansion(cmd: &CmdAliasSet) -> Result<String> {
 }
 
 /// Check if a set of arguments is a valid `oxide` command.
-fn valid_command(args: &str) -> bool {
+pub fn valid_command(args: &str) -> bool {
     let s = shlex::split(args);
     if s.is_none() {
         return false;

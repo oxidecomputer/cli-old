@@ -26,6 +26,7 @@ mod man;
 mod markdown;
 
 use clap::Parser;
+use config::Config;
 
 /// Work seamlessly with Oxide from the command line.
 ///
@@ -84,13 +85,60 @@ enum SubCommand {
 }
 
 fn main() {
-    // Parse the command line arguments.
-    let opts: Opts = Opts::parse();
-
     // Let's get our configuration.
     let mut c = crate::config_file::parse_default_config().unwrap();
     let mut config = crate::config_from_env::EnvConfig::inherit_env(&mut c);
     let mut ctx = crate::context::Context::new(&mut config);
+
+    // Let's grab all our args.
+    let mut args: Vec<String> = std::env::args().collect();
+    let args_str = shlex::join(args.iter().map(|s| s.as_str()).collect::<Vec<&str>>());
+
+    /*let first_arg = if args.len() > 1 {
+        args.get(1).unwrap().to_string()
+    } else {
+        "".to_string()
+    };
+
+    // Convert our opts into a clap app.
+    let app: clap::App = crate::Opts::into_app();*/
+
+    // Check if the user is passing in an alias.
+    if !crate::cmd_alias::valid_command(&args_str) {
+        // Let's validate if it is an alias.
+        // It is okay to check the error here because we will not error out if the
+        // alias does not exist. We will just return the expanded args.
+        let (mut expanded_args, is_shell) = ctx.config.expand_alias(args).unwrap();
+
+        // TODO: debug
+        //if opts.debug {
+        writeln!(
+            &mut ctx.io.out,
+            "Expanded alias: {} -> {}",
+            args_str,
+            &shlex::join(expanded_args.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
+        )
+        .unwrap();
+        //}
+
+        if is_shell {
+            // Remove the first argument, since thats our `sh`.
+            expanded_args.remove(0);
+
+            let mut external_cmd = std::process::Command::new("sh").args(expanded_args).spawn().unwrap();
+            let ecode = external_cmd.wait().unwrap();
+            std::process::exit(ecode.code().unwrap_or(0));
+        }
+
+        // So we handled if the alias was a shell.
+        // We can now parse our options from the extended args.
+        args = expanded_args;
+    }
+
+    // Parse the command line arguments.
+    let opts: Opts = Opts::parse_from(args);
+
+    // Set our debug flag.
     ctx.debug = opts.debug;
 
     match opts.subcmd {
