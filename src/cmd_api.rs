@@ -148,12 +148,17 @@ impl crate::cmd::Command for CmdApi {
         // Read the response body.
         let result: serde_json::Value = resp.json().await?;
 
-        // Enable colored json output.
-        #[cfg(windows)]
-        let enabled = colored_json::enable_ansi_support();
+        if ctx.io.color_enabled() {
+            // Enable colored json output.
+            #[cfg(windows)]
+            let enabled = colored_json::enable_ansi_support();
 
-        // Print the response body.
-        writeln!(ctx.io.out, "{}", colored_json::to_colored_json_auto(&result)?)?;
+            // Print the response body.
+            writeln!(ctx.io.out, "{}", colored_json::to_colored_json_auto(&result)?)?;
+        } else {
+            // Print the response body.
+            writeln!(ctx.io.out, "{}", serde_json::to_string_pretty(&result)?)?;
+        }
 
         Ok(())
     }
