@@ -92,7 +92,7 @@ async fn main() -> Result<(), ()> {
     let build_version = clap::crate_version!();
     // Check for updates to the cli.
     // TODO: this should be done in a background thread.
-    let update = crate::update::check_for_update(build_version).await.unwrap();
+    let update = crate::update::check_for_update(build_version).await.unwrap_or_default();
 
     // Let's get our configuration.
     let mut c = crate::config_file::parse_default_config().unwrap();
