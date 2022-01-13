@@ -91,9 +91,9 @@ impl crate::cmd::Command for CmdApi {
 
         let mut bytes = b.as_bytes().to_vec();
 
-        // Add the pagination parameters.
+        // TODO: Add the pagination parameters.
 
-        // If they didn't specify the method and we have parameters, we'll
+        // TODO: If they didn't specify the method and we have parameters, we'll
         // assume they want to use POST.
 
         // Parse the input file.
