@@ -48,9 +48,14 @@ impl Context<'_> {
 
     /// This function returns an API client for Oxide that is based on the configured
     /// user.
-    pub fn api_client(&self) -> Result<oxide_api::Client> {
-        // We need to get the default host from the config.
-        let host = self.config.default_host()?;
+    pub fn api_client(&self, hostname: &str) -> Result<oxide_api::Client> {
+        // Use the host passed in if it's set.
+        // Otherwise, use the default host.
+        let host = if hostname.is_empty() {
+            self.config.default_host()?
+        } else {
+            hostname.to_string()
+        };
 
         // Get the token for that host.
         let token = self.config.get(&host, "token")?;

@@ -1,6 +1,7 @@
 use std::env;
 
 use anyhow::Result;
+use thiserror::Error;
 
 use crate::config_file::get_env_var;
 
@@ -15,6 +16,12 @@ impl EnvConfig<'_> {
     pub fn inherit_env(config: &mut dyn crate::config::Config) -> EnvConfig {
         EnvConfig { config }
     }
+}
+
+#[derive(Error, Debug)]
+pub enum ReadOnlyEnvVarError {
+    #[error("read-only value in: {0}")]
+    Variable(String),
 }
 
 unsafe impl Send for EnvConfig<'_> {}
@@ -86,7 +93,7 @@ impl crate::config::Config for EnvConfig<'_> {
         if key == "token" {
             let token = get_env_var(OXIDE_TOKEN);
             if !token.is_empty() {
-                return Err(anyhow::anyhow!("Cannot write to env var {}", OXIDE_TOKEN));
+                return Err(ReadOnlyEnvVarError::Variable(OXIDE_TOKEN.to_string()).into());
             }
         }
 

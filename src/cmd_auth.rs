@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Parser;
 
 /// Login, logout, and get the status of your authentication.
@@ -42,6 +42,10 @@ pub struct CmdAuthLogin {
     /// The hostname of the Oxide instance to authenticate with.
     #[clap(short = 'H', long, default_value = "")]
     pub host: String,
+    // Open a browser to authenticate.
+    // TODO: Make this work when we have device auth.
+    // #[clap(short, long)]
+    // pub web: bool,
 }
 
 #[async_trait::async_trait]
@@ -55,6 +59,12 @@ impl crate::cmd::Command for CmdAuthLogin {
 ///
 /// This command removes the authentication configuration for a host either specified
 /// interactively or via `--host`.
+///
+///     $ oxide auth logout
+///     # => select what host to log out of via a prompt
+///
+///     $ oxide auth logout --host oxide.internal
+///     # => log out of specified host
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdAuthLogout {
@@ -66,6 +76,110 @@ pub struct CmdAuthLogout {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdAuthLogout {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if self.host.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--host required when not running interactively"));
+        }
+
+        let mut hostname = self.host.to_string();
+
+        let candidates = ctx.config.hosts()?;
+        if candidates.is_empty() {
+            return Err(anyhow!("not logged in to any hosts"));
+        }
+
+        if hostname.is_empty() {
+            if candidates.len() == 1 {
+                hostname = candidates[0].to_string();
+            } else {
+                let index = dialoguer::Select::with_theme(&dialoguer::theme::ColorfulTheme::default())
+                    .with_prompt("What account do you want to log out of?")
+                    .default(0)
+                    .items(&candidates[..])
+                    .interact();
+
+                match index {
+                    Ok(i) => {
+                        hostname = candidates[i].to_string();
+                    }
+                    Err(err) => {
+                        return Err(anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+        } else {
+            let mut found = false;
+            for c in candidates {
+                if c == hostname {
+                    found = true;
+                    break;
+                }
+            }
+
+            if !found {
+                return Err(anyhow!("not logged into {}", hostname));
+            }
+        }
+
+        if let Err(err) = ctx.config.check_writable(&hostname, "token") {
+            // TODO: make this error a type and actually check it.
+            if let crate::config_from_env::ReadOnlyEnvVarError::Variable(var) = err {
+                writeln!(
+                    ctx.io.err_out,
+                    "The value of the {} environment variable is being used for authentication.\n",
+                    var
+                )?;
+                writeln!(
+                    ctx.io.err_out,
+                    "To erase credentials stored in Oxide CLI, first clear the value from the environment.\n"
+                )?;
+                return Err(anyhow!(""));
+            }
+
+            return Err(err);
+        }
+
+        let _client = ctx.api_client(&hostname)?;
+
+        // TODO: Get the current user.
+        // let session = client.session().await?;
+
+        /*let username_str = if session.email.is_empty() {
+            "".to_string()
+        } else {
+            format!(" account '{}'", session.email)
+        };*/
+        let username_str = "".to_string();
+
+        if ctx.io.can_prompt() {
+            /*	var keepGoing bool
+            err := prompt.SurveyAskOne(&survey.Confirm{
+                Message: fmt.Sprintf("Are you sure you want to log out of %s%s?", hostname, usernameStr),
+                Default: true,
+            }, &keepGoing)
+            if err != nil {
+                return fmt.Errorf("could not prompt: %w", err)
+            }
+
+            if !keepGoing {
+                return nil
+            }*/
+        }
+
+        // Unset the host.
+        ctx.config.unset_host(&hostname)?;
+
+        // Write the changes to the config.
+        ctx.config.write()?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Logged out of {}{}\n",
+            cs.success_icon(),
+            cs.bold(&hostname),
+            username_str
+        )?;
+
         Ok(())
     }
 }

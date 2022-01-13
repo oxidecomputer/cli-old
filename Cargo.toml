@@ -19,6 +19,7 @@ clap = { git = "https://github.com/sondr3/clap", branch = "generate-man", featur
 # Fix once https://github.com/clap-rs/clap/pull/3174 is merged.
 clap_generate = { git = "https://github.com/sondr3/clap", branch = "generate-man" }
 colored_json = "^2.1.0"
+dialoguer = "^0.9.0"
 dirs = "4"
 heck = "^0.4.0"
 http = "^0.2.6"

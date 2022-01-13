@@ -68,7 +68,7 @@ pub struct CmdApi {
 impl crate::cmd::Command for CmdApi {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         // Let's get the api client.
-        let client = ctx.api_client()?;
+        let client = ctx.api_client("")?;
 
         if self.paginate && self.method != http::method::Method::GET {
             return Err(anyhow!("the `--paginate` option is not supported for non-GET requests",));
