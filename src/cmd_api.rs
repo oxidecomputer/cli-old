@@ -1,4 +1,6 @@
-use anyhow::Result;
+use std::{collections::HashMap, io::Read};
+
+use anyhow::{anyhow, Result};
 use clap::Parser;
 
 /// Makes an authenticated HTTP request to the Oxide API and prints the response.
@@ -16,7 +18,7 @@ use clap::Parser;
 ///
 /// The `-F/--field` flag has magic type conversion based on the format of the value:
 ///
-/// - literal values "true", "false", "null", and integer numbers get converted to
+/// - literal values "true", "false", "null", and integer/float numbers get converted to
 ///   appropriate JSON types;
 /// - if the value starts with "@", the rest of the value is interpreted as a
 ///   filename to read the value from. Pass "-" to read from standard input.
@@ -36,10 +38,10 @@ pub struct CmdApi {
 
     /// The HTTP method for the request.
     #[clap(short = 'X', long, default_value = "GET")]
-    pub method: String,
+    pub method: http::method::Method,
 
     /// Make additional HTTP requests to fetch all pages of results.
-    #[clap(long)]
+    #[clap(long, conflicts_with = "input")]
     pub paginate: bool,
 
     /// Add a typed parameter in key=value format.
@@ -51,13 +53,90 @@ pub struct CmdApi {
     pub raw_field: Vec<String>,
 
     /// The file to use as body for the HTTP request (use "-" to read from standard input).
-    #[clap(long, default_value = "")]
+    #[clap(long, default_value = "", conflicts_with = "paginate")]
     pub input: String,
 }
 
 impl crate::cmd::Command for CmdApi {
     fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        // Let's get the api client.
+        let client = ctx.api_client()?;
+
+        if self.paginate && self.method != http::method::Method::GET {
+            return Err(anyhow!("the `--paginate` option is not supported for non-GET requests",));
+        }
+
+        // Make sure the endpoint starts with a slash.
+        let mut endpoint = self.endpoint.to_string();
+        if !self.endpoint.starts_with("/") {
+            endpoint = format!("/{}", endpoint);
+        }
+
         Ok(())
+    }
+}
+
+impl CmdApi {
+    fn parse_fields(&self) -> Result<HashMap<String, serde_json::Value>> {
+        let mut params: HashMap<String, serde_json::Value> = HashMap::new();
+
+        // Parse the raw fields.
+        // These are always added as strings.
+        for f in self.raw_field.iter() {
+            let mut parts = f.splitn(2, '=');
+            let key = parts.next().ok_or_else(|| anyhow!("missing key in --raw-field"))?;
+            let value = parts.next().ok_or_else(|| anyhow!("missing value in --raw-field"))?;
+
+            params.insert(key.to_string(), serde_json::Value::String(value.to_string()));
+        }
+
+        // Parse the typed fields.
+        for t in self.field.iter() {
+            let mut parts = t.splitn(2, '=');
+            let key = parts.next().ok_or_else(|| anyhow!("missing key in --field"))?;
+            let value = parts.next().ok_or_else(|| anyhow!("missing value in --field"))?;
+
+            // See if value parses as an integer.
+            if let Ok(i) = value.parse::<i64>() {
+                params.insert(key.to_string(), serde_json::Value::Number(i.into()));
+                continue;
+            }
+
+            // See if value parses as a float.
+            if let Ok(f) = value.parse::<f64>() {
+                let num = serde_json::Number::from_f64(f).ok_or_else(|| anyhow!("invalid float {}", f))?;
+                params.insert(key.to_string(), serde_json::Value::Number(num));
+                continue;
+            }
+
+            // Check the rest.
+            let value = match value {
+                "true" => serde_json::Value::Bool(true),
+                "false" => serde_json::Value::Bool(false),
+                "null" => serde_json::Value::Null,
+                _ => {
+                    // Check if we have a file.
+                    if value.starts_with('@') {
+                        let filename = value.trim_start_matches('@');
+                        let mut file = std::fs::File::open(filename)?;
+                        let mut contents = String::new();
+                        file.read_to_string(&mut contents)?;
+                        serde_json::Value::String(contents)
+                    } else if value == "-" {
+                        // Read from stdin.
+                        let mut contents = String::new();
+                        std::io::stdin().read_to_string(&mut contents)?;
+                        serde_json::Value::String(contents)
+                    } else {
+                        serde_json::Value::String(value.to_string())
+                    }
+                }
+            };
+
+            params.insert(key.to_string(), value);
+        }
+
+        Ok(params)
     }
 }
 
