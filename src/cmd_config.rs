@@ -2,6 +2,12 @@ use anyhow::{bail, Result};
 use clap::Parser;
 
 /// Manage configuration for oxide.
+///
+/// Current respected settings:
+/// - editor: the text editor program to use for authoring text
+/// - prompt: toggle interactive prompting in the terminal (default: "enabled")
+/// - pager: the terminal pager program to send standard output to
+/// - browser: the web browser to use for opening URLs
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdConfig {
