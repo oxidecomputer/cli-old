@@ -115,7 +115,7 @@ async fn main() -> Result<(), ()> {
                 "\n\n{} {} → {}\n",
                 cs.yellow("A new release of gh is available:"),
                 cs.cyan(build_version),
-                cs.cyan(&latest_release.version)
+                cs.purple(&latest_release.version)
             )
             .unwrap();
 
