@@ -1,6 +1,6 @@
 use std::fs;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::config_file::get_env_var;
@@ -48,7 +48,7 @@ pub async fn check_for_update(current_version: &str) -> Result<Option<ReleaseInf
     // Update our state.
     set_state_entry(&state_file, chrono::Utc::now(), latest_release.clone())?;
 
-    if version_greater_then(&latest_release.version, current_version) {
+    if version_greater_then(&latest_release.version, current_version)? {
         return Ok(Some(latest_release));
     }
 
@@ -110,11 +110,11 @@ fn set_state_entry(filename: &str, t: chrono::DateTime<chrono::Utc>, r: ReleaseI
 }
 
 /// Return is one version is greater than another.
-fn version_greater_then(v: &str, w: &str) -> bool {
-    let cmp = version_compare::compare(v.trim_start_matches('v'), w.trim_start_matches('v'))
-        .unwrap_or(version_compare::Cmp::Eq);
-
-    cmp == version_compare::Cmp::Gt
+fn version_greater_then(v: &str, w: &str) -> Result<bool> {
+    match version_compare::compare(v, w) {
+        Ok(cmp) => Ok(cmp == version_compare::Cmp::Gt),
+        Err(_) => Err(anyhow!("failed to compare versions: {} {}", v, w)),
+    }
 }
 
 /// Returns if the release was published in the last 24 hours.
@@ -197,7 +197,7 @@ mod test {
         ];
 
         for t in tests {
-            let result = crate::update::version_greater_then(&t.latest_version, &t.current_version);
+            let result = crate::update::version_greater_then(&t.latest_version, &t.current_version).unwrap();
 
             assert_eq!(result, t.want_result, "test {} failed", t.name);
         }
