@@ -64,7 +64,7 @@ impl crate::cmd::Command for CmdCompletion {
         generate(self.shell, &mut app, name, &mut ctx.io.out);
 
         // Add a new line.
-        writeln!(ctx.io.out, "")?;
+        writeln!(ctx.io.out)?;
 
         Ok(())
     }

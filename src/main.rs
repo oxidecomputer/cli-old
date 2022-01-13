@@ -91,7 +91,7 @@ fn main() {
     let mut ctx = crate::context::Context::new(&mut config);
 
     // Let's grab all our args.
-    let mut args: Vec<String> = std::env::args().collect();
+    let args: Vec<String> = std::env::args().collect();
     if let Err(err) = do_main(args, &mut ctx) {
         eprintln!("{}", err);
         std::process::exit(1);
