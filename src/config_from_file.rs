@@ -235,7 +235,10 @@ impl crate::config::Config for FileConfig {
         }
 
         let mut expanded = args.clone();
-        expanded.remove(0); // Remove the first argument.
+
+        // Save the first argument and remove it at the same time.
+        // The first argument is the command name, we want to add it back at the end.
+        let first = expanded.remove(0);
 
         // Get our aliases.
         let aliases = self.aliases()?;
@@ -243,7 +246,8 @@ impl crate::config::Config for FileConfig {
         // Expand the alias.
         let (mut expansion, ok) = aliases.get(expanded.first().unwrap());
         if !ok {
-            return Ok((expanded, is_shell));
+            // Return the original args.
+            return Ok((args, is_shell));
         }
 
         // Get the additional arguments.
@@ -284,7 +288,8 @@ impl crate::config::Config for FileConfig {
             return Err(anyhow!("not enough arguments for alias: {}", expansion));
         }
 
-        let mut new_args = shlex::split(&expansion).unwrap();
+        let mut new_args = vec![first];
+        new_args.append(&mut shlex::split(&expansion).unwrap());
         new_args.append(&mut extra_args);
 
         Ok((new_args, is_shell))

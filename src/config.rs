@@ -347,14 +347,21 @@ default = true"#;
             TestItem {
                 name: "no expansion".to_string(),
                 args: vec!["oxide".to_string(), "config".to_string(), "set".to_string()],
-                want_expanded: vec!["config".to_string(), "set".to_string()],
+                want_expanded: vec!["oxide".to_string(), "config".to_string(), "set".to_string()],
                 want_is_shell: false,
                 want_err: "".to_string(),
             },
             TestItem {
                 name: "simple expansion".to_string(),
                 args: vec!["oxide".to_string(), "cs".to_string()],
-                want_expanded: vec!["config".to_string(), "set".to_string()],
+                want_expanded: vec!["oxide".to_string(), "config".to_string(), "set".to_string()],
+                want_is_shell: false,
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "simple expansion with weird binary name".to_string(),
+                args: vec!["weird".to_string(), "cs".to_string()],
+                want_expanded: vec!["weird".to_string(), "config".to_string(), "set".to_string()],
                 want_is_shell: false,
                 want_err: "".to_string(),
             },
@@ -367,6 +374,7 @@ default = true"#;
                     "bar".to_string(),
                 ],
                 want_expanded: vec![
+                    "oxide".to_string(),
                     "config".to_string(),
                     "set".to_string(),
                     "foo".to_string(),
@@ -398,6 +406,7 @@ default = true"#;
                     "bar".to_string(),
                 ],
                 want_expanded: vec![
+                    "oxide".to_string(),
                     "config".to_string(),
                     "set".to_string(),
                     "foo".to_string(),
@@ -417,6 +426,7 @@ default = true"#;
                     "example.org".to_string(),
                 ],
                 want_expanded: vec![
+                    "oxide".to_string(),
                     "config".to_string(),
                     "set".to_string(),
                     "foo".to_string(),
@@ -431,6 +441,7 @@ default = true"#;
                 name: "dolla dolla bills in expansion".to_string(),
                 args: vec!["oxide".to_string(), "ci".to_string(), "$foo$".to_string()],
                 want_expanded: vec![
+                    "oxide".to_string(),
                     "config".to_string(),
                     "set".to_string(),
                     "$foo$".to_string(),

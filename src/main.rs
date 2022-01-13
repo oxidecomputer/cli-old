@@ -175,9 +175,20 @@ mod test {
     fn test_main() {
         let tests: Vec<TestItem> = vec![
             TestItem {
-                name: "completion".to_string(),
+                name: "existing command".to_string(),
                 args: vec!["oxide".to_string(), "completion".to_string()],
                 want_out: "complete -F _oxide -o bashdefault -o default oxide\n".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "existing command with args".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "completion".to_string(),
+                    "-s".to_string(),
+                    "zsh".to_string(),
+                ],
+                want_out: "_oxide \"$@\"\n".to_string(),
                 want_err: "".to_string(),
             },
             TestItem {
@@ -201,13 +212,13 @@ mod test {
             TestItem {
                 name: "call that alias".to_string(),
                 args: vec!["oxide".to_string(), "foo".to_string()],
-                want_out: "complete -F _oxide -o bashdefault -o default oxide\n".to_string(),
+                want_out: "_oxide \"$@\"\n".to_string(),
                 want_err: "".to_string(),
             },
             TestItem {
                 name: "call that alias with different binary name".to_string(),
                 args: vec!["/bin/thing/oxide".to_string(), "foo".to_string()],
-                want_out: "complete -F _oxide -o bashdefault -o default oxide\n".to_string(),
+                want_out: "_oxide \"$@\"\n".to_string(),
                 want_err: "".to_string(),
             },
         ];
