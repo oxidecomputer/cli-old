@@ -24,7 +24,7 @@ pub struct StateEntry {
 ///
 /// Returns the latest version of the cli, or none if there is not a new
 /// update or we shouldn't update.
-fn check_for_update(current_version: &str) -> Result<Option<ReleaseInfo>> {
+fn check_for_update(_current_version: &str) -> Result<Option<ReleaseInfo>> {
     if !should_check_for_update() {
         return Ok(None);
     }
@@ -95,24 +95,20 @@ fn version_greater_then(v: &str, w: &str) -> bool {
     cmp == version_compare::Cmp::Gt
 }
 
-/*
- * func isRecentRelease(publishedAt time.Time) bool {
-    return !publishedAt.IsZero() && time.Since(publishedAt) < time.Hour*24
+/// Returns if the release was published in the last 24 hours.
+fn is_recent_release(published_at: chrono::DateTime<chrono::Utc>) -> bool {
+    let duration = chrono::Utc::now() - published_at;
+
+    duration.num_days() < 1
 }
 
-// Check whether the gh binary was found under the Homebrew prefix
-func isUnderHomebrew(ghBinary string) bool {
-    brewExe, err := safeexec.LookPath("brew")
-    if err != nil {
-        return false
-    }
+/// Check whether the oxide binary was found under the Homebrew prefix.
+fn is_under_homebrew(binary_path: &str) -> Result<bool> {
+    let output = std::process::Command::new("brew").args(vec!["--prefix"]).output()?;
 
-    brewPrefixBytes, err := exec.Command(brewExe, "--prefix").Output()
-    if err != nil {
-        return false
-    }
+    let homebrew_prefix = String::from_utf8(output.stdout)?;
 
-    brewBinPrefix := filepath.Join(strings.TrimSpace(string(brewPrefixBytes)), "bin") + string(filepath.Separator)
-    return strings.HasPrefix(ghBinary, brewBinPrefix)
+    let brew_bin_prefix = std::path::Path::new(homebrew_prefix.trim()).join("bin");
+
+    Ok(binary_path.starts_with(brew_bin_prefix.to_str().unwrap()))
 }
-*/
