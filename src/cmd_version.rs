@@ -13,7 +13,7 @@ impl crate::cmd::Command for CmdVersion {
 
         writeln!(ctx.io.out, "oxide {}", version)?;
 
-        writeln!(ctx.io.out, "{}", changelog_url(&version))?;
+        writeln!(ctx.io.out, "{}", changelog_url(version))?;
 
         Ok(())
     }
