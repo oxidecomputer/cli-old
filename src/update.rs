@@ -111,7 +111,8 @@ fn set_state_entry(filename: &str, t: chrono::DateTime<chrono::Utc>, r: ReleaseI
 
 /// Return is one version is greater than another.
 fn version_greater_then(v: &str, w: &str) -> bool {
-    let cmp = version_compare::compare(v, w).unwrap_or(version_compare::Cmp::Eq);
+    let cmp = version_compare::compare(v.trim_start_matches('v'), w.trim_start_matches('v'))
+        .unwrap_or(version_compare::Cmp::Eq);
 
     cmp == version_compare::Cmp::Gt
 }
@@ -135,4 +136,70 @@ pub fn is_under_homebrew() -> Result<bool> {
     let brew_bin_prefix = std::path::Path::new(homebrew_prefix.trim()).join("bin");
 
     Ok(binary_path_str.starts_with(brew_bin_prefix.to_str().unwrap()))
+}
+
+#[cfg(test)]
+mod test {
+    use pretty_assertions::assert_eq;
+
+    pub struct TestItem {
+        name: String,
+        current_version: String,
+        latest_version: String,
+        want_result: bool,
+    }
+
+    #[test]
+    fn test_update() {
+        let tests: Vec<TestItem> = vec![
+            TestItem {
+                name: "latest is newer".to_string(),
+                current_version: "v0.0.1".to_string(),
+                latest_version: "v1.0.0".to_string(),
+                want_result: true,
+            },
+            TestItem {
+                name: "current is prerelease".to_string(),
+                current_version: "v1.0.0-pre.1".to_string(),
+                latest_version: "v1.0.0".to_string(),
+                want_result: true,
+            },
+            TestItem {
+                name: "current is built from source".to_string(),
+                current_version: "v1.2.3-123-gdeadbeef".to_string(),
+                latest_version: "v1.2.3".to_string(),
+                want_result: false,
+            },
+            TestItem {
+                name: "current is built from source after a prerelease".to_string(),
+                current_version: "v1.2.3-rc.1-123-gdeadbeef".to_string(),
+                latest_version: "v1.2.3".to_string(),
+                want_result: true,
+            },
+            TestItem {
+                name: "latest is newer than version build from source".to_string(),
+                current_version: "v1.2.3-123-gdeadbeef".to_string(),
+                latest_version: "v1.2.4".to_string(),
+                want_result: true,
+            },
+            TestItem {
+                name: "latest is current".to_string(),
+                current_version: "v1.2.5".to_string(),
+                latest_version: "v1.2.5".to_string(),
+                want_result: false,
+            },
+            TestItem {
+                name: "latest is older".to_string(),
+                current_version: "v0.10.0-pre.1".to_string(),
+                latest_version: "v0.9.0".to_string(),
+                want_result: false,
+            },
+        ];
+
+        for t in tests {
+            let result = crate::update::version_greater_then(&t.latest_version, &t.current_version);
+
+            assert_eq!(result, t.want_result, "test {} failed", t.name);
+        }
+    }
 }
