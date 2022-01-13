@@ -113,7 +113,7 @@ async fn main() -> Result<(), ()> {
             writeln!(
                 &mut ctx.io.err_out,
                 "\n\n{} {} → {}\n",
-                cs.yellow("A new release of gh is available:"),
+                cs.yellow("A new release of oxide is available:"),
                 cs.cyan(build_version),
                 cs.purple(&latest_release.version)
             )
