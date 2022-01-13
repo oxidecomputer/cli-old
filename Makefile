@@ -15,14 +15,11 @@ GENERATED_DOCS_DIR := ${PREFIX}/generated_docs
 CROSS_TARGETS := x86_64-unknown-linux-musl \
 				 x86_64-apple-darwin \
 				 aarch64-apple-darwin \
-				 x86_64-pc-windows-gnu
-
-# TODO: Add these back in once they work.
-# aarch64-unknown-linux-musl
-# x86_64-unknown-freebsd
-# x86_64-unknown-illumos
-# i686-pc-windows-gnu
-
+				 x86_64-pc-windows-gnu \
+				 aarch64-unknown-linux-musl \
+				 x86_64-unknown-freebsd \
+				 x86_64-unknown-illumos \
+				 i686-pc-windows-gnu
 
 # For this to work, you need to install toml-cli: https://github.com/gnprice/toml-cli
 # `cargo install toml-cli`
@@ -38,8 +35,7 @@ ifeq ($(GITCOMMIT),)
 endif
 
 define buildrelease
-rustup target add $(1)
-cargo build \
+cross build \
 	--target $(1) \
 	-Z unstable-options \
 	--out-dir $(BUILDDIR);
