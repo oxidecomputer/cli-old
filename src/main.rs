@@ -91,8 +91,9 @@ enum SubCommand {
 async fn main() -> Result<(), ()> {
     let build_version = clap::crate_version!();
     // Check for updates to the cli.
-    // TODO: this should be done in a background thread.
-    let update = crate::update::check_for_update(build_version).await.unwrap_or_default();
+    // We don't await here since we don't want to block the main thread.
+    // We'll check again before we exit.
+    let update = crate::update::check_for_update(build_version);
 
     // Let's get our configuration.
     let mut c = crate::config_file::parse_default_config().unwrap();
@@ -104,7 +105,7 @@ async fn main() -> Result<(), ()> {
     let result = do_main(args, &mut ctx);
 
     // If we have an update, let's print it.
-    handle_update(&mut ctx, update, build_version).unwrap();
+    handle_update(&mut ctx, update.await.unwrap_or_default(), build_version).unwrap();
 
     if let Err(err) = result {
         eprintln!("{}", err);
