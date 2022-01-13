@@ -284,6 +284,22 @@ impl IoStreams {
         crate::colors::ColorScheme::new(self.color_enabled(), self.color_support_256(), self.has_true_color())
     }
 
+    pub fn write_json(&mut self, json: &serde_json::Value) -> Result<()> {
+        if self.color_enabled() {
+            // Enable colored json output.
+            #[cfg(windows)]
+            let enabled = colored_json::enable_ansi_support();
+
+            // Print the response body.
+            writeln!(self.out, "{}", colored_json::to_colored_json_auto(json)?)?;
+        } else {
+            // Print the response body.
+            writeln!(self.out, "{}", serde_json::to_string_pretty(json)?)?;
+        }
+
+        Ok(())
+    }
+
     pub fn system() -> Self {
         let stdout_is_tty = atty::is(atty::Stream::Stdout);
         let stderr_is_tty = atty::is(atty::Stream::Stderr);
