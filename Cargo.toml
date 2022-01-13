@@ -20,10 +20,10 @@ clap_generate = { git = "https://github.com/sondr3/clap", branch = "generate-man
 dirs = "4"
 heck = "^0.4.0"
 regex = "1"
-oxide-api = "0.1.0-rc.3"
+oxide-api = "0.1.0-rc.4"
 pulldown-cmark = "^0.9.0"
 pulldown-cmark-to-cmark = "^9.0.0"
-reqwest = { version = "^0.11.9", features = ["json", "rustls-tls"] }
+reqwest = { version = "^0.11.9", default-features = false, features = ["json", "rustls-tls"] }
 # Fix once https://github.com/clap-rs/clap/pull/3174 is merged.
 roff = { git = "https://github.com/sondr3/roff-rs", branch = "updates" }
 serde = { version = "1", features = ["derive"] }
