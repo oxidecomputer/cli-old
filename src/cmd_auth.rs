@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::{anyhow, Result};
 use clap::Parser;
 
@@ -203,16 +205,102 @@ pub struct CmdAuthStatus {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdAuthStatus {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let cs = ctx.io.color_scheme();
+
+        let mut status_info: HashMap<String, Vec<String>> = HashMap::new();
+
+        let hostnames = ctx.config.hosts()?;
+
+        if hostnames.is_empty() {
+            writeln!(
+                ctx.io.err_out,
+                "You are not logged into any Oxide hosts. Run {} to authenticate.\n",
+                cs.bold("oxide auth login")
+            )?;
+            return Err(anyhow!(""));
+        }
+
+        let mut failed = false;
+        let mut hostname_found = false;
+
+        for hostname in &hostnames {
+            if !self.host.is_empty() && self.host != *hostname {
+                continue;
+            }
+
+            hostname_found = true;
+
+            let (token, token_source) = ctx.config.get_with_source(hostname, "token")?;
+
+            let client = ctx.api_client(hostname)?;
+
+            let mut host_status: Vec<String> = vec![];
+
+            /*match client.session().await {
+                Ok(session) => {
+                    // Let the user know if their token is invalid.
+                    if !session.is_valid() {
+                        host_status.push(format!(
+                            "{} Logged in to {} as {} ({}) with an invalid token",
+                            cs.failure_icon(),
+                            hostname,
+                            cs.bold(session.email),
+                            token_source
+                        ));
+                        failed = true;
+                        continue;
+                    }
+
+                    host_status.push(format!(
+                        "{} Logged in to {} as {} ({})",
+                        cs.success_icon(),
+                        hostname,
+                        cs.bold(session.email),
+                        token_source
+                    ));
+                    let mut token_display = "*******************".to_string();
+                    if self.show_token {
+                        token_display = token.to_string();
+                    }
+                    host_status.push(format!("{} Token: {}\n", cs.success_icon(), token_display));
+                }
+                Err(err) => {
+                    host_status.push(format!("{} {}: api call failed: {}", cs.failure_icon(), hostname, err));
+                    failed = true;
+                    continue;
+                }
+            }*/
+
+            status_info.insert(hostname.to_string(), host_status);
+        }
+
+        if !hostname_found {
+            writeln!(
+                ctx.io.err_out,
+                "Hostname {} not found among authenticated Oxide hosts\n",
+                self.host
+            )?;
+            return Err(anyhow!(""));
+        }
+
+        for hostname in hostnames {
+            match status_info.get(&hostname) {
+                Some(status) => {
+                    writeln!(ctx.io.out, "{}", cs.bold(&hostname))?;
+                    for line in status {
+                        writeln!(ctx.io.out, "{}", line)?;
+                    }
+                }
+                None => {
+                    writeln!(ctx.io.err_out, "No status information for {}\n", hostname)?;
+                }
+            }
+        }
+
+        if failed {
+            return Err(anyhow!(""));
+        }
+
         Ok(())
     }
-}
-
-#[cfg(test)]
-mod test {
-    use pretty_assertions::assert_eq;
-
-    use crate::cmd::Command;
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cmd_auth() {}
 }
