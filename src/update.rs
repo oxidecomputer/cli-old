@@ -24,12 +24,33 @@ pub struct StateEntry {
 ///
 /// Returns the latest version of the cli, or none if there is not a new
 /// update or we shouldn't update.
-fn check_for_update(_current_version: &str) -> Result<Option<ReleaseInfo>> {
+pub async fn check_for_update(current_version: &str) -> Result<Option<ReleaseInfo>> {
     if !should_check_for_update() {
         return Ok(None);
     }
 
-    // TODO: Fill in here.
+    let state_file = crate::config_file::state_file()?;
+
+    // Get our current state.
+    if std::path::Path::new(&state_file).exists() {
+        let state = get_state_entry(&state_file)?;
+
+        let duration_since_last_check = chrono::Utc::now() - state.checked_for_update_at;
+        if duration_since_last_check < chrono::Duration::hours(24) {
+            // If we've checked for updates in the last 24 hours, don't check again.
+            return Ok(None);
+        }
+    }
+
+    // Get the latest release.
+    let latest_release = get_latest_release_info().await?;
+
+    // Update our state.
+    set_state_entry(&state_file, chrono::Utc::now(), latest_release.clone())?;
+
+    if version_greater_then(&latest_release.version, current_version) {
+        return Ok(Some(latest_release));
+    }
 
     Ok(None)
 }
@@ -96,14 +117,14 @@ fn version_greater_then(v: &str, w: &str) -> bool {
 }
 
 /// Returns if the release was published in the last 24 hours.
-fn is_recent_release(published_at: chrono::DateTime<chrono::Utc>) -> bool {
+pub fn is_recent_release(published_at: chrono::DateTime<chrono::Utc>) -> bool {
     let duration = chrono::Utc::now() - published_at;
 
     duration.num_days() < 1
 }
 
 /// Check whether the oxide binary was found under the Homebrew prefix.
-fn is_under_homebrew(binary_path: &str) -> Result<bool> {
+pub fn is_under_homebrew(binary_path: &str) -> Result<bool> {
     let output = std::process::Command::new("brew").args(vec!["--prefix"]).output()?;
 
     let homebrew_prefix = String::from_utf8(output.stdout)?;

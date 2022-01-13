@@ -87,7 +87,13 @@ enum SubCommand {
     Generate(cmd_generate::CmdGenerate),
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), ()> {
+    let build_version = clap::crate_version!();
+    // Check for updates to the cli.
+    // TODO: this should be done in a background thread.
+    let update = crate::update::check_for_update(&build_version).await.unwrap();
+
     // Let's get our configuration.
     let mut c = crate::config_file::parse_default_config().unwrap();
     let mut config = crate::config_from_env::EnvConfig::inherit_env(&mut c);
@@ -96,6 +102,31 @@ fn main() {
     // Let's grab all our args.
     let args: Vec<String> = std::env::args().collect();
     let result = do_main(args, &mut ctx);
+
+    if let Some(latest_release) = update {
+        // do not notify Homebrew users before the version bump had a chance to get merged into homebrew-core
+        let is_homebrew = crate::update::is_under_homebrew().unwrap();
+
+        if !(is_homebrew && crate::update::is_recent_release(latest_release.published_at)) {
+            let cs = ctx.io.color_scheme();
+
+            writeln!(
+                &ctx.io.err_out,
+                "\n\n{} {} → {}\n",
+                cs.yellow("A new release of gh is available:"),
+                cs.cyan(&build_version),
+                cs.cyan(&latest_release.version)
+            )
+            .unwrap();
+
+            if is_homebrew {
+                writeln!(&ctx.io.err_out, "To upgrade, run: brew update && brew upgrade oxide").unwrap();
+            }
+
+            writeln!(&ctx.io.err_out, "{}\n\n", cs.yellow(&latest_release.url)).unwrap();
+        }
+    }
+
     if let Err(err) = result {
         eprintln!("{}", err);
         std::process::exit(1);
