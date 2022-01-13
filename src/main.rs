@@ -25,6 +25,8 @@ mod iostreams;
 mod man;
 mod markdown;
 
+use std::io::{Read, Write};
+
 use anyhow::Result;
 use clap::Parser;
 
@@ -126,8 +128,26 @@ fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<(
             // Remove the first argument, since thats our `sh`.
             expanded_args.remove(0);
 
-            let mut external_cmd = std::process::Command::new("sh").args(expanded_args).spawn()?;
+            let mut external_cmd = std::process::Command::new("sh")
+                .args(expanded_args)
+                .stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::piped())
+                .spawn()?;
             let ecode = external_cmd.wait()?;
+
+            // Pipe the output to the terminal.
+            if let Some(mut stdout_rd) = external_cmd.stdout.as_mut() {
+                let mut stdout = Vec::new();
+                stdout_rd.read_to_end(&mut stdout)?;
+                ctx.io.out.write_all(&stdout)?;
+            }
+
+            if let Some(mut stderr_rd) = external_cmd.stderr {
+                let mut stderr = Vec::new();
+                stderr_rd.read_to_end(&mut stderr)?;
+                ctx.io.err_out.write_all(&stderr)?;
+            }
+
             std::process::exit(ecode.code().unwrap_or(0));
         }
 
@@ -204,21 +224,40 @@ mod test {
                 want_err: "".to_string(),
             },
             TestItem {
+                name: "add a shell alias".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "alias".to_string(),
+                    "set".to_string(),
+                    "-s".to_string(),
+                    "bar".to_string(),
+                    "which bash".to_string(),
+                ],
+                want_out: "- Adding alias for bar: !which bash\n✔ Added alias.".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
                 name: "list our aliases".to_string(),
                 args: vec!["oxide".to_string(), "alias".to_string(), "list".to_string()],
                 want_out: "\"completion -s zsh\"".to_string(),
                 want_err: "".to_string(),
             },
             TestItem {
-                name: "call that alias".to_string(),
+                name: "call alias".to_string(),
                 args: vec!["oxide".to_string(), "foo".to_string()],
                 want_out: "_oxide \"$@\"\n".to_string(),
                 want_err: "".to_string(),
             },
             TestItem {
-                name: "call that alias with different binary name".to_string(),
+                name: "call alias with different binary name".to_string(),
                 args: vec!["/bin/thing/oxide".to_string(), "foo".to_string()],
                 want_out: "_oxide \"$@\"\n".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "call shell alias".to_string(),
+                args: vec!["oxide".to_string(), "bar".to_string()],
+                want_out: "bash".to_string(),
                 want_err: "".to_string(),
             },
         ];
@@ -241,6 +280,8 @@ mod test {
             let stdout = std::fs::read_to_string(stdout_path).unwrap();
             let stderr = std::fs::read_to_string(stderr_path).unwrap();
 
+            println!("STDOUT '{}'", stdout);
+
             assert!(
                 stdout.contains(&t.want_out),
                 "test {} ->\nstdout: {}\nwant: {}",
@@ -251,7 +292,7 @@ mod test {
 
             match result {
                 Ok(()) => {
-                    assert!(stdout.is_empty() == t.want_out.is_empty(), "test {}", t.name);
+                    assert_eq!(stdout.is_empty(), t.want_out.is_empty(), "test {}", t.name);
                     assert!(stderr.is_empty(), "test {}", t.name);
                 }
                 Err(err) => {
@@ -262,8 +303,9 @@ mod test {
                         err,
                         t.want_err
                     );
-                    assert!(
-                        err.to_string().is_empty() == t.want_err.is_empty(),
+                    assert_eq!(
+                        err.to_string().is_empty(),
+                        t.want_err.is_empty(),
                         "test {} -> err: {}\nwant_err: {}",
                         t.name,
                         err,
