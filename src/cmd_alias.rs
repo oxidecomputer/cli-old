@@ -206,66 +206,109 @@ pub fn valid_command(args: &str) -> bool {
         return false;
     }
 
-    let mut args = s.unwrap_or_default();
+    let args = s.unwrap_or_default();
     if args.is_empty() {
         return false;
     }
-
-    let mut split: Vec<String> = vec![];
-    let first = args.first().unwrap();
-    if first != "oxide" {
-        split.push("oxide".to_string());
-    }
-    // Add out args.
-    split.append(&mut args);
 
     // Convert our opts into a clap app.
     let app: App = crate::Opts::into_app();
 
     // Try to get matches.
-    match app.try_get_matches_from(split) {
-        Ok(_) => {
-            // If we get here, we have a valid command.
-            true
+    for subcmd in app.get_subcommands() {
+        if subcmd.get_name() != args[0] {
+            continue;
         }
-        Err(err) => {
-            match err.kind {
-                // These come from here: https://docs.rs/clap/latest/clap/enum.ErrorKind.html#variant.DisplayHelp
-                // We basically want to ignore any errors that are valid commands but invalid args.
-                clap::ErrorKind::DisplayHelp => true,
-                clap::ErrorKind::DisplayVersion => true,
-                clap::ErrorKind::MissingRequiredArgument => true,
-                clap::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand => true,
-                _ => {
-                    // If we get here, we have an invalid command.
-                    false
-                }
+
+        match subcmd.clone().try_get_matches_from(args) {
+            Ok(_) => {
+                // If we get here, we have a valid command.
+                return true;
+            }
+            Err(err) => {
+                return match err.kind {
+                    // These come from here: https://docs.rs/clap/latest/clap/enum.ErrorKind.html#variant.DisplayHelp
+                    // We basically want to ignore any errors that are valid commands but invalid args.
+                    clap::ErrorKind::DisplayHelp => true,
+                    clap::ErrorKind::DisplayVersion => true,
+                    clap::ErrorKind::MissingRequiredArgument => true,
+                    clap::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand => true,
+                    _ => {
+                        // If we get here, we have an invalid command.
+                        false
+                    }
+                };
             }
         }
     }
+
+    false
 }
 
 #[cfg(test)]
 mod test {
     use crate::cmd::Command;
 
-    pub struct TestItem {
+    pub struct TestAlias {
         name: String,
         cmd: crate::cmd_alias::SubCommand,
         want_out: String,
         want_err: String,
     }
 
+    pub struct TestValidCommand {
+        name: String,
+        cmd: String,
+        want: bool,
+    }
+
     #[test]
-    fn test_cmd_config() {
-        let tests: Vec<TestItem> = vec![
-            TestItem {
+    fn test_valid_command() {
+        let tests = vec![
+            TestValidCommand {
+                name: "empty".to_string(),
+                cmd: "".to_string(),
+                want: false,
+            },
+            TestValidCommand {
+                name: "single arg valid".to_string(),
+                cmd: "completion".to_string(),
+                want: true,
+            },
+            TestValidCommand {
+                name: "multiple arg valid".to_string(),
+                cmd: "completion -s zsh".to_string(),
+                want: true,
+            },
+            TestValidCommand {
+                name: "single arg invalid".to_string(),
+                cmd: "foo".to_string(),
+                want: false,
+            },
+            TestValidCommand {
+                name: "multiple args invalid".to_string(),
+                cmd: "foo -H thing".to_string(),
+                want: false,
+            },
+        ];
+
+        for t in tests {
+            let is_valid = crate::cmd_alias::valid_command(&t.cmd);
+
+            assert_eq!(is_valid, t.want, "test {}", t.name);
+        }
+    }
+
+    #[test]
+    fn test_cmd_alias() {
+        let tests: Vec<TestAlias> = vec![
+            TestAlias {
                 name: "list empty".to_string(),
                 cmd: crate::cmd_alias::SubCommand::List(crate::cmd_alias::CmdAliasList {}),
                 want_out: "no aliases configured\n".to_string(),
                 want_err: "".to_string(),
             },
-            TestItem {
+            TestAlias {
                 name: "add an alias".to_string(),
                 cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
                     alias: "cs".to_string(),
@@ -275,7 +318,7 @@ mod test {
                 want_out: "- Adding alias for cs: config set\n✔ Added alias.\n".to_string(),
                 want_err: "".to_string(),
             },
-            TestItem {
+            TestAlias {
                 name: "update an alias".to_string(),
                 cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
                     alias: "cs".to_string(),
@@ -286,7 +329,7 @@ mod test {
                     .to_string(),
                 want_err: "".to_string(),
             },
-            TestItem {
+            TestAlias {
                 name: "add an alias with shell".to_string(),
                 cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
                     alias: "cp".to_string(),
@@ -296,7 +339,7 @@ mod test {
                 want_out: "- Adding alias for cp: !config list\n✔ Added alias.\n".to_string(),
                 want_err: "".to_string(),
             },
-            TestItem {
+            TestAlias {
                 name: "add an alias with expandable args".to_string(),
                 cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
                     alias: "cs".to_string(),
@@ -308,8 +351,8 @@ mod test {
                         .to_string(),
                 want_err: "".to_string(),
             },
-            TestItem {
-                name: "add already command".to_string(),
+            TestAlias {
+                name: "add already command -> config".to_string(),
                 cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
                     alias: "config".to_string(),
                     expansion: "alias set".to_string(),
@@ -318,7 +361,17 @@ mod test {
                 want_out: "".to_string(),
                 want_err: "could not create alias: config is already an oxide command".to_string(),
             },
-            TestItem {
+            TestAlias {
+                name: "add already command -> completion".to_string(),
+                cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
+                    alias: "completion".to_string(),
+                    expansion: "alias set".to_string(),
+                    shell: false,
+                }),
+                want_out: "".to_string(),
+                want_err: "could not create alias: completion is already an oxide command".to_string(),
+            },
+            TestAlias {
                 name: "add does not exist".to_string(),
                 cmd: crate::cmd_alias::SubCommand::Set(crate::cmd_alias::CmdAliasSet {
                     alias: "cp".to_string(),
@@ -328,13 +381,13 @@ mod test {
                 want_out: "".to_string(),
                 want_err: "could not create alias: dne thing does not correspond to an oxide command".to_string(),
             },
-            TestItem {
+            TestAlias {
                 name: "list all".to_string(),
                 cmd: crate::cmd_alias::SubCommand::List(crate::cmd_alias::CmdAliasList {}),
                 want_out: "\"!config list\"\n".to_string(),
                 want_err: "".to_string(),
             },
-            TestItem {
+            TestAlias {
                 name: "delete an alias".to_string(),
                 cmd: crate::cmd_alias::SubCommand::Delete(crate::cmd_alias::CmdAliasDelete {
                     alias: "cp".to_string(),
@@ -342,7 +395,7 @@ mod test {
                 want_out: "Deleted alias cp; was !config list".to_string(),
                 want_err: "".to_string(),
             },
-            TestItem {
+            TestAlias {
                 name: "delete an alias not exist".to_string(),
                 cmd: crate::cmd_alias::SubCommand::Delete(crate::cmd_alias::CmdAliasDelete {
                     alias: "thing".to_string(),
@@ -350,7 +403,7 @@ mod test {
                 want_out: "".to_string(),
                 want_err: "no such alias thing".to_string(),
             },
-            TestItem {
+            TestAlias {
                 name: "list after delete".to_string(),
                 cmd: crate::cmd_alias::SubCommand::List(crate::cmd_alias::CmdAliasList {}),
                 want_out: "cs:   \"config set $1 $2\"\n".to_string(),
@@ -372,23 +425,26 @@ mod test {
             };
 
             let cmd_alias = crate::cmd_alias::CmdAlias { subcmd: t.cmd };
-            match cmd_alias.run(&mut ctx) {
+
+            let result = cmd_alias.run(&mut ctx);
+
+            let stdout = std::fs::read_to_string(stdout_path).unwrap();
+            let stderr = std::fs::read_to_string(stderr_path).unwrap();
+
+            assert!(
+                stdout.contains(&t.want_out),
+                "test {} ->\nstdout: {}\nwant: {}",
+                t.name,
+                stdout,
+                t.want_out
+            );
+
+            match result {
                 Ok(()) => {
-                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
-                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
-                    assert!(
-                        stdout.contains(&t.want_out),
-                        "test {} ->\nstdout: {}\nwant: {}",
-                        t.name,
-                        stdout,
-                        t.want_out
-                    );
                     assert!(stdout.is_empty() == t.want_out.is_empty(), "test {}", t.name);
                     assert!(stderr.is_empty(), "test {}", t.name);
                 }
                 Err(err) => {
-                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
-                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
                     assert!(
                         err.to_string().contains(&t.want_err),
                         "test {} -> err: {}\nwant_err: {}",
@@ -404,7 +460,6 @@ mod test {
                         t.want_err
                     );
                     assert!(stderr.is_empty(), "test {}", t.name);
-                    assert!(stdout.contains(&t.want_out), "test {}", t.name);
                 }
             }
         }

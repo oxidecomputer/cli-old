@@ -248,6 +248,7 @@ impl crate::config::Config for FileConfig {
 
         // Get the additional arguments.
         let mut additional_args = args;
+
         additional_args.remove(0); // Remove the first argument.
         additional_args.remove(0); // Remove the second argument.
 

@@ -25,8 +25,8 @@ mod iostreams;
 mod man;
 mod markdown;
 
+use anyhow::Result;
 use clap::Parser;
-use config::Config;
 
 /// Work seamlessly with Oxide from the command line.
 ///
@@ -92,47 +92,50 @@ fn main() {
 
     // Let's grab all our args.
     let mut args: Vec<String> = std::env::args().collect();
+    if let Err(err) = do_main(args, &mut ctx) {
+        eprintln!("{}", err);
+        std::process::exit(1);
+    }
+}
+
+fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<()> {
+    let original_args = args.clone();
+
+    // Remove the first argument, which is the program name, and can change depending on how
+    // they are calling it.
+    args.remove(0);
+
     let args_str = shlex::join(args.iter().map(|s| s.as_str()).collect::<Vec<&str>>());
-
-    /*let first_arg = if args.len() > 1 {
-        args.get(1).unwrap().to_string()
-    } else {
-        "".to_string()
-    };
-
-    // Convert our opts into a clap app.
-    let app: clap::App = crate::Opts::into_app();*/
 
     // Check if the user is passing in an alias.
     if !crate::cmd_alias::valid_command(&args_str) {
         // Let's validate if it is an alias.
         // It is okay to check the error here because we will not error out if the
         // alias does not exist. We will just return the expanded args.
-        let (mut expanded_args, is_shell) = ctx.config.expand_alias(args).unwrap();
+        let (mut expanded_args, is_shell) = ctx.config.expand_alias(original_args)?;
 
-        // TODO: debug
-        //if opts.debug {
-        writeln!(
+        // KEEP for debug
+        /* writeln!(
             &mut ctx.io.out,
             "Expanded alias: {} -> {}",
             args_str,
             &shlex::join(expanded_args.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
-        )
-        .unwrap();
-        //}
+        )?;*/
 
         if is_shell {
             // Remove the first argument, since thats our `sh`.
             expanded_args.remove(0);
 
-            let mut external_cmd = std::process::Command::new("sh").args(expanded_args).spawn().unwrap();
-            let ecode = external_cmd.wait().unwrap();
+            let mut external_cmd = std::process::Command::new("sh").args(expanded_args).spawn()?;
+            let ecode = external_cmd.wait()?;
             std::process::exit(ecode.code().unwrap_or(0));
         }
 
         // So we handled if the alias was a shell.
         // We can now parse our options from the extended args.
         args = expanded_args;
+    } else {
+        args = original_args;
     }
 
     // Parse the command line arguments.
@@ -142,16 +145,122 @@ fn main() {
     ctx.debug = opts.debug;
 
     match opts.subcmd {
-        SubCommand::Alias(cmd) => run_cmd(&cmd, &mut ctx),
-        SubCommand::Completion(cmd) => run_cmd(&cmd, &mut ctx),
-        SubCommand::Config(cmd) => run_cmd(&cmd, &mut ctx),
-        SubCommand::Generate(cmd) => run_cmd(&cmd, &mut ctx),
+        SubCommand::Alias(cmd) => run_cmd(&cmd, ctx),
+        SubCommand::Completion(cmd) => run_cmd(&cmd, ctx),
+        SubCommand::Config(cmd) => run_cmd(&cmd, ctx),
+        SubCommand::Generate(cmd) => run_cmd(&cmd, ctx),
     }
+
+    Ok(())
 }
 
 fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context) {
     if let Err(err) = cmd.run(ctx) {
         writeln!(ctx.io.err_out, "{}", err).unwrap();
         std::process::exit(1);
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    pub struct TestItem {
+        name: String,
+        args: Vec<String>,
+        want_out: String,
+        want_err: String,
+    }
+
+    #[test]
+    fn test_main() {
+        let tests: Vec<TestItem> = vec![
+            TestItem {
+                name: "completion".to_string(),
+                args: vec!["oxide".to_string(), "completion".to_string()],
+                want_out: "complete -F _oxide -o bashdefault -o default oxide\n".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "add an alias".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "alias".to_string(),
+                    "set".to_string(),
+                    "foo".to_string(),
+                    "completion -s zsh".to_string(),
+                ],
+                want_out: "- Adding alias for foo: completion -s zsh\n✔ Added alias.".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "list our aliases".to_string(),
+                args: vec!["oxide".to_string(), "alias".to_string(), "list".to_string()],
+                want_out: "\"completion -s zsh\"".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "call that alias".to_string(),
+                args: vec!["oxide".to_string(), "foo".to_string()],
+                want_out: "complete -F _oxide -o bashdefault -o default oxide\n".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "call that alias with different binary name".to_string(),
+                args: vec!["/bin/thing/oxide".to_string(), "foo".to_string()],
+                want_out: "complete -F _oxide -o bashdefault -o default oxide\n".to_string(),
+                want_err: "".to_string(),
+            },
+        ];
+
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        for t in tests {
+            let (mut io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
+            io.set_stdout_tty(false);
+            io.set_color_enabled(false);
+            let mut ctx = crate::context::Context {
+                config: &mut c,
+                io,
+                debug: false,
+            };
+
+            let result = crate::do_main(t.args, &mut ctx);
+
+            let stdout = std::fs::read_to_string(stdout_path).unwrap();
+            let stderr = std::fs::read_to_string(stderr_path).unwrap();
+
+            assert!(
+                stdout.contains(&t.want_out),
+                "test {} ->\nstdout: {}\nwant: {}",
+                t.name,
+                stdout,
+                t.want_out
+            );
+
+            match result {
+                Ok(()) => {
+                    assert!(stdout.is_empty() == t.want_out.is_empty(), "test {}", t.name);
+                    assert!(stderr.is_empty(), "test {}", t.name);
+                }
+                Err(err) => {
+                    assert!(
+                        err.to_string().contains(&t.want_err),
+                        "test {} -> err: {}\nwant_err: {}",
+                        t.name,
+                        err,
+                        t.want_err
+                    );
+                    assert!(
+                        err.to_string().is_empty() == t.want_err.is_empty(),
+                        "test {} -> err: {}\nwant_err: {}",
+                        t.name,
+                        err,
+                        t.want_err
+                    );
+                    assert!(stderr.is_empty(), "test {}", t.name);
+                }
+            }
+        }
     }
 }
