@@ -148,6 +148,7 @@ impl crate::cmd::Command for CmdApi {
         // Read the response body.
         let result: serde_json::Value = resp.json().await?;
 
+        // TODO: refactor this into an io::write_json() function, so we can use it everywhere.
         if ctx.io.color_enabled() {
             // Enable colored json output.
             #[cfg(windows)]
