@@ -111,7 +111,7 @@ async fn main() -> Result<(), ()> {
             let cs = ctx.io.color_scheme();
 
             writeln!(
-                &ctx.io.err_out,
+                &mut ctx.io.err_out,
                 "\n\n{} {} → {}\n",
                 cs.yellow("A new release of gh is available:"),
                 cs.cyan(&build_version),
@@ -120,10 +120,14 @@ async fn main() -> Result<(), ()> {
             .unwrap();
 
             if is_homebrew {
-                writeln!(&ctx.io.err_out, "To upgrade, run: brew update && brew upgrade oxide").unwrap();
+                writeln!(
+                    &mut ctx.io.err_out,
+                    "To upgrade, run: brew update && brew upgrade oxide"
+                )
+                .unwrap();
             }
 
-            writeln!(&ctx.io.err_out, "{}\n\n", cs.yellow(&latest_release.url)).unwrap();
+            writeln!(&mut ctx.io.err_out, "{}\n\n", cs.yellow(&latest_release.url)).unwrap();
         }
     }
 

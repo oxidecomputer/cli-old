@@ -124,12 +124,15 @@ pub fn is_recent_release(published_at: chrono::DateTime<chrono::Utc>) -> bool {
 }
 
 /// Check whether the oxide binary was found under the Homebrew prefix.
-pub fn is_under_homebrew(binary_path: &str) -> Result<bool> {
+pub fn is_under_homebrew() -> Result<bool> {
+    let binary_path = std::env::current_exe()?;
+    let binary_path_str = binary_path.to_str().unwrap();
+
     let output = std::process::Command::new("brew").args(vec!["--prefix"]).output()?;
 
     let homebrew_prefix = String::from_utf8(output.stdout)?;
 
     let brew_bin_prefix = std::path::Path::new(homebrew_prefix.trim()).join("bin");
 
-    Ok(binary_path.starts_with(brew_bin_prefix.to_str().unwrap()))
+    Ok(binary_path_str.starts_with(brew_bin_prefix.to_str().unwrap()))
 }
