@@ -16,12 +16,13 @@ enum SubCommand {
     Get(CmdConfigGet),
 }
 
+#[async_trait::async_trait]
 impl crate::cmd::Command for CmdConfig {
-    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         match &self.subcmd {
-            SubCommand::Get(cmd) => cmd.run(ctx),
-            SubCommand::Set(cmd) => cmd.run(ctx),
-            SubCommand::List(cmd) => cmd.run(ctx),
+            SubCommand::Get(cmd) => cmd.run(ctx).await,
+            SubCommand::Set(cmd) => cmd.run(ctx).await,
+            SubCommand::List(cmd) => cmd.run(ctx).await,
         }
     }
 }
@@ -39,8 +40,9 @@ pub struct CmdConfigGet {
     pub host: String,
 }
 
+#[async_trait::async_trait]
 impl crate::cmd::Command for CmdConfigGet {
-    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         match ctx.config.get(&self.host, &self.key) {
             Ok(value) => writeln!(ctx.io.out, "{}", value)?,
             Err(err) => {
@@ -69,8 +71,9 @@ pub struct CmdConfigSet {
     pub host: String,
 }
 
+#[async_trait::async_trait]
 impl crate::cmd::Command for CmdConfigSet {
-    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let cs = ctx.io.color_scheme();
 
         // Validate the key.
@@ -113,8 +116,9 @@ pub struct CmdConfigList {
     pub host: String,
 }
 
+#[async_trait::async_trait]
 impl crate::cmd::Command for CmdConfigList {
-    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let host = if self.host.is_empty() {
             ctx.config.default_host().unwrap_or_default()
         } else {

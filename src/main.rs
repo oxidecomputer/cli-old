@@ -105,7 +105,7 @@ async fn main() -> Result<(), ()> {
 
     // Let's grab all our args.
     let args: Vec<String> = std::env::args().collect();
-    let result = do_main(args, &mut ctx);
+    let result = do_main(args, &mut ctx).await;
 
     // If we have an update, let's print it.
     handle_update(&mut ctx, update.await.unwrap_or_default(), build_version).unwrap();
@@ -118,7 +118,7 @@ async fn main() -> Result<(), ()> {
     std::process::exit(result.unwrap_or(0));
 }
 
-fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<i32> {
+async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<i32> {
     let original_args = args.clone();
 
     // Remove the first argument, which is the program name, and can change depending on how
@@ -176,18 +176,18 @@ fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<i
     ctx.debug = opts.debug;
 
     match opts.subcmd {
-        SubCommand::Alias(cmd) => run_cmd(&cmd, ctx),
-        SubCommand::Api(cmd) => run_cmd(&cmd, ctx),
-        SubCommand::Completion(cmd) => run_cmd(&cmd, ctx),
-        SubCommand::Config(cmd) => run_cmd(&cmd, ctx),
-        SubCommand::Generate(cmd) => run_cmd(&cmd, ctx),
+        SubCommand::Alias(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Api(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Completion(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Config(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Generate(cmd) => run_cmd(&cmd, ctx).await,
     }
 
     Ok(0)
 }
 
-fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context) {
-    if let Err(err) = cmd.run(ctx) {
+async fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context) {
+    if let Err(err) = cmd.run(ctx).await {
         writeln!(ctx.io.err_out, "{}", err).unwrap();
         std::process::exit(1);
     }

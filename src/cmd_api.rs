@@ -1,4 +1,7 @@
-use std::{collections::HashMap, io::Read};
+use std::{
+    collections::HashMap,
+    io::{Read, Write},
+};
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
@@ -55,12 +58,17 @@ pub struct CmdApi {
     /// The file to use as body for the HTTP request (use "-" to read from standard input).
     #[clap(long, default_value = "", conflicts_with = "paginate")]
     pub input: String,
+
+    /// Include HTTP response headers in the output.
+    #[clap(short, long)]
+    pub include: bool,
 }
 
+#[async_trait::async_trait]
 impl crate::cmd::Command for CmdApi {
-    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         // Let's get the api client.
-        let _client = ctx.api_client()?;
+        let client = ctx.api_client()?;
 
         if self.paginate && self.method != http::method::Method::GET {
             return Err(anyhow!("the `--paginate` option is not supported for non-GET requests",));
@@ -70,6 +78,59 @@ impl crate::cmd::Command for CmdApi {
         let mut endpoint = self.endpoint.to_string();
         if !self.endpoint.starts_with('/') {
             endpoint = format!("/{}", endpoint);
+        }
+
+        // Parse the fields.
+        let params = self.parse_fields()?;
+        // Set them as our body if they exist.
+        let mut body = if params.is_empty() {
+            None
+        } else {
+            Some(reqwest::Body::from(serde_json::to_string(&params)?.as_bytes()))
+        };
+
+        // Add the pagination parameters.
+
+        // If they didn't specify the method and we have parameters, we'll
+        // assume they want to use POST.
+
+        // Parse the input file.
+        if !self.input.is_empty() {
+            // Read the input file.
+            let buf = Vec::new();
+            let mut input_file = std::fs::File::open(&self.input)?;
+            input_file.read_to_end(&mut buf)?;
+
+            // Set this as our body.
+            body = Some(reqwest::Body::from(buf));
+
+            // Set our params to the query string.
+            if !params.is_empty() {
+                let mut query_string = String::new();
+                for (key, value) in params {
+                    if !query_string.is_empty() {
+                        query_string.push('&');
+                    }
+                    query_string.push_str(&format!("{}={}", key, value));
+                }
+
+                if endpoint.contains('?') {
+                    endpoint = format!("{}&{}", endpoint, query_string);
+                } else {
+                    endpoint = format!("{}?{}", endpoint, query_string);
+                }
+            }
+        }
+
+        // Make the request.
+
+        // TODO: We could also add flags for setting headers, etc.
+        let resp = client.request_raw(self.method, &endpoint, body).await?;
+
+        // Print the response headers if requested.
+        if self.include {
+            writeln!(ctx.io.out, "{:?} {}", resp.version(), resp.status())?;
+            print_headers(ctx, &resp.headers())?;
         }
 
         Ok(())
@@ -138,6 +199,31 @@ impl CmdApi {
 
         Ok(params)
     }
+}
+
+fn print_headers(ctx: &mut crate::context::Context, headers: reqwest::header::HeaderMap) -> Result<()> {
+    let mut names: Vec<String> = headers.keys().map(|k| k.as_str().to_string()).collect();
+    names.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+
+    let cs = ctx.io.color_scheme();
+
+    let mut tw = tabwriter::TabWriter::new(vec![]);
+    for name in names {
+        if name.to_lowercase() == "status" {
+            continue;
+        }
+
+        let value = headers.get(name.as_str()).unwrap();
+
+        writeln!(tw, "{}:\t{:?}\n", cs.cyan(&name), value)?;
+    }
+
+    tw.flush()?;
+
+    let table = String::from_utf8(tw.into_inner()?)?;
+    writeln!(ctx.io.out, "{}", table)?;
+
+    Ok(())
 }
 
 #[cfg(test)]

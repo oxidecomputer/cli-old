@@ -17,8 +17,9 @@ enum SubCommand {
     ManPages(CmdGenerateManPages),
 }
 
+#[async_trait::async_trait]
 impl crate::cmd::Command for CmdGenerate {
-    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         match &self.subcmd {
             SubCommand::Markdown(cmd) => cmd.run(ctx),
             SubCommand::ManPages(cmd) => cmd.run(ctx),
@@ -35,8 +36,9 @@ pub struct CmdGenerateMarkdown {
     pub dir: String,
 }
 
+#[async_trait::async_trait]
 impl crate::cmd::Command for CmdGenerateMarkdown {
-    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let mut app: App = crate::Opts::into_app();
         app._build_all();
 
@@ -107,8 +109,9 @@ pub struct CmdGenerateManPages {
     pub dir: String,
 }
 
+#[async_trait::async_trait]
 impl crate::cmd::Command for CmdGenerateManPages {
-    fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let mut app: App = crate::Opts::into_app();
         app._build_all();
 
