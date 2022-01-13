@@ -103,33 +103,8 @@ async fn main() -> Result<(), ()> {
     let args: Vec<String> = std::env::args().collect();
     let result = do_main(args, &mut ctx);
 
-    if let Some(latest_release) = update {
-        // do not notify Homebrew users before the version bump had a chance to get merged into homebrew-core
-        let is_homebrew = crate::update::is_under_homebrew().unwrap();
-
-        if !(is_homebrew && crate::update::is_recent_release(latest_release.published_at)) {
-            let cs = ctx.io.color_scheme();
-
-            writeln!(
-                &mut ctx.io.err_out,
-                "\n\n{} {} → {}\n",
-                cs.yellow("A new release of oxide is available:"),
-                cs.cyan(build_version),
-                cs.purple(&latest_release.version)
-            )
-            .unwrap();
-
-            if is_homebrew {
-                writeln!(
-                    &mut ctx.io.err_out,
-                    "To upgrade, run: brew update && brew upgrade oxide"
-                )
-                .unwrap();
-            }
-
-            writeln!(&mut ctx.io.err_out, "{}\n\n", cs.yellow(&latest_release.url)).unwrap();
-        }
-    }
+    // If we have an update, let's print it.
+    handle_update(&mut ctx, update, build_version).unwrap();
 
     if let Err(err) = result {
         eprintln!("{}", err);
@@ -219,6 +194,40 @@ fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context) {
         writeln!(ctx.io.err_out, "{}", err).unwrap();
         std::process::exit(1);
     }
+}
+
+fn handle_update(
+    ctx: &mut crate::context::Context,
+    update: Option<crate::update::ReleaseInfo>,
+    build_version: &str,
+) -> Result<()> {
+    if let Some(latest_release) = update {
+        // do not notify Homebrew users before the version bump had a chance to get merged into homebrew-core
+        let is_homebrew = crate::update::is_under_homebrew()?;
+
+        if !(is_homebrew && crate::update::is_recent_release(latest_release.published_at)) {
+            let cs = ctx.io.color_scheme();
+
+            writeln!(
+                ctx.io.err_out,
+                "\n\n{} {} → {}\n",
+                cs.yellow("A new release of oxide is available:"),
+                cs.cyan(build_version),
+                cs.purple(&latest_release.version)
+            )?;
+
+            if is_homebrew {
+                writeln!(
+                    &mut ctx.io.err_out,
+                    "To upgrade, run: brew update && brew upgrade oxide"
+                )?;
+            }
+
+            writeln!(ctx.io.err_out, "{}\n\n", cs.yellow(&latest_release.url))?;
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
