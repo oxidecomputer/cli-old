@@ -92,7 +92,7 @@ async fn main() -> Result<(), ()> {
     let build_version = clap::crate_version!();
     // Check for updates to the cli.
     // TODO: this should be done in a background thread.
-    let update = crate::update::check_for_update(&build_version).await.unwrap();
+    let update = crate::update::check_for_update(build_version).await.unwrap();
 
     // Let's get our configuration.
     let mut c = crate::config_file::parse_default_config().unwrap();
@@ -114,7 +114,7 @@ async fn main() -> Result<(), ()> {
                 &mut ctx.io.err_out,
                 "\n\n{} {} → {}\n",
                 cs.yellow("A new release of gh is available:"),
-                cs.cyan(&build_version),
+                cs.cyan(build_version),
                 cs.cyan(&latest_release.version)
             )
             .unwrap();
