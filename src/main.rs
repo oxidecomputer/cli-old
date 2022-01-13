@@ -24,6 +24,7 @@ mod context;
 mod iostreams;
 mod man;
 mod markdown;
+mod update;
 
 use std::io::{Read, Write};
 
