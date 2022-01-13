@@ -142,7 +142,6 @@ impl CmdApi {
 
 #[cfg(test)]
 mod test {
-    
 
     pub struct TestItem {
         name: String,
