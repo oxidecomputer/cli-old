@@ -153,18 +153,21 @@ impl crate::cmd::Command for CmdAuthLogout {
         let username_str = "".to_string();
 
         if ctx.io.can_prompt() {
-            /*	var keepGoing bool
-            err := prompt.SurveyAskOne(&survey.Confirm{
-                Message: fmt.Sprintf("Are you sure you want to log out of %s%s?", hostname, usernameStr),
-                Default: true,
-            }, &keepGoing)
-            if err != nil {
-                return fmt.Errorf("could not prompt: %w", err)
+            match dialoguer::Confirm::new()
+                .with_prompt(format!(
+                    "Are you sure you want to log out of {}{}?",
+                    hostname, username_str
+                ))
+                .interact()
+            {
+                Ok(true) => {}
+                Ok(false) => {
+                    return Ok(());
+                }
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
             }
-
-            if !keepGoing {
-                return nil
-            }*/
         }
 
         // Unset the host.
