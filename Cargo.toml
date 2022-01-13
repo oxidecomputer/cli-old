@@ -20,7 +20,7 @@ clap_generate = { git = "https://github.com/sondr3/clap", branch = "generate-man
 dirs = "4"
 heck = "^0.4.0"
 regex = "1"
-oxide-api = "0.1.0-rc.1"
+oxide-api = "0.1.0-rc.2"
 pulldown-cmark = "^0.9.0"
 pulldown-cmark-to-cmark = "^9.0.0"
 reqwest = { version = "^0.11.9", features = ["json", "rustls-tls"] }
