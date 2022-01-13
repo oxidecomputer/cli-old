@@ -30,6 +30,7 @@ jobs:
             libmpc-dev \
             libmpfr-dev \
             libgmp-dev \
+            libssl-dev \
             mingw-w64 \
             gcc-mingw-w64
       - name: Build osxcross
