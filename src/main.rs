@@ -136,7 +136,7 @@ fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<(
             let ecode = external_cmd.wait()?;
 
             // Pipe the output to the terminal.
-            if let Some(mut stdout_rd) = external_cmd.stdout.as_mut() {
+            if let Some(stdout_rd) = external_cmd.stdout.as_mut() {
                 let mut stdout = Vec::new();
                 stdout_rd.read_to_end(&mut stdout)?;
                 ctx.io.out.write_all(&stdout)?;
