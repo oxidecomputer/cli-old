@@ -9,7 +9,7 @@ pub struct Context<'a> {
 }
 
 impl Context<'_> {
-    pub fn new(config: &mut dyn Config) -> Context {
+    pub fn new(config: &mut (dyn Config + Send + Sync)) -> Context {
         // Let's get our IO streams.
         let mut io = crate::iostreams::IoStreams::system();
 

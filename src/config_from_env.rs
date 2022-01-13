@@ -17,6 +17,9 @@ impl EnvConfig<'_> {
     }
 }
 
+unsafe impl Send for EnvConfig<'_> {}
+unsafe impl Sync for EnvConfig<'_> {}
+
 impl crate::config::Config for EnvConfig<'_> {
     fn get(&self, hostname: &str, key: &str) -> Result<String> {
         let (val, _) = self.get_with_source(hostname, key)?;

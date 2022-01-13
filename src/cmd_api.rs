@@ -82,12 +82,14 @@ impl crate::cmd::Command for CmdApi {
 
         // Parse the fields.
         let params = self.parse_fields()?;
+
         // Set them as our body if they exist.
-        let mut body = if params.is_empty() {
-            None
-        } else {
-            Some(reqwest::Body::from(serde_json::to_string(&params)?.as_bytes()))
-        };
+        let mut b = String::new();
+        if !params.is_empty() {
+            b = serde_json::to_string(&params)?.to_string();
+        }
+
+        let mut bytes = b.as_bytes().to_vec();
 
         // Add the pagination parameters.
 
@@ -97,12 +99,12 @@ impl crate::cmd::Command for CmdApi {
         // Parse the input file.
         if !self.input.is_empty() {
             // Read the input file.
-            let buf = Vec::new();
+            let mut buf = Vec::new();
             let mut input_file = std::fs::File::open(&self.input)?;
             input_file.read_to_end(&mut buf)?;
 
             // Set this as our body.
-            body = Some(reqwest::Body::from(buf));
+            bytes = buf.clone();
 
             // Set our params to the query string.
             if !params.is_empty() {
@@ -124,8 +126,14 @@ impl crate::cmd::Command for CmdApi {
 
         // Make the request.
 
+        let body = if bytes.is_empty() {
+            None
+        } else {
+            Some(reqwest::Body::from(bytes))
+        };
+
         // TODO: We could also add flags for setting headers, etc.
-        let resp = client.request_raw(self.method, &endpoint, body).await?;
+        let resp = client.request_raw(self.method.clone(), &endpoint, body).await?;
 
         // Print the response headers if requested.
         if self.include {
