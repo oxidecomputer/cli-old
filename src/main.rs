@@ -330,7 +330,7 @@ mod test {
                 debug: false,
             };
 
-            let result = crate::do_main(t.args, &mut ctx);
+            let result = crate::do_main(t.args, &mut ctx).await;
 
             let stdout = std::fs::read_to_string(stdout_path).unwrap_or_default();
             let stderr = std::fs::read_to_string(stderr_path).unwrap_or_default();
@@ -343,7 +343,7 @@ mod test {
                 t.want_out
             );
 
-            match result.await {
+            match result {
                 Ok(code) => {
                     assert_eq!(code, t.want_code, "test {}", t.name);
                     assert_eq!(stdout.is_empty(), t.want_out.is_empty(), "test {}", t.name);

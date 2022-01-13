@@ -433,7 +433,7 @@ mod test {
 
             let cmd_alias = crate::cmd_alias::CmdAlias { subcmd: t.cmd };
 
-            let result = cmd_alias.run(&mut ctx);
+            let result = cmd_alias.run(&mut ctx).await;
 
             let stdout = std::fs::read_to_string(stdout_path).unwrap();
             let stderr = std::fs::read_to_string(stderr_path).unwrap();
@@ -446,7 +446,7 @@ mod test {
                 t.want_out
             );
 
-            match result.await {
+            match result {
                 Ok(()) => {
                     assert!(stdout.is_empty() == t.want_out.is_empty(), "test {}", t.name);
                     assert!(stderr.is_empty(), "test {}", t.name);
