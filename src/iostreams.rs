@@ -163,9 +163,6 @@ impl IoStreams {
         // TODO: fix this.
         let pager_cmd = Command::new(pager_args.first().unwrap())
             .args(pager_args.iter().skip(1))
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
             .env_clear()
             .envs(&filtered_env)
             .spawn()

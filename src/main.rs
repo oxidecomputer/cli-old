@@ -94,13 +94,16 @@ fn main() {
 
     // Let's grab all our args.
     let args: Vec<String> = std::env::args().collect();
-    if let Err(err) = do_main(args, &mut ctx) {
+    let result = do_main(args, &mut ctx);
+    if let Err(err) = result {
         eprintln!("{}", err);
         std::process::exit(1);
     }
+
+    std::process::exit(result.unwrap_or(0));
 }
 
-fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<()> {
+fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<i32> {
     let original_args = args.clone();
 
     // Remove the first argument, which is the program name, and can change depending on how
@@ -133,6 +136,7 @@ fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<(
                 .stdout(std::process::Stdio::piped())
                 .stderr(std::process::Stdio::piped())
                 .spawn()?;
+
             let ecode = external_cmd.wait()?;
 
             // Pipe the output to the terminal.
@@ -148,7 +152,7 @@ fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<(
                 ctx.io.err_out.write_all(&stderr)?;
             }
 
-            std::process::exit(ecode.code().unwrap_or(0));
+            return Ok(ecode.code().unwrap_or(0));
         }
 
         // So we handled if the alias was a shell.
@@ -171,7 +175,7 @@ fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<(
         SubCommand::Generate(cmd) => run_cmd(&cmd, ctx),
     }
 
-    Ok(())
+    Ok(0)
 }
 
 fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context) {
@@ -189,6 +193,7 @@ mod test {
         args: Vec<String>,
         want_out: String,
         want_err: String,
+        want_code: i32,
     }
 
     #[test]
@@ -199,6 +204,7 @@ mod test {
                 args: vec!["oxide".to_string(), "completion".to_string()],
                 want_out: "complete -F _oxide -o bashdefault -o default oxide\n".to_string(),
                 want_err: "".to_string(),
+                want_code: 0,
             },
             TestItem {
                 name: "existing command with args".to_string(),
@@ -210,6 +216,7 @@ mod test {
                 ],
                 want_out: "_oxide \"$@\"\n".to_string(),
                 want_err: "".to_string(),
+                want_code: 0,
             },
             TestItem {
                 name: "add an alias".to_string(),
@@ -222,6 +229,7 @@ mod test {
                 ],
                 want_out: "- Adding alias for foo: completion -s zsh\n✔ Added alias.".to_string(),
                 want_err: "".to_string(),
+                want_code: 0,
             },
             TestItem {
                 name: "add a shell alias".to_string(),
@@ -235,30 +243,35 @@ mod test {
                 ],
                 want_out: "- Adding alias for bar: !which bash\n✔ Added alias.".to_string(),
                 want_err: "".to_string(),
+                want_code: 0,
             },
             TestItem {
                 name: "list our aliases".to_string(),
                 args: vec!["oxide".to_string(), "alias".to_string(), "list".to_string()],
                 want_out: "\"completion -s zsh\"".to_string(),
                 want_err: "".to_string(),
+                want_code: 0,
             },
             TestItem {
                 name: "call alias".to_string(),
                 args: vec!["oxide".to_string(), "foo".to_string()],
                 want_out: "_oxide \"$@\"\n".to_string(),
                 want_err: "".to_string(),
+                want_code: 0,
             },
             TestItem {
                 name: "call alias with different binary name".to_string(),
                 args: vec!["/bin/thing/oxide".to_string(), "foo".to_string()],
                 want_out: "_oxide \"$@\"\n".to_string(),
                 want_err: "".to_string(),
+                want_code: 0,
             },
             TestItem {
                 name: "call shell alias".to_string(),
                 args: vec!["oxide".to_string(), "bar".to_string()],
-                want_out: "bash".to_string(),
+                want_out: "/bash".to_string(),
                 want_err: "".to_string(),
+                want_code: 0,
             },
         ];
 
@@ -277,10 +290,8 @@ mod test {
 
             let result = crate::do_main(t.args, &mut ctx);
 
-            let stdout = std::fs::read_to_string(stdout_path).unwrap();
-            let stderr = std::fs::read_to_string(stderr_path).unwrap();
-
-            println!("STDOUT '{}'", stdout);
+            let stdout = std::fs::read_to_string(stdout_path).unwrap_or_default();
+            let stderr = std::fs::read_to_string(stderr_path).unwrap_or_default();
 
             assert!(
                 stdout.contains(&t.want_out),
@@ -291,11 +302,13 @@ mod test {
             );
 
             match result {
-                Ok(()) => {
+                Ok(code) => {
+                    assert_eq!(code, t.want_code, "test {}", t.name);
                     assert_eq!(stdout.is_empty(), t.want_out.is_empty(), "test {}", t.name);
                     assert!(stderr.is_empty(), "test {}", t.name);
                 }
                 Err(err) => {
+                    assert!(!t.want_err.is_empty(), "test {}", t.name);
                     assert!(
                         err.to_string().contains(&t.want_err),
                         "test {} -> err: {}\nwant_err: {}",
