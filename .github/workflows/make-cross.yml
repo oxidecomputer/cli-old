@@ -16,13 +16,49 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
+            toolchain: stable
             override: true
             components: rustfmt, clippy
       - name: Install deps
         shell: bash
         run: |
           cargo install cross
+      - name: Install deps
+        shell: bash
+        run: |
+          sudo apt update -y && sudo apt install -y \
+            clang \
+            gcc \
+            g++ \
+            zlib1g-dev \
+            libmpc-dev \
+            libmpfr-dev \
+            libgmp-dev \
+            mingw-w64 \
+            gcc-mingw-w64
+      - name: install toml-cli
+        shell: bash
+        run: |
+          cargo install toml-cli
+      - name: Build osxcross
+        shell: bash
+        run: |
+          git clone https://github.com/jessfraz/osxcross
+          cd osxcross
+          wget -nc https://dl.oxide.computer/mac/sdk/MacOSX12.1.sdk.tar.xz
+          mv MacOSX12.1.sdk.tar.xz tarballs/
+          UNATTENDED=yes ./build.sh
+      - name: Update cargo config for mac
+        shell: bash
+        run: |
+          echo "[target.x86_64-apple-darwin]" >> $HOME/.cargo/config
+          echo "linker = \"x86_64-apple-darwin21.2-clang\"" >> $HOME/.cargo/config
+          echo "ar = \"x86_64-apple-darwin21.2-ar\"" >> $HOME/.cargo/config
+          echo >> $HOME/.cargo/config
+          echo "[target.aarch64-apple-darwin]" >> $HOME/.cargo/config
+          echo "linker = \"arm64-apple-darwin21.2-clang\"" >> $HOME/.cargo/config
+          echo "ar = \"arm64-apple-darwin21.2-ar\"" >> $HOME/.cargo/config
+          echo >> $HOME/.cargo/config
       - name: Cache cargo registry
         uses: actions/cache@v2
         with:
@@ -40,6 +76,7 @@ jobs:
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
       - name: Run make cross
         run: |
+          export PATH="$(pwd)/osxcross/target/bin:$PATH"
           make release
           ls -la cross
         shell: bash
