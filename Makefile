@@ -35,6 +35,7 @@ ifeq ($(GITCOMMIT),)
 endif
 
 define buildrelease
+rustup target add $(1)
 cross build \
 	--target $(1) \
 	-Z unstable-options \
