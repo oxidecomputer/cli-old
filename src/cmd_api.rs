@@ -60,7 +60,7 @@ pub struct CmdApi {
 impl crate::cmd::Command for CmdApi {
     fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         // Let's get the api client.
-        let client = ctx.api_client()?;
+        let _client = ctx.api_client()?;
 
         if self.paginate && self.method != http::method::Method::GET {
             return Err(anyhow!("the `--paginate` option is not supported for non-GET requests",));
@@ -68,7 +68,7 @@ impl crate::cmd::Command for CmdApi {
 
         // Make sure the endpoint starts with a slash.
         let mut endpoint = self.endpoint.to_string();
-        if !self.endpoint.starts_with("/") {
+        if !self.endpoint.starts_with('/') {
             endpoint = format!("/{}", endpoint);
         }
 
@@ -142,7 +142,7 @@ impl CmdApi {
 
 #[cfg(test)]
 mod test {
-    use pretty_assertions::assert_eq;
+    
 
     pub struct TestItem {
         name: String,
@@ -186,6 +186,6 @@ mod test {
             },
         ];
 
-        for t in tests {}
+        for _t in tests {}
     }
 }
