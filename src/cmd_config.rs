@@ -36,7 +36,7 @@ pub struct CmdConfigGet {
     pub key: String,
 
     /// Get per-host setting.
-    #[clap(short = 'H', long, default_value = "")]
+    #[clap(short = 'H', long, default_value = "", env = "OXIDE_HOST")]
     pub host: String,
 }
 

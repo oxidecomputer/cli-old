@@ -34,6 +34,15 @@ impl crate::cmd::Command for CmdAuth {
 /// Authenticate with an Oxide host.
 ///
 /// Alternatively, pass in a token on standard input by using `--with-token`.
+///
+///     # start interactive setup
+///     $ oxide auth login
+///
+///     # authenticate against a specific Oxide instance by reading the token from a file
+///     $ oxide auth login --with-token --host oxide.internal < mytoken.txt
+///
+///     # authenticate with a specific Oxide instance
+///     $ oxide auth login --host oxide.internal
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdAuthLogin {
@@ -42,7 +51,7 @@ pub struct CmdAuthLogin {
     pub with_token: bool,
 
     /// The hostname of the Oxide instance to authenticate with.
-    #[clap(short = 'H', long, default_value = "")]
+    #[clap(short = 'H', long, env = "OXIDE_HOST")]
     pub host: String,
     // Open a browser to authenticate.
     // TODO: Make this work when we have device auth.
@@ -71,7 +80,7 @@ impl crate::cmd::Command for CmdAuthLogin {
 #[clap(verbatim_doc_comment)]
 pub struct CmdAuthLogout {
     /// The hostname of the Oxide instance to log out of.
-    #[clap(short = 'H', long, default_value = "")]
+    #[clap(short = 'H', long, default_value = "", env = "OXIDE_HOST")]
     pub host: String,
 }
 
