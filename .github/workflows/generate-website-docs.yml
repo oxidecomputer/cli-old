@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/generate-website-docs.yml
+  workflow_dispatch:
 name: generate-website-docs
 concurrency:
   group: docs-${{ github.ref }}
