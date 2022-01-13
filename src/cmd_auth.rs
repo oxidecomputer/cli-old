@@ -122,7 +122,7 @@ impl crate::cmd::Command for CmdAuthLogout {
 
         if let Err(err) = ctx.config.check_writable(&hostname, "token") {
             // TODO: make this error a type and actually check it.
-            if let crate::config_from_env::ReadOnlyEnvVarError::Variable(var) = err {
+            if let Some(crate::config_from_env::ReadOnlyEnvVarError::Variable(var)) = err.downcast_ref() {
                 writeln!(
                     ctx.io.err_out,
                     "The value of the {} environment variable is being used for authentication.\n",
