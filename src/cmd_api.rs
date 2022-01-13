@@ -86,7 +86,7 @@ impl crate::cmd::Command for CmdApi {
         // Set them as our body if they exist.
         let mut b = String::new();
         if !params.is_empty() {
-            b = serde_json::to_string(&params)?.to_string();
+            b = serde_json::to_string(&params)?;
         }
 
         let mut bytes = b.as_bytes().to_vec();
@@ -211,7 +211,7 @@ impl CmdApi {
 
 fn print_headers(ctx: &mut crate::context::Context, headers: &reqwest::header::HeaderMap) -> Result<()> {
     let mut names: Vec<String> = headers.keys().map(|k| k.as_str().to_string()).collect();
-    names.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+    names.sort_by_key(|a| a.to_lowercase());
 
     let cs = ctx.io.color_scheme();
 
