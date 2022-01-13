@@ -9,6 +9,8 @@ mod cmd;
 pub mod cmd_alias;
 /// The api command.
 pub mod cmd_api;
+/// The auth command.
+pub mod cmd_auth;
 /// The completion command.
 pub mod cmd_completion;
 /// The config command.
