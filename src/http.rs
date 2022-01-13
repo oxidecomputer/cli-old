@@ -1,8 +1,8 @@
 use anyhow::Result;
 
 /// This function returns an API client for Oxide that is based on the configured
-/// user..
-fn new_api_client(ctx: &crate::context::Context) -> Result<oxide_api::Client> {
+/// user.
+pub fn new_api_client(ctx: &crate::context::Context) -> Result<oxide_api::Client> {
     // We need to get the default host from the config.
     let host = ctx.config.default_host()?;
 
