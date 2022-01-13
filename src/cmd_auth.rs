@@ -51,7 +51,7 @@ pub struct CmdAuthLogin {
     pub with_token: bool,
 
     /// The hostname of the Oxide instance to authenticate with.
-    #[clap(short = 'H', long, env = "OXIDE_HOST")]
+    #[clap(short = 'H', long, env = "OXIDE_HOST", default_value = "")]
     pub host: String,
     // Open a browser to authenticate.
     // TODO: Make this work when we have device auth.
@@ -62,6 +62,125 @@ pub struct CmdAuthLogin {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdAuthLogin {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if !ctx.io.can_prompt() && !self.with_token {
+            return Err(anyhow!("--with-token required when not running interactively"));
+        }
+
+        let mut token = String::new();
+
+        if self.with_token {
+            // Read from stdin.
+            ctx.io.stdin.read_to_string(&mut token)?;
+        }
+
+        let mut interactive = false;
+        if ctx.io.can_prompt() && token.is_empty() {
+            interactive = true;
+        }
+
+        let mut host = clean_hostname(&self.host);
+
+        if host.is_empty() {
+            if interactive {
+                match dialoguer::Input::<String>::new()
+                    .with_prompt("Oxide instance hostname:")
+                    .interact_text()
+                {
+                    Ok(input) => {
+                        host = clean_hostname(&input);
+                    }
+                    Err(err) => {
+                        return Err(anyhow!("prompt failed: {}", err));
+                    }
+                }
+            } else {
+                return Err(anyhow!("--host required when not running interactively"));
+            }
+        }
+
+        if let Err(err) = ctx.config.check_writable(&host, "token") {
+            if let Some(crate::config_from_env::ReadOnlyEnvVarError::Variable(var)) = err.downcast_ref() {
+                writeln!(
+                    ctx.io.err_out,
+                    "The value of the {} environment variable is being used for authentication.",
+                    var
+                )?;
+                writeln!(
+                    ctx.io.err_out,
+                    "To have Oxide CLI store credentials instead, first clear the value from the environment."
+                )?;
+                return Err(anyhow!(""));
+            }
+
+            return Err(err);
+        }
+
+        if !token.is_empty() {
+            ctx.config.set(&host, "token", &token)?;
+
+            // Write the token to the config file.
+            return ctx.config.write();
+        }
+
+        let existing_token = ctx.config.get(&host, "token")?;
+        if !existing_token.is_empty() && interactive {
+            match dialoguer::Confirm::new()
+                .with_prompt(format!(
+                    "You're already logged into {}. Do you want to re-authenticate?",
+                    host
+                ))
+                .interact()
+            {
+                Ok(true) => {}
+                Ok(false) => {
+                    return Ok(());
+                }
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        // Do the login flow.
+        let cs = ctx.io.color_scheme();
+
+        writeln!(
+            ctx.io.err_out,
+            "Tip: you can generate an API Token here https://{}/account",
+            host
+        )?;
+
+        let auth_token: String = match dialoguer::Input::<String>::new()
+            .with_prompt("Paste your authentication token:")
+            .interact_text()
+        {
+            Ok(input) => input,
+            Err(err) => {
+                return Err(anyhow!("prompt failed: {}", err));
+            }
+        };
+
+        // Set the token in the config file.
+        ctx.config.set(&host, "token", &auth_token)?;
+
+        /*let client = ctx.api_client(&host)?;
+
+        // Get the session for the token.
+        let session = client.session().await?;
+
+        // Set the user.
+        ctx.config.set(&host, "user", &session.email)?;
+
+        // Save the config.
+        ctx.config.write()?;
+
+        writeln!(
+            ctx.io.out,
+            "{} Logged in as {}",
+            cs.success_icon(),
+            cs.bold(session.email)
+        )?;*/
+
         Ok(())
     }
 }
@@ -132,16 +251,15 @@ impl crate::cmd::Command for CmdAuthLogout {
         }
 
         if let Err(err) = ctx.config.check_writable(&hostname, "token") {
-            // TODO: make this error a type and actually check it.
             if let Some(crate::config_from_env::ReadOnlyEnvVarError::Variable(var)) = err.downcast_ref() {
                 writeln!(
                     ctx.io.err_out,
-                    "The value of the {} environment variable is being used for authentication.\n",
+                    "The value of the {} environment variable is being used for authentication.",
                     var
                 )?;
                 writeln!(
                     ctx.io.err_out,
-                    "To erase credentials stored in Oxide CLI, first clear the value from the environment.\n"
+                    "To erase credentials stored in Oxide CLI, first clear the value from the environment."
                 )?;
                 return Err(anyhow!(""));
             }
@@ -188,7 +306,7 @@ impl crate::cmd::Command for CmdAuthLogout {
         let cs = ctx.io.color_scheme();
         writeln!(
             ctx.io.out,
-            "{} Logged out of {}{}\n",
+            "{} Logged out of {}{}",
             cs.success_icon(),
             cs.bold(&hostname),
             username_str
@@ -226,7 +344,7 @@ impl crate::cmd::Command for CmdAuthStatus {
         if hostnames.is_empty() {
             writeln!(
                 ctx.io.err_out,
-                "You are not logged into any Oxide hosts. Run {} to authenticate.\n",
+                "You are not logged into any Oxide hosts. Run {} to authenticate.",
                 cs.bold("oxide auth login")
             )?;
             return Err(anyhow!(""));
@@ -274,7 +392,7 @@ impl crate::cmd::Command for CmdAuthStatus {
                     if self.show_token {
                         token_display = token.to_string();
                     }
-                    host_status.push(format!("{} Token: {}\n", cs.success_icon(), token_display));
+                    host_status.push(format!("{} Token: {}", cs.success_icon(), token_display));
                 }
                 Err(err) => {
                     host_status.push(format!("{} {}: api call failed: {}", cs.failure_icon(), hostname, err));
@@ -289,7 +407,7 @@ impl crate::cmd::Command for CmdAuthStatus {
         if !hostname_found {
             writeln!(
                 ctx.io.err_out,
-                "Hostname {} not found among authenticated Oxide hosts\n",
+                "Hostname {} not found among authenticated Oxide hosts",
                 self.host
             )?;
             return Err(anyhow!(""));
@@ -304,7 +422,7 @@ impl crate::cmd::Command for CmdAuthStatus {
                     }
                 }
                 None => {
-                    writeln!(ctx.io.err_out, "No status information for {}\n", hostname)?;
+                    writeln!(ctx.io.err_out, "No status information for {}", hostname)?;
                 }
             }
         }
@@ -315,4 +433,10 @@ impl crate::cmd::Command for CmdAuthStatus {
 
         Ok(())
     }
+}
+
+fn clean_hostname(host: &str) -> String {
+    host.trim_start_matches("https://")
+        .trim_start_matches("http://")
+        .to_string()
 }
