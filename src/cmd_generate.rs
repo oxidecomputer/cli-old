@@ -65,7 +65,7 @@ impl CmdGenerateMarkdown {
         writeln!(ctx.io.out, "Generating markdown for `{}` -> {}", title, filename)?;
 
         // Generate the markdown.
-        let m = crate::markdown::app_to_markdown(app, &title)?;
+        let m = crate::docs_markdown::app_to_markdown(app, &title)?;
 
         // Add our header information.
         let markdown = format!(
@@ -138,11 +138,11 @@ impl CmdGenerateManPages {
         writeln!(ctx.io.out, "Generating man page for `{}` -> {}", title, filename)?;
 
         if self.dir.is_empty() {
-            crate::man::generate_manpage(app, &mut ctx.io.out, &title, root);
+            crate::docs_man::generate_manpage(app, &mut ctx.io.out, &title, root);
         } else {
             let p = std::path::Path::new(&self.dir).join(filename);
             let mut file = std::fs::File::create(p)?;
-            crate::man::generate_manpage(app, &mut file, &title, root);
+            crate::docs_man::generate_manpage(app, &mut file, &title, root);
         }
 
         // Iterate over all the subcommands and generate the documentation.
