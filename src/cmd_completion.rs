@@ -85,8 +85,8 @@ mod test {
         want_err: String,
     }
 
-    #[test]
-    fn test_cmd_completion_get() {
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cmd_completion_get() {
         let tests = vec![
             TestItem {
                 name: "bash completion".to_string(),
@@ -139,7 +139,7 @@ mod test {
                 debug: false,
             };
 
-            cmd.run(&mut ctx).unwrap();
+            cmd.run(&mut ctx).await.unwrap();
 
             let stdout = std::fs::read_to_string(&stdout_path).unwrap();
             let stderr = std::fs::read_to_string(&stderr_path).unwrap();

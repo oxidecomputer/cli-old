@@ -238,8 +238,8 @@ mod test {
         want_code: i32,
     }
 
-    #[test]
-    fn test_main() {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_main() {
         let tests: Vec<TestItem> = vec![
             TestItem {
                 name: "existing command".to_string(),
@@ -343,7 +343,7 @@ mod test {
                 t.want_out
             );
 
-            match result {
+            match result.await {
                 Ok(code) => {
                     assert_eq!(code, t.want_code, "test {}", t.name);
                     assert_eq!(stdout.is_empty(), t.want_out.is_empty(), "test {}", t.name);

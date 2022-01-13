@@ -155,8 +155,8 @@ mod test {
         want_err: String,
     }
 
-    #[test]
-    fn test_cmd_config() {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_cmd_config() {
         let tests: Vec<TestItem> = vec![
             TestItem {
                 name: "list empty".to_string(),
@@ -241,7 +241,7 @@ mod test {
             };
 
             let cmd_config = crate::cmd_config::CmdConfig { subcmd: t.cmd };
-            match cmd_config.run(&mut ctx) {
+            match cmd_config.run(&mut ctx).await {
                 Ok(()) => {
                     let stdout = std::fs::read_to_string(stdout_path).unwrap();
                     let stderr = std::fs::read_to_string(stderr_path).unwrap();

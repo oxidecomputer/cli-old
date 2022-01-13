@@ -306,8 +306,8 @@ mod test {
         }
     }
 
-    #[test]
-    fn test_cmd_alias() {
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_cmd_alias() {
         let tests: Vec<TestAlias> = vec![
             TestAlias {
                 name: "list empty".to_string(),
@@ -446,7 +446,7 @@ mod test {
                 t.want_out
             );
 
-            match result {
+            match result.await {
                 Ok(()) => {
                     assert!(stdout.is_empty() == t.want_out.is_empty(), "test {}", t.name);
                     assert!(stderr.is_empty(), "test {}", t.name);

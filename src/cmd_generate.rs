@@ -197,8 +197,8 @@ mod test {
 
     use crate::cmd::Command;
 
-    #[test]
-    fn test_generate_markdown() {
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_generate_markdown() {
         let mut config = crate::config::new_blank_config().unwrap();
         let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
 
@@ -211,7 +211,7 @@ mod test {
 
         let cmd = crate::cmd_generate::CmdGenerateMarkdown { dir: "".to_string() };
 
-        cmd.run(&mut ctx).unwrap();
+        cmd.run(&mut ctx).await.unwrap();
 
         let stdout = std::fs::read_to_string(stdout_path).unwrap();
         let stderr = std::fs::read_to_string(stderr_path).unwrap();
@@ -399,8 +399,8 @@ sub subcommand
         assert_eq!(stderr, "");
     }
 
-    #[test]
-    fn test_generate_man_pages() {
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_generate_man_pages() {
         let mut config = crate::config::new_blank_config().unwrap();
         let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
 
@@ -413,7 +413,7 @@ sub subcommand
 
         let cmd = crate::cmd_generate::CmdGenerateManPages { dir: "".to_string() };
 
-        cmd.run(&mut ctx).unwrap();
+        cmd.run(&mut ctx).await.unwrap();
 
         let stdout = std::fs::read_to_string(stdout_path).unwrap();
         let stderr = std::fs::read_to_string(stderr_path).unwrap();
