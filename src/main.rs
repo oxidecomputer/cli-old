@@ -17,6 +17,8 @@ pub mod cmd_completion;
 pub mod cmd_config;
 /// The generate command.
 pub mod cmd_generate;
+/// The version command.
+pub mod cmd_version;
 mod colors;
 mod config;
 mod config_alias;
@@ -90,6 +92,7 @@ enum SubCommand {
     Completion(cmd_completion::CmdCompletion),
     Config(cmd_config::CmdConfig),
     Generate(cmd_generate::CmdGenerate),
+    Version(cmd_version::CmdVersion),
 }
 
 #[tokio::main]
@@ -183,6 +186,7 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Completion(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Config(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Generate(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Version(cmd) => run_cmd(&cmd, ctx).await,
     }
 
     Ok(0)

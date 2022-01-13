@@ -46,7 +46,7 @@ echo -e "\`\`\`console" >> $(BUILDDIR)/README.md;
 echo -e "# Export the sha256sum for verification." >> $(BUILDDIR)/README.md;
 echo -e "$$ export OXIDE_CLI_SHA256=\"`cat $(BUILDDIR)/$(NAME)-$(1).sha256 | awk '{print $$1}'`\"\n\n" >> $(BUILDDIR)/README.md;
 echo -e "# Download and check the sha256sum." >> $(BUILDDIR)/README.md;
-echo -e "$$ curl -fSL \"https://dl.oxide.computer/releases/cli/$(VERSION)/$(NAME)-$(1)\" -o \"/usr/local/bin/oxide\" \\" >> $(BUILDDIR)/README.md;
+echo -e "$$ curl -fSL \"https://dl.oxide.computer/releases/cli/v$(VERSION)/$(NAME)-$(1)\" -o \"/usr/local/bin/oxide\" \\" >> $(BUILDDIR)/README.md;
 echo -e "\t&& echo \"\$${OXIDE_CLI_SHA256}  /usr/local/bin/oxide\" | sha256sum -c - \\" >> $(BUILDDIR)/README.md;
 echo -e "\t&& chmod a+x \"/usr/local/bin/oxide\"\n\n" >> $(BUILDDIR)/README.md;
 echo -e "$$ echo \"oxide cli installed!\"\n" >> $(BUILDDIR)/README.md;
@@ -64,8 +64,8 @@ release: src/*.rs Cargo.toml ## Builds the cross-compiled binaries, naming them 
 
 .PHONY: tag
 tag: ## Create a new git tag to prepare to build a release.
-	git tag -sa $(VERSION) -m "$(VERSION)"
-	@echo "Run git push origin $(VERSION) to push your new tag to GitHub and trigger a release."
+	git tag -sa v$(VERSION) -m "v$(VERSION)"
+	@echo "Run git push origin v$(VERSION) to push your new tag to GitHub and trigger a release."
 
 .PHONY: AUTHORS
 AUTHORS:
