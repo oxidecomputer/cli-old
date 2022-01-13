@@ -23,6 +23,7 @@ mod config_map;
 mod context;
 mod docs_man;
 mod docs_markdown;
+mod http;
 mod iostreams;
 mod update;
 
@@ -130,14 +131,6 @@ fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<i
         // It is okay to check the error here because we will not error out if the
         // alias does not exist. We will just return the expanded args.
         let (mut expanded_args, is_shell) = ctx.config.expand_alias(original_args)?;
-
-        // KEEP for debug
-        /* writeln!(
-            &mut ctx.io.out,
-            "Expanded alias: {} -> {}",
-            args_str,
-            &shlex::join(expanded_args.iter().map(|s| s.as_str()).collect::<Vec<&str>>())
-        )?;*/
 
         if is_shell {
             // Remove the first argument, since thats our `sh`.
