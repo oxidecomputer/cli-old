@@ -23,7 +23,6 @@ mod config_map;
 mod context;
 mod docs_man;
 mod docs_markdown;
-mod http;
 mod iostreams;
 mod update;
 
