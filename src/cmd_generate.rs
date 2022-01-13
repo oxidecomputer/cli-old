@@ -21,8 +21,8 @@ enum SubCommand {
 impl crate::cmd::Command for CmdGenerate {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         match &self.subcmd {
-            SubCommand::Markdown(cmd) => cmd.run(ctx),
-            SubCommand::ManPages(cmd) => cmd.run(ctx),
+            SubCommand::Markdown(cmd) => cmd.run(ctx).await,
+            SubCommand::ManPages(cmd) => cmd.run(ctx).await,
         }
     }
 }

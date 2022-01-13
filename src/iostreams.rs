@@ -1,8 +1,4 @@
-use std::{
-    collections::HashMap,
-    env,
-    process::{Command},
-};
+use std::{collections::HashMap, env, process::Command};
 
 use anyhow::{anyhow, Result};
 use terminal_size::{terminal_size, Height, Width};
@@ -12,12 +8,12 @@ use crate::config_file::get_env_var;
 const DEFAULT_WIDTH: i32 = 80;
 
 pub struct IoStreams {
-    pub stdin: Box<dyn std::io::Read>,
-    pub out: Box<dyn std::io::Write>,
-    pub err_out: Box<dyn std::io::Write>,
+    pub stdin: Box<dyn std::io::Read + Send + Sync>,
+    pub out: Box<dyn std::io::Write + Send + Sync>,
+    pub err_out: Box<dyn std::io::Write + Send + Sync>,
 
     // the original (non-colorable) output stream
-    original_out: Box<dyn std::io::Write>,
+    original_out: Box<dyn std::io::Write + Send + Sync>,
 
     color_enabled: bool,
     is_256_enabled: bool,

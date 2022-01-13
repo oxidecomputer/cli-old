@@ -118,7 +118,7 @@ async fn main() -> Result<(), ()> {
     std::process::exit(result.unwrap_or(0));
 }
 
-async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<i32> {
+async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -> Result<i32> {
     let original_args = args.clone();
 
     // Remove the first argument, which is the program name, and can change depending on how
@@ -186,7 +186,7 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Re
     Ok(0)
 }
 
-async fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context) {
+async fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context<'_>) {
     if let Err(err) = cmd.run(ctx).await {
         writeln!(ctx.io.err_out, "{}", err).unwrap();
         std::process::exit(1);

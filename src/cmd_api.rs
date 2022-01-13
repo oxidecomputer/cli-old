@@ -130,7 +130,7 @@ impl crate::cmd::Command for CmdApi {
         // Print the response headers if requested.
         if self.include {
             writeln!(ctx.io.out, "{:?} {}", resp.version(), resp.status())?;
-            print_headers(ctx, &resp.headers())?;
+            print_headers(ctx, resp.headers())?;
         }
 
         Ok(())
@@ -201,7 +201,7 @@ impl CmdApi {
     }
 }
 
-fn print_headers(ctx: &mut crate::context::Context, headers: reqwest::header::HeaderMap) -> Result<()> {
+fn print_headers(ctx: &mut crate::context::Context, headers: &reqwest::header::HeaderMap) -> Result<()> {
     let mut names: Vec<String> = headers.keys().map(|k| k.as_str().to_string()).collect();
     names.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
 

@@ -3,7 +3,7 @@ use anyhow::Result;
 use crate::config::Config;
 
 pub struct Context<'a> {
-    pub config: &'a mut (dyn Config + 'a),
+    pub config: &'a mut (dyn Config + Send + Sync + 'a),
     pub io: crate::iostreams::IoStreams,
     pub debug: bool,
 }
