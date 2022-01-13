@@ -7,6 +7,8 @@
 mod cmd;
 /// The alias command.
 pub mod cmd_alias;
+/// The api command.
+pub mod cmd_api;
 /// The completion command.
 pub mod cmd_completion;
 /// The config command.
@@ -82,6 +84,7 @@ struct Opts {
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     Alias(cmd_alias::CmdAlias),
+    Api(cmd_api::CmdApi),
     Completion(cmd_completion::CmdCompletion),
     Config(cmd_config::CmdConfig),
     Generate(cmd_generate::CmdGenerate),
@@ -174,6 +177,7 @@ fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context) -> Result<i
 
     match opts.subcmd {
         SubCommand::Alias(cmd) => run_cmd(&cmd, ctx),
+        SubCommand::Api(cmd) => run_cmd(&cmd, ctx),
         SubCommand::Completion(cmd) => run_cmd(&cmd, ctx),
         SubCommand::Config(cmd) => run_cmd(&cmd, ctx),
         SubCommand::Generate(cmd) => run_cmd(&cmd, ctx),

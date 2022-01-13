@@ -35,8 +35,9 @@ impl crate::cmd::Command for CmdAlias {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdAliasDelete {
+    /// The alias to delete.
     #[clap(name = "alias", required = true)]
-    alias: String,
+    pub alias: String,
 }
 
 impl crate::cmd::Command for CmdAliasDelete {
@@ -86,11 +87,13 @@ impl crate::cmd::Command for CmdAliasDelete {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdAliasSet {
+    /// The alias to set.
     #[clap(name = "alias", required = true)]
-    alias: String,
+    pub alias: String,
 
+    /// The expansion of the alias.
     #[clap(name = "expansion", required = true)]
-    expansion: String,
+    pub expansion: String,
 
     /// Declare an alias to be passed through a shell interpreter.
     #[clap(short, long)]

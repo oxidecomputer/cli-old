@@ -30,8 +30,9 @@ impl crate::cmd::Command for CmdConfig {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdConfigGet {
+    /// The key to get the value of.
     #[clap(name = "key", required = true)]
-    key: String,
+    pub key: String,
 
     /// Get per-host setting.
     #[clap(short = 'H', long, default_value = "")]
@@ -55,11 +56,13 @@ impl crate::cmd::Command for CmdConfigGet {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdConfigSet {
+    /// The key to set the value of.
     #[clap(name = "key", required = true)]
-    key: String,
+    pub key: String,
 
+    /// The value to set.
     #[clap(name = "value", required = true)]
-    value: String,
+    pub value: String,
 
     /// Set per-host setting.
     #[clap(short = 'H', long, default_value = "")]

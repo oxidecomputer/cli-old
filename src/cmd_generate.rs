@@ -32,7 +32,7 @@ impl crate::cmd::Command for CmdGenerate {
 pub struct CmdGenerateMarkdown {
     /// Path directory where you want to output the generated files.
     #[clap(short = 'D', long, default_value = "")]
-    dir: String,
+    pub dir: String,
 }
 
 impl crate::cmd::Command for CmdGenerateMarkdown {
@@ -104,7 +104,7 @@ layout: manual
 pub struct CmdGenerateManPages {
     /// Path directory where you want to output the generated files.
     #[clap(short = 'D', long, default_value = "")]
-    dir: String,
+    pub dir: String,
 }
 
 impl crate::cmd::Command for CmdGenerateManPages {
