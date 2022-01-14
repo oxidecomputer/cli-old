@@ -45,6 +45,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
-       - name: Run clippy manually without annotations
+      - name: Run clippy manually without annotations
          if: ${{ !steps.check_permissions.outputs.has-permission }}
          run: cargo clippy --all-targets -- -D warnings
