@@ -113,7 +113,7 @@ async fn main() -> Result<(), ()> {
     let result = do_main(args, &mut ctx).await;
 
     // If we have an update, let's print it.
-    handle_update(&mut ctx, update.await.unwrap_or_default(), build_version).unwrap();
+    handle_update(&mut ctx, update.await.unwrap(), build_version).unwrap();
 
     if let Err(err) = result {
         eprintln!("{}", err);

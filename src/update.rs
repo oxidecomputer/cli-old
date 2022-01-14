@@ -73,10 +73,35 @@ fn is_ci() -> bool {
 
 /// Get the information about the latest version of the cli.
 async fn get_latest_release_info() -> Result<ReleaseInfo> {
-    let latest_release: ReleaseInfo = reqwest::get("https://api.github.com/repos/oxidecomputer/cli/releases/latest")
-        .await?
-        .json()
-        .await?;
+    // If the user has a GITHUB_TOKEN environment variable, use it to get the latest release.
+    // This allows us to test this while the repo is still private.
+    // We might want to remove this in the future.
+    let github_token = crate::config_file::get_env_var("GITHUB_TOKEN");
+
+    let url = "https://api.github.com/repos/oxidecomputer/cli/releases/latest";
+
+    let mut req = reqwest::Client::new().get(url);
+
+    // Set the user agent.
+    req = req.header("User-Agent", format!("oxide/{}", clap::crate_version!()));
+
+    if !github_token.is_empty() {
+        req = req.bearer_auth(github_token);
+    }
+
+    let resp = req.send().await?;
+    let text = resp.text().await?;
+
+    let latest_release: ReleaseInfo = match serde_json::from_str(&text) {
+        Ok(release_info) => release_info,
+        Err(err) => {
+            return Err(anyhow!(
+                "Failed to parse response from GitHub: {}\ntext:\n{}",
+                err.to_string(),
+                text
+            ));
+        }
+    };
 
     Ok(latest_release)
 }
