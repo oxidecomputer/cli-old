@@ -20,11 +20,11 @@ ifeq ($(UNAME), Darwin)
 else
 	CROSS_TARGETS := x86_64-pc-windows-gnu \
 				 x86_64-unknown-linux-musl \
-				 aarch64-unknown-linux-musl \
-				 x86_64-unknown-freebsd
+				 aarch64-unknown-linux-musl
 	# Turn this back on when it works.
 	# x86_64-unknown-illumos
 	# i686-pc-windows-gnu
+	# x86_64-unknown-freebsd
 endif
 
 # For this to work, you need to install toml-cli: https://github.com/gnprice/toml-cli
