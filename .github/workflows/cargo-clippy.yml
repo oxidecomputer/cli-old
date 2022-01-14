@@ -33,7 +33,13 @@ jobs:
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/clippy-check@v1
+      - if: ${{ ! startsWith(github.ref, 'refs/heads/dependabot') }}
+        uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
+      - if: ${{ startsWith(github.ref, 'refs/heads/dependabot') }}
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.PAT_GITHUB }}
           args: --all-features
