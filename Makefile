@@ -11,15 +11,20 @@ BUILDDIR := ${PREFIX}/cross
 
 GENERATED_DOCS_DIR := ${PREFIX}/generated_docs
 
+UNAME := $(shell uname)
+
 # These are chosen from: https://doc.rust-lang.org/nightly/rustc/platform-support.html
-CROSS_TARGETS := x86_64-pc-windows-gnu \
+ifeq ($(UNAME), Linux)
+	CROSS_TARGETS := x86_64-apple-darwin \
+				 aarch64-apple-darwin
+else
+	CROSS_TARGETS := x86_64-pc-windows-gnu \
 				 i686-pc-windows-gnu \
 				 x86_64-unknown-linux-musl \
-				 x86_64-apple-darwin \
-				 aarch64-apple-darwin \
 				 aarch64-unknown-linux-musl \
 				 x86_64-unknown-freebsd \
 				 x86_64-unknown-illumos
+endif
 
 # For this to work, you need to install toml-cli: https://github.com/gnprice/toml-cli
 # `cargo install toml-cli`

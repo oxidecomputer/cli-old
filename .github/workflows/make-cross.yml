@@ -8,9 +8,12 @@ on:
       - Makefile
 name: make cross
 jobs:
-  cargobuild:
+  cross:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
     name: make cross
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@master
       - name: Install latest nightly
@@ -19,7 +22,8 @@ jobs:
             toolchain: nightly
             override: true
             components: rustfmt, clippy
-      - name: Install deps
+      - if: ${{ matrix.os == "ubuntu-latest" }}
+        name: Install deps
         shell: bash
         run: |
           ./.github/workflows/cross-deps.sh
