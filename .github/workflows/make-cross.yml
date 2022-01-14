@@ -22,7 +22,7 @@ jobs:
             toolchain: nightly
             override: true
             components: rustfmt, clippy
-      - if: ${{ matrix.os == "ubuntu-latest" }}
+      - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: Install deps
         shell: bash
         run: |
