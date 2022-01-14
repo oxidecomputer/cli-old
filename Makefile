@@ -65,6 +65,7 @@ endef
 .PHONY: release
 release: src/*.rs Cargo.toml ## Builds the cross-compiled binaries, naming them in such a way for release (eg. binary-OS-ARCH).
 	@echo "+ $@"
+	mkdir -p $(BUILDDIR)
 	$(foreach TARGET,$(CROSS_TARGETS), $(call buildrelease,$(TARGET)))
 
 .PHONY: tag
