@@ -124,45 +124,67 @@ impl crate::cmd::Command for CmdApi {
                     query_string.push_str(&format!("{}={}", key, value));
                 }
 
-                if endpoint.contains('?') {
-                    endpoint = format!("{}&{}", endpoint, query_string);
-                } else {
-                    endpoint = format!("{}?{}", endpoint, query_string);
-                }
+                endpoint = add_query_string(&endpoint, &query_string);
             }
         }
 
         // Make the request.
+        let mut has_next_page = true;
+        let mut result = serde_json::Value::Null;
+        let mut page_results: Vec<serde_json::Value> = Vec::new();
+        while has_next_page {
+            let body = if bytes.is_empty() {
+                None
+            } else {
+                Some(reqwest::Body::from(bytes.clone()))
+            };
 
-        let body = if bytes.is_empty() {
-            None
-        } else {
-            Some(reqwest::Body::from(bytes))
-        };
+            // TODO: We could also add flags for setting headers, etc.
+            let resp = client.request_raw(self.method.clone(), &endpoint, body).await?;
 
-        // TODO: We could also add flags for setting headers, etc.
-        let resp = client.request_raw(self.method.clone(), &endpoint, body).await?;
+            // Print the response headers if requested.
+            if self.include {
+                writeln!(ctx.io.out, "{:?} {}", resp.version(), resp.status())?;
+                print_headers(ctx, resp.headers())?;
+            }
 
-        // Print the response headers if requested.
-        if self.include {
-            writeln!(ctx.io.out, "{:?} {}", resp.version(), resp.status())?;
-            print_headers(ctx, resp.headers())?;
+            if resp.status() == 204 {
+                return Ok(());
+            }
+
+            if !resp.status().is_success() {
+                return Err(anyhow!(
+                    "{} {}",
+                    resp.status(),
+                    resp.status().canonical_reason().unwrap_or("")
+                ));
+            }
+
+            if self.paginate {
+                let mut page: PaginatableResponse = resp.json().await?;
+
+                if !page.items.is_empty() {
+                    page_results.append(&mut page.items);
+                }
+
+                match page.next_page {
+                    Some(next_page) => {
+                        endpoint = add_query_string(&endpoint, &format!("page_token={}", next_page));
+                    }
+                    None => {
+                        has_next_page = false;
+                    }
+                }
+            } else {
+                // Read the response body.
+                result = resp.json().await?;
+                has_next_page = false;
+            }
         }
 
-        if resp.status() == 204 {
-            return Ok(());
+        if self.paginate {
+            result = serde_json::Value::Array(page_results);
         }
-
-        if !resp.status().is_success() {
-            return Err(anyhow!(
-                "{} {}",
-                resp.status(),
-                resp.status().canonical_reason().unwrap_or("")
-            ));
-        }
-
-        // Read the response body.
-        let result: serde_json::Value = resp.json().await?;
 
         ctx.io.write_json(&result)?;
 
@@ -257,4 +279,12 @@ fn print_headers(ctx: &mut crate::context::Context, headers: &reqwest::header::H
     writeln!(ctx.io.out, "{}", table)?;
 
     Ok(())
+}
+
+fn add_query_string(endpoint: &str, query_string: &str) -> String {
+    if endpoint.contains('?') {
+        format!("{}&{}", endpoint, query_string)
+    } else {
+        format!("{}?{}", endpoint, query_string)
+    }
 }
