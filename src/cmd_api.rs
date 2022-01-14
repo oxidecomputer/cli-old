@@ -68,7 +68,9 @@ pub struct CmdApi {
 /// The JSON type for a paginated response.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PaginatableResponse {
+    /// The items in the response.
     pub items: Vec<serde_json::Value>,
+    /// The pagination information for the response.
     pub next_page: Option<String>,
 }
 
@@ -151,7 +153,7 @@ impl crate::cmd::Command for CmdApi {
             return Ok(());
         }
 
-        if resp.status() > 299 {
+        if !resp.status().is_success() {
             return Err(anyhow!(
                 "{} {}",
                 resp.status(),
