@@ -22,7 +22,7 @@ jobs:
       - name: Install deps
         shell: bash
         run: |
-          ./github/workflows/cross-deps.sh
+          ./.github/workflows/cross-deps.sh
       - name: Cache cargo registry
         uses: actions/cache@v2
         with:
