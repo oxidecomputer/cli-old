@@ -5,6 +5,7 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use serde::{Deserialize, Serialize};
 
 /// Makes an authenticated HTTP request to the Oxide API and prints the response.
 ///
@@ -64,6 +65,13 @@ pub struct CmdApi {
     pub include: bool,
 }
 
+/// The JSON type for a paginated response.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct PaginatableResponse {
+    pub items: Vec<serde_json::Value>,
+    pub next_page: Option<String>,
+}
+
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdApi {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
@@ -90,8 +98,6 @@ impl crate::cmd::Command for CmdApi {
         }
 
         let mut bytes = b.as_bytes().to_vec();
-
-        // TODO: Add the pagination parameters.
 
         // TODO: If they didn't specify the method and we have parameters, we'll
         // assume they want to use POST.
@@ -143,6 +149,14 @@ impl crate::cmd::Command for CmdApi {
 
         if resp.status() == 204 {
             return Ok(());
+        }
+
+        if resp.status() > 299 {
+            return Err(anyhow!(
+                "{} {}",
+                resp.status(),
+                resp.status().canonical_reason().unwrap_or("")
+            ));
         }
 
         // Read the response body.

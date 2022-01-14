@@ -75,7 +75,7 @@ jobs:
       - name: Archive the README.md data
         uses: actions/upload-artifact@v2
         with:
-          name: ${{matrix.os}}-${{github.ref}}-README.md
+          name: ${{matrix.os}}-${{github.ref_name}}-README.md
           path: ${{github.workspace}}/cross/README.md
   createrelease:
     runs-on: ubuntu-latest
@@ -84,14 +84,14 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
         with:
-          name:  ubuntu-latest-${{github.ref}}-README.md
+          name:  ubuntu-latest-${{github.ref_name}}-README.md
       - uses: actions/download-artifact@v2
         with:
-          name:  macos-latest-${{github.ref}}-README.md
+          name:  macos-latest-${{github.ref_name}}-README.md
       - name: combine readmes
         shell: bash
         run: |
-          cat macos-latest-${{github.ref}}-README.md ubuntu-latest-${{github.ref}}-README.md > release.md
+          cat macos-latest-${{github.ref_name}}-README.md ubuntu-latest-${{github.ref_name}}-README.md > release.md
       - name: Create a Release
         uses: softprops/action-gh-release@v1
         with:
