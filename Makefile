@@ -22,8 +22,9 @@ else
 				 i686-pc-windows-gnu \
 				 x86_64-unknown-linux-musl \
 				 aarch64-unknown-linux-musl \
-				 x86_64-unknown-freebsd \
-				 x86_64-unknown-illumos
+				 x86_64-unknown-freebsd
+	# Turn this back on when it works.
+	# x86_64-unknown-illumos
 endif
 
 # For this to work, you need to install toml-cli: https://github.com/gnprice/toml-cli
