@@ -8,6 +8,7 @@ use crate::config_file::get_env_var;
 /// ReleaseInfo stores information about a release.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ReleaseInfo {
+    #[serde(rename = "tag_name")]
     pub version: String,
     pub url: String,
     pub published_at: chrono::DateTime<chrono::Utc>,
