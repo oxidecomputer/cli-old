@@ -35,7 +35,10 @@ jobs:
         name: Install deps
         shell: bash
         run: |
-          brew install jq
+          brew install \
+            coreutils \
+            jq \
+            md5sha1sum
       - name: Cache cargo registry
         uses: actions/cache@v2
         with:

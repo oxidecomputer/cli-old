@@ -27,6 +27,14 @@ jobs:
         shell: bash
         run: |
           ./.github/workflows/cross-deps.sh
+      - if: ${{ matrix.os == 'macos-latest' }}
+        name: Install deps
+        shell: bash
+        run: |
+          brew install \
+            coreutils \
+            jq \
+            md5sha1sum
       - name: Cache cargo registry
         uses: actions/cache@v2
         with:
