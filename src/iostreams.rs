@@ -12,9 +12,6 @@ pub struct IoStreams {
     pub out: Box<dyn std::io::Write + Send + Sync>,
     pub err_out: Box<dyn std::io::Write + Send + Sync>,
 
-    // the original (non-colorable) output stream
-    original_out: Box<dyn std::io::Write + Send + Sync>,
-
     color_enabled: bool,
     is_256_enabled: bool,
     has_true_color: bool,
@@ -54,6 +51,7 @@ impl IoStreams {
         self.has_true_color
     }
 
+    #[allow(dead_code)]
     pub fn detect_terminal_theme(&mut self) -> String {
         if !self.color_enabled() {
             self.terminal_theme = "none".to_string();
@@ -83,6 +81,7 @@ impl IoStreams {
         }
     }
 
+    #[allow(dead_code)]
     pub fn terminal_theme(&self) -> String {
         if self.terminal_theme.is_empty() {
             return "none".to_string();
@@ -90,10 +89,12 @@ impl IoStreams {
         self.terminal_theme.to_string()
     }
 
+    #[allow(dead_code)]
     pub fn set_color_enabled(&mut self, color_enabled: bool) {
         self.color_enabled = color_enabled;
     }
 
+    #[allow(dead_code)]
     pub fn set_stdin_tty(&mut self, is_tty: bool) {
         self.stdin_tty_override = true;
         self.stdin_is_tty = is_tty;
@@ -127,14 +128,17 @@ impl IoStreams {
         self.stderr_is_tty = is_tty;
     }
 
+    #[allow(dead_code)]
     pub fn set_pager(&mut self, pager_command: String) {
         self.pager_command = pager_command;
     }
 
+    #[cfg(test)]
     pub fn get_pager(&self) -> String {
         self.pager_command.to_string()
     }
 
+    #[allow(dead_code)]
     pub fn start_pager(&mut self) -> Result<()> {
         if self.pager_command.is_empty() || self.pager_command == "cat" || !self.is_stdout_tty() {
             return Ok(());
@@ -169,6 +173,7 @@ impl IoStreams {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn stop_pager(&mut self) -> Result<()> {
         if self.pager_process.is_none() {
             return Ok(());
@@ -188,6 +193,7 @@ impl IoStreams {
         self.is_stdin_tty() && self.is_stdout_tty()
     }
 
+    #[cfg(test)]
     pub fn get_never_prompt(&self) -> bool {
         self.never_prompt
     }
@@ -196,11 +202,13 @@ impl IoStreams {
         self.never_prompt = never_prompt;
     }
 
+    #[allow(dead_code)]
     pub fn start_process_indicator(&mut self) {
         self.start_process_indicator_with_label("")
     }
 
     // TODO: do we need a mutex here?
+    #[allow(dead_code)]
     pub fn start_process_indicator_with_label(&mut self, label: &str) {
         if !self.progress_indicator_enabled {
             return;
@@ -225,6 +233,7 @@ impl IoStreams {
     }
 
     // TODO: do we need a mutex here?
+    #[allow(dead_code)]
     pub fn stop_progress_indicator(&mut self) {
         if self.progress_indicator.is_none() {
             return;
@@ -236,23 +245,13 @@ impl IoStreams {
         self.progress_indicator = None;
     }
 
-    // TODO: fix this.
+    #[allow(dead_code)]
     pub fn terminal_width(&self) -> i32 {
         if self.terminal_width_override > 0 {
             return self.terminal_width_override;
         }
 
         let (w, _) = tty_size().unwrap_or((DEFAULT_WIDTH, 0));
-        w
-    }
-
-    pub fn process_terminal_width(&mut self) -> i32 {
-        let (w, _) = (self.tty_size)().unwrap_or((DEFAULT_WIDTH, 0));
-
-        if w == 0 {
-            return DEFAULT_WIDTH;
-        }
-
         w
     }
 
@@ -323,7 +322,6 @@ impl IoStreams {
             stdin: Box::new(std::io::stdin()),
             out: Box::new(std::io::stdout()),
             err_out: Box::new(std::io::stderr()),
-            original_out: Box::new(std::io::stdout()),
             color_enabled: crate::colors::env_color_forced() || (!crate::colors::env_color_disabled() && stdout_is_tty),
             is_256_enabled: assume_true_color || crate::colors::is_256_color_supported(),
             has_true_color: assume_true_color || crate::colors::is_true_color_supported(),

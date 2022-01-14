@@ -9,6 +9,7 @@ use anyhow::{anyhow, Context, Result};
 const OXIDE_CONFIG_DIR: &str = "OXIDE_CONFIG_DIR";
 const XDG_CONFIG_HOME: &str = "XDG_CONFIG_HOME";
 const XDG_STATE_HOME: &str = "XDG_STATE_HOME";
+#[allow(dead_code)]
 const XDG_DATA_HOME: &str = "XDG_DATA_HOME";
 const APP_DATA: &str = "AppData";
 const LOCAL_APP_DATA: &str = "LocalAppData";
@@ -85,6 +86,7 @@ pub fn state_dir() -> Result<String> {
 // 2. XDG_DATA_HOME
 // 3. LocalAppData (windows only)
 // 4. HOME
+#[allow(dead_code)]
 pub fn data_dir() -> Result<String> {
     let path: PathBuf;
 
@@ -187,22 +189,9 @@ pub fn write_config_file(filename: &str, data: &str) -> Result<()> {
         .with_context(|| format!("failed to write to {}", filename))
 }
 
+#[allow(dead_code)]
 fn backup_config_file(filename: String) -> Result<()> {
     fs::rename(&filename, &format!("{}.bak", filename)).with_context(|| format!("failed to backup {}", filename))
-}
-
-fn parse_config_file(filename: &str) -> Result<(String, toml_edit::Document)> {
-    match read_config_file(filename) {
-        Ok(data) => {
-            let config = data
-                .parse::<toml_edit::Document>()
-                .with_context(|| format!("failed to parse {}", filename))?;
-            Ok((data, config))
-        }
-        Err(e) => {
-            return Err(anyhow!("failed to read config file `{}`: {}", filename, e));
-        }
-    }
 }
 
 pub fn get_env_var(key: &str) -> String {

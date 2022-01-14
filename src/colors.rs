@@ -25,6 +25,7 @@ pub fn is_256_color_supported() -> bool {
     is_true_color_supported() || term.contains("256") || color_term.contains("256")
 }
 
+#[allow(dead_code)]
 pub struct ColorScheme {
     enabled: bool,
     is_256_enabled: bool,
@@ -72,12 +73,17 @@ impl ColorScheme {
         ansi_term::Colour::Green.paint(t).to_string()
     }
 
+    #[allow(dead_code)]
     pub fn gray(&self, t: &str) -> String {
         if !self.enabled {
             return t.to_string();
         }
 
-        ansi_term::Colour::Fixed(242).paint(t).to_string()
+        if self.is_256_enabled {
+            ansi_term::Colour::Fixed(242).paint(t).to_string()
+        } else {
+            t.to_string()
+        }
     }
 
     pub fn purple(&self, t: &str) -> String {
@@ -88,6 +94,7 @@ impl ColorScheme {
         ansi_term::Colour::Purple.paint(t).to_string()
     }
 
+    #[allow(dead_code)]
     pub fn blue(&self, t: &str) -> String {
         if !self.enabled {
             return t.to_string();
@@ -116,6 +123,7 @@ impl ColorScheme {
         self.yellow("!")
     }
 
+    #[allow(dead_code)]
     pub fn failure_icon(&self) -> String {
         self.red("✘")
     }

@@ -125,18 +125,19 @@ pub fn validate_value(key: &str, value: &str) -> Result<()> {
     Err(InvalidValueError::ValidValues(valid_values).into())
 }
 
+// new_from_string initializes a Config from a toml string.
+#[cfg(test)]
+fn new_from_string(s: &str) -> Result<impl Config> {
+    let root = s.parse::<toml_edit::Document>()?;
+    Ok(new_config(root))
+}
+
 pub fn new_config(t: toml_edit::Document) -> impl Config {
     crate::config_from_file::FileConfig {
         map: crate::config_map::ConfigMap {
             root: t.as_table().clone(),
         },
     }
-}
-
-// new_from_string initializes a Config from a toml string.
-fn new_from_string(s: &str) -> Result<impl Config> {
-    let root = s.parse::<toml_edit::Document>()?;
-    Ok(new_config(root))
 }
 
 pub fn new_blank_root() -> Result<toml_edit::Document> {
@@ -154,6 +155,7 @@ pub fn new_blank_root() -> Result<toml_edit::Document> {
     Ok(s.parse::<toml_edit::Document>()?)
 }
 
+#[cfg(test)]
 pub fn new_blank_config() -> Result<impl Config> {
     let root = new_blank_root()?;
     Ok(new_config(root))
