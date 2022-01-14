@@ -33,13 +33,18 @@ jobs:
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      - if: ${{ ! startsWith(github.ref, 'refs/heads/dependabot') }}
+      - name: Check workflow permissions
+        id: check_permissions
+        uses: scherermichael-oss/action-has-permission@1.0.6
+        with:
+          required-permission: write
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - if: steps.check_permissions.outputs.has-permission
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
-      - if: ${{ startsWith(github.ref, 'refs/heads/dependabot') }}
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.PAT_GITHUB }}
-          args: --all-features
+       - name: Run clippy manually without annotations
+         if: ${{ !steps.check_permissions.outputs.has-permission }}
+         run: cargo clippy --all-targets -- -D warnings
