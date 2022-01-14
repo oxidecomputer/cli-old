@@ -38,6 +38,8 @@ jobs:
           brew install \
             coreutils \
             jq
+
+          cargo install toml-cli
       - name: Cache cargo registry
         uses: actions/cache@v2
         with:
