@@ -142,7 +142,7 @@ impl crate::cmd::Command for CmdAuthLogin {
         }
 
         // Do the login flow.
-        let cs = ctx.io.color_scheme();
+        let _cs = ctx.io.color_scheme();
 
         writeln!(
             ctx.io.err_out,
@@ -350,7 +350,7 @@ impl crate::cmd::Command for CmdAuthStatus {
             return Err(anyhow!(""));
         }
 
-        let mut failed = false;
+        let failed = false;
         let mut hostname_found = false;
 
         for hostname in &hostnames {
@@ -360,11 +360,11 @@ impl crate::cmd::Command for CmdAuthStatus {
 
             hostname_found = true;
 
-            let (token, token_source) = ctx.config.get_with_source(hostname, "token")?;
+            let (_token, _token_source) = ctx.config.get_with_source(hostname, "token")?;
 
-            let client = ctx.api_client(hostname)?;
+            let _client = ctx.api_client(hostname)?;
 
-            let mut host_status: Vec<String> = vec![];
+            let host_status: Vec<String> = vec![];
 
             /*match client.session().await {
                 Ok(session) => {
