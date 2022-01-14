@@ -12,6 +12,7 @@ sudo apt update -y && sudo apt install -y \
 	gcc \
 	gcc-mingw-w64-i686 \
 	gcc-mingw-w64 \
+	jq \
 	libmpc-dev \
 	libmpfr-dev \
 	libgmp-dev \
