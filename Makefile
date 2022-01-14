@@ -14,7 +14,7 @@ GENERATED_DOCS_DIR := ${PREFIX}/generated_docs
 UNAME := $(shell uname)
 
 # These are chosen from: https://doc.rust-lang.org/nightly/rustc/platform-support.html
-ifeq ($(UNAME), Linux)
+ifeq ($(UNAME), Darwin)
 	CROSS_TARGETS := x86_64-apple-darwin \
 				 aarch64-apple-darwin
 else
