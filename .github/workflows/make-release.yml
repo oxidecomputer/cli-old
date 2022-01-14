@@ -91,6 +91,7 @@ jobs:
       - name: combine readmes
         shell: bash
         run: |
+          ls -la
           cat macos-latest-${{github.ref_name}}-README.md ubuntu-latest-${{github.ref_name}}-README.md > release.md
       - name: Create a Release
         uses: softprops/action-gh-release@v1
