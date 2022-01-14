@@ -51,6 +51,7 @@ jobs:
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
       - name: Run make cross
         run: |
+          export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
           make release
           ls -la cross
         shell: bash
