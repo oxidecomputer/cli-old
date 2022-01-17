@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Parser;
 
 /// Create, list, edit, view, and delete projects.
@@ -48,11 +48,54 @@ impl crate::cmd::Command for CmdProjectCreate {
 /// Delete a project.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdProjectDelete {}
+pub struct CmdProjectDelete {
+    /// The name of the project to delete.
+    #[clap(name = "project", required = true)]
+    pub project: String,
+
+    /// The name of the organization to delete the project from.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// Confirm deletion without prompting.
+    #[clap(long)]
+    pub confirm: bool,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdProjectDelete {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if !ctx.io.can_prompt() && !self.confirm {
+            return Err(anyhow!("--confirm required when not running interactively"));
+        }
+
+        let client = ctx.api_client("")?;
+
+        let full_name = format!("{}/{}", self.organization, self.project);
+
+        // Confirm deletion.
+        if !self.confirm {
+            if let Err(err) = dialoguer::Input::<String>::new()
+                .with_prompt(format!("Type {} to confirm deletion:", full_name))
+                .validate_with(|input: &String| -> Result<(), &str> {
+                    if input.trim() == full_name {
+                        Ok(())
+                    } else {
+                        Err("mismatched confirmation")
+                    }
+                })
+                .interact_text()
+            {
+                return Err(anyhow!("prompt failed: {}", err));
+            }
+        }
+
+        // Delete the project.
+        client.projects().delete(&self.organization, &self.project).await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(ctx.io.out, "{} Deleted project {}", cs.success_icon(), full_name)?;
+
         Ok(())
     }
 }
