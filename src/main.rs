@@ -23,6 +23,8 @@ pub mod cmd_generate;
 pub mod cmd_instance;
 /// The project command.
 pub mod cmd_project;
+/// The ssh-key command.
+pub mod cmd_ssh_key;
 /// The version command.
 pub mod cmd_version;
 mod colors;
@@ -101,6 +103,7 @@ enum SubCommand {
     Generate(cmd_generate::CmdGenerate),
     Instance(cmd_instance::CmdInstance),
     Project(cmd_project::CmdProject),
+    SshKey(cmd_ssh_key::CmdSSHKey),
     Version(cmd_version::CmdVersion),
 }
 
@@ -198,6 +201,7 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Generate(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Instance(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Project(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::SshKey(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Version(cmd) => run_cmd(&cmd, ctx).await,
     }
 
