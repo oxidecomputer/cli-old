@@ -182,7 +182,7 @@ impl crate::cmd::Command for CmdProjectList {
             let org = client.organizations().get(&project.organization_id).await?;
             let full_name = format!("{}/{}", org.name, project.name);
 
-            let last_updated = chrono::Utc::now() - project.time_modified.unwrap_or(project.time_created.unwrap());
+            let last_updated = chrono::Utc::now() - project.time_modified.unwrap_or_else(|| project.time_created.unwrap());
             writeln!(
                 tw,
                 "{}\t{}\t{}",
