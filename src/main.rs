@@ -15,6 +15,8 @@ pub mod cmd_auth;
 pub mod cmd_completion;
 /// The config command.
 pub mod cmd_config;
+/// The disk command.
+pub mod cmd_disk;
 /// The generate command.
 pub mod cmd_generate;
 /// The instance command.
@@ -95,6 +97,7 @@ enum SubCommand {
     Api(cmd_api::CmdApi),
     Completion(cmd_completion::CmdCompletion),
     Config(cmd_config::CmdConfig),
+    Disk(cmd_disk::CmdDisk),
     Generate(cmd_generate::CmdGenerate),
     Instance(cmd_instance::CmdInstance),
     Project(cmd_project::CmdProject),
@@ -191,6 +194,7 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Api(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Completion(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Config(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Disk(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Generate(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Instance(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Project(cmd) => run_cmd(&cmd, ctx).await,
