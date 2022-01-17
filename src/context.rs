@@ -82,30 +82,26 @@ impl Context<'_> {
         let browser = if !get_env_var("OXIDE_BROWSER").is_empty() {
             source = "OXIDE_BROWSER".to_string();
             get_env_var("OXIDE_BROWSER")
+        } else if !get_env_var("BROWSER").is_empty() {
+            source = "BROWSER".to_string();
+            get_env_var("BROWSER")
         } else {
-            if !get_env_var("BROWSER").is_empty() {
-                source = "BROWSER".to_string();
-                get_env_var("BROWSER")
-            } else {
-                source = crate::config_file::config_file()?;
-                self.config.get(hostname, "browser")?
-            }
+            source = crate::config_file::config_file()?;
+            self.config.get(hostname, "browser")?
         };
 
         if browser.is_empty() {
             if let Err(err) = open::that(url) {
                 return Err(anyhow!("An error occurred when opening '{}': {}", url, err));
             }
-        } else {
-            if let Err(err) = open::with(url, &browser) {
-                return Err(anyhow!(
-                    "An error occurred when opening '{}' with browser '{}' configured from '{}': {}",
-                    url,
-                    browser,
-                    source,
-                    err
-                ));
-            }
+        } else if let Err(err) = open::with(url, &browser) {
+            return Err(anyhow!(
+                "An error occurred when opening '{}' with browser '{}' configured from '{}': {}",
+                url,
+                browser,
+                source,
+                err
+            ));
         }
 
         Ok(())
