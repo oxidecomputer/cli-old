@@ -131,11 +131,34 @@ impl crate::cmd::Command for CmdProjectList {
 /// With '--web', open the project in a web browser instead.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdProjectView {}
+pub struct CmdProjectView {
+    /// The name of the project to view.
+    #[clap(name = "project", required = true)]
+    pub project: String,
+
+    /// The name of the organization to view the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// Open a project in the browser.
+    #[clap(short, long)]
+    pub web: bool,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdProjectView {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if self.web {
+            let url = format!(
+                "https://{}/{}/{}",
+                ctx.config.default_host()?,
+                self.organization,
+                self.project
+            );
+
+            ctx.browser("", &url)?;
+        }
+
         Ok(())
     }
 }
