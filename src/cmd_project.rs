@@ -220,6 +220,10 @@ pub struct CmdProjectView {
     /// Open a project in the browser.
     #[clap(short, long)]
     pub web: bool,
+
+    /// Output JSON.
+    #[clap(long)]
+    pub json: bool,
 }
 
 #[async_trait::async_trait]
@@ -235,6 +239,8 @@ impl crate::cmd::Command for CmdProjectView {
 
             ctx.browser("", &url)?;
         }
+
+        // TODO: do the rest of the command.
 
         Ok(())
     }
