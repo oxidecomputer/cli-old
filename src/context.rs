@@ -77,6 +77,11 @@ impl Context<'_> {
 
     /// This function opens a browser that is based on the configured
     /// environment to the specified path.
+    ///
+    /// Browser precedence:
+    /// 1. GH_BROWSER
+    /// 2. BROWSER
+    /// 3. browser from config
     pub fn browser(&self, hostname: &str, url: &str) -> Result<()> {
         let source: String;
         let browser = if !get_env_var("OXIDE_BROWSER").is_empty() {
