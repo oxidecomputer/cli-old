@@ -2,6 +2,8 @@ use anyhow::Result;
 use clap::Parser;
 
 /// Create, list, edit, view, and delete instances.
+///
+/// Additionally, start, stop, and reboot instances.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdInstance {
@@ -15,6 +17,9 @@ enum SubCommand {
     Delete(CmdInstanceDelete),
     Edit(CmdInstanceEdit),
     List(CmdInstanceList),
+    Start(CmdInstanceStart),
+    Stop(CmdInstanceStop),
+    Reboot(CmdInstanceReboot),
     View(CmdInstanceView),
 }
 
@@ -26,6 +31,9 @@ impl crate::cmd::Command for CmdInstance {
             SubCommand::Delete(cmd) => cmd.run(ctx).await,
             SubCommand::Edit(cmd) => cmd.run(ctx).await,
             SubCommand::List(cmd) => cmd.run(ctx).await,
+            SubCommand::Start(cmd) => cmd.run(ctx).await,
+            SubCommand::Stop(cmd) => cmd.run(ctx).await,
+            SubCommand::Reboot(cmd) => cmd.run(ctx).await,
             SubCommand::View(cmd) => cmd.run(ctx).await,
         }
     }
@@ -76,6 +84,42 @@ pub struct CmdInstanceList {}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceList {
+    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        Ok(())
+    }
+}
+
+/// Start an instance.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdInstanceStart {}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdInstanceStart {
+    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        Ok(())
+    }
+}
+
+/// Stop an instance.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdInstanceStop {}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdInstanceStop {
+    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        Ok(())
+    }
+}
+
+/// Reboot an instance.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdInstanceReboot {}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdInstanceReboot {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
         Ok(())
     }
