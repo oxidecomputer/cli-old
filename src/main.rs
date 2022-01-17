@@ -17,6 +17,8 @@ pub mod cmd_completion;
 pub mod cmd_config;
 /// The generate command.
 pub mod cmd_generate;
+/// The project command.
+pub mod cmd_project;
 /// The version command.
 pub mod cmd_version;
 mod colors;
@@ -92,6 +94,7 @@ enum SubCommand {
     Completion(cmd_completion::CmdCompletion),
     Config(cmd_config::CmdConfig),
     Generate(cmd_generate::CmdGenerate),
+    Project(cmd_project::CmdProject),
     Version(cmd_version::CmdVersion),
 }
 
@@ -186,6 +189,7 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Completion(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Config(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Generate(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Project(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Version(cmd) => run_cmd(&cmd, ctx).await,
     }
 
