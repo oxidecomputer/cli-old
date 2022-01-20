@@ -26,7 +26,7 @@ http = "^0.2.6"
 regex = "1"
 open = "^2.0.2"
 oxide-api = "0.1.0-rc.6"
-pulldown-cmark = "^0.9.0"
+pulldown-cmark = "^0.9.1"
 pulldown-cmark-to-cmark = "^9.0.0"
 reqwest = { version = "^0.11.9", default-features = false, features = ["json", "rustls-tls"] }
 # Fix once https://github.com/clap-rs/clap/pull/3174 is merged.
