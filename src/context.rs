@@ -57,20 +57,17 @@ impl Context<'_> {
             hostname.to_string()
         };
 
-        // Get the token for that host.
-        let token = self.config.get(&host, "token")?;
-
-        // Create the client.
-        let mut client = oxide_api::Client::new(&token);
-
         // Change the baseURL to the one we want.
         let mut baseurl = format!("https://{}", host);
         if host.starts_with("localhost") {
             baseurl = format!("http://{}", host)
         }
 
-        // Override the default host with the one from the config.
-        client = client.with_host(baseurl);
+        // Get the token for that host.
+        let token = self.config.get(&host, "token")?;
+
+        // Create the client.
+        let client = oxide_api::Client::new(&token, &baseurl);
 
         Ok(client)
     }

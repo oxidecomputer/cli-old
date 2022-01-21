@@ -140,7 +140,8 @@ impl crate::cmd::Command for CmdApi {
             };
 
             // TODO: We could also add flags for setting headers, etc.
-            let resp = client.request_raw(self.method.clone(), &endpoint, body).await?;
+            let req = client.request_raw(self.method.clone(), &endpoint, body).await?;
+            let resp = req.send().await?;
 
             // Print the response headers if requested.
             if self.include {
