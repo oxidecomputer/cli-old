@@ -85,6 +85,13 @@ jobs:
     needs: makerelease
     name: createrelease
     steps:
+      - uses: actions/checkout@v2
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            override: true
+            components: rustfmt, clippy
       - uses: actions/download-artifact@v2
         with:
           name:  ubuntu-latest-${{github.ref_name}}-README.md
@@ -96,7 +103,23 @@ jobs:
         run: |
           ls -la
           cat macos-latest-${{github.ref_name}}-README.md ubuntu-latest-${{github.ref_name}}-README.md > release.md
+      - name: Get if prerelease
+        shell: bash
+        id: extract_prerelease
+        run: |
+          cargo install toml-cli
+          export VERSION=v$(toml get Cargo.toml package.version | jq -r .)
+          if echo $VERSION | grep -q "rc"; then
+            echo "##[set-output name=prerelease;]$(echo true)";
+          else
+            if echo $VERSION | grep -q "pre"; then
+              echo "##[set-output name=prerelease;]$(echo true)";
+            else
+              echo "##[set-output name=prerelease;]$(echo false)";
+            fi
+          fi
       - name: Create a Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: ${{github.workspace}}/release.md
+          prerelease: ${{steps.extract_prerelease.outputs.prerelease}}
