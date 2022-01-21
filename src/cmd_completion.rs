@@ -18,16 +18,17 @@ use clap_generate::{generate, Shell};
 ///
 /// After, add this to your `~/.bash_profile`:
 ///
-///         eval "$(oxide completion -s bash)"
+///     eval "$(oxide completion -s bash)"
 ///
 /// ### zsh
 /// Generate a `_oxide` completion script and put it somewhere in your `$fpath`:
 ///
-///         oxide completion -s zsh > /usr/local/share/zsh/site-functions/_oxide
+///     oxide completion -s zsh > /usr/local/share/zsh/site-functions/_oxide
 ///
 /// Ensure that the following is present in your `~/.zshrc`:
-///         autoload -U compinit
-///         compinit -i
+///
+///     autoload -U compinit
+///     compinit -i
 ///
 /// Zsh version 5.7 or later is recommended.
 ///
@@ -35,18 +36,18 @@ use clap_generate::{generate, Shell};
 ///
 /// Generate a `oxide.fish` completion script:
 ///
-///         oxide completion -s fish > ~/.config/fish/completions/oxide.fish
+///     oxide completion -s fish > ~/.config/fish/completions/oxide.fish
 ///
 /// ### PowerShell
 ///
 /// Open your profile script with:
 ///
-///         mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
-///         notepad $profile
+///     mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue
+///     notepad $profile
 ///
 /// Add the line and save the file:
 ///
-/// Invoke-Expression -Command $(oxide completion -s powershell | Out-String)
+///     Invoke-Expression -Command $(oxide completion -s powershell | Out-String)
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdCompletion {
