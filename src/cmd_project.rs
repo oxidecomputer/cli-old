@@ -312,10 +312,18 @@ impl crate::cmd::Command for CmdProjectView {
         writeln!(tw, "description:\t{}", project.description)?;
         writeln!(tw, "organization:\t{}", project.organization_id)?;
         if let Some(time_created) = project.time_created {
-            writeln!(tw, "created:\t{}", time_created)?;
+            writeln!(
+                tw,
+                "created:\t{}",
+                chrono_humanize::HumanTime::from((chrono::Utc::now() - time_created)).to_string()
+            )?;
         }
         if let Some(time_modified) = project.time_modified {
-            writeln!(tw, "modified:\t{}", time_modified)?;
+            writeln!(
+                tw,
+                "modified:\t{}",
+                chrono_humanize::HumanTime::from((chrono::Utc::now() - time_modified)).to_string()
+            )?;
         }
 
         tw.flush()?;
