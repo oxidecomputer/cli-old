@@ -57,7 +57,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdInstanceDelete {
-    /// The instance to delete, can be an ID or name.
+    /// The instance to delete. Can be an ID or name.
     #[clap(name = "instance", required = true)]
     instance: String,
 

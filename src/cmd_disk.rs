@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Parser;
 
 /// Create, list, edit, view, and delete disks.
@@ -66,11 +66,67 @@ impl crate::cmd::Command for CmdDiskCreate {
 /// Delete a disk.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdDiskDelete {}
+pub struct CmdDiskDelete {
+    /// The disk to delete. Can be an ID or name.
+    #[clap(name = "disk", required = true)]
+    disk: String,
+
+    /// The project to delete the disk from.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// Confirm deletion without prompting.
+    #[clap(long)]
+    pub confirm: bool,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskDelete {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if !ctx.io.can_prompt() && !self.confirm {
+            return Err(anyhow!("--confirm required when not running interactively"));
+        }
+
+        let client = ctx.api_client("")?;
+
+        let full_name = format!("{}/{}", self.organization, self.project);
+
+        // Confirm deletion.
+        if !self.confirm {
+            if let Err(err) = dialoguer::Input::<String>::new()
+                .with_prompt(format!("Type {} to confirm deletion:", self.disk))
+                .validate_with(|input: &String| -> Result<(), &str> {
+                    if input.trim() == full_name {
+                        Ok(())
+                    } else {
+                        Err("mismatched confirmation")
+                    }
+                })
+                .interact_text()
+            {
+                return Err(anyhow!("prompt failed: {}", err));
+            }
+        }
+
+        // Delete the project.
+        client
+            .disks()
+            .delete(&self.organization, &self.project, &self.disk)
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Deleted disk {} from {}",
+            cs.success_icon_with_color(ansi_term::Color::Red),
+            self.disk,
+            full_name
+        )?;
+
         Ok(())
     }
 }
