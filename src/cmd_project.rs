@@ -111,12 +111,60 @@ impl crate::cmd::Command for CmdProjectDelete {
 /// Edit project settings.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdProjectEdit {}
+pub struct CmdProjectEdit {
+    /// The project to edit.
+    #[clap(name = "project", required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// The new name for the project.
+    #[clap(long = "name", short)]
+    pub new_name: Option<String>,
+
+    /// The new description for the project.
+    #[clap(long = "description", short = 'D')]
+    pub new_description: Option<String>,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdProjectEdit {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if self.new_name.is_none() && self.new_description.is_none() {
+            return Err(anyhow!("nothing to edit"));
+        }
+
+        let mut full_name = format!("{}/{}", self.organization, self.project);
+
+        let client = ctx.api_client("")?;
+
+        let mut body = oxide_api::types::ProjectUpdate {
+            name: "".to_string(),
+            description: "".to_string(),
+        };
+
+        if let Some(n) = &self.new_name {
+            body.name = n.to_string();
+            // Update the full name, so when we print it out in the end, it's correct.
+            full_name = format!("{}/{}", self.organization, n);
+        }
+
+        if let Some(d) = &self.new_description {
+            body.description = d.to_string();
+        }
+
+        client.projects().put(&self.organization, &self.project, &body).await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Successfully edited project {}",
+            cs.success_icon(),
+            full_name
+        )?;
+
         Ok(())
     }
 }
