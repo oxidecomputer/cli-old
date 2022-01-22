@@ -43,6 +43,7 @@ pub struct CmdProjectCreate {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdProjectCreate {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -115,6 +116,7 @@ pub struct CmdProjectEdit {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdProjectEdit {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -246,6 +248,7 @@ impl crate::cmd::Command for CmdProjectView {
         }
 
         // TODO: do the rest of the command.
+        println!("Not implemented yet.");
 
         Ok(())
     }

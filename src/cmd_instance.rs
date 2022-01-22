@@ -49,6 +49,7 @@ pub struct CmdInstanceCreate {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceCreate {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -129,6 +130,7 @@ pub struct CmdInstanceEdit {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceEdit {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -153,6 +155,7 @@ pub struct CmdInstanceStart {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceStart {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -165,6 +168,7 @@ pub struct CmdInstanceStop {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceStop {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -177,6 +181,7 @@ pub struct CmdInstanceReboot {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceReboot {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -193,6 +198,7 @@ pub struct CmdInstanceView {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceView {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }

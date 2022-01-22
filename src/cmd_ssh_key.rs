@@ -35,6 +35,7 @@ pub struct CmdSSHKeyAdd {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyAdd {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -47,6 +48,7 @@ pub struct CmdSSHKeyDelete {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyDelete {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -59,6 +61,7 @@ pub struct CmdSSHKeyList {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyList {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }

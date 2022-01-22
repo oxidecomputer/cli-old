@@ -45,6 +45,7 @@ pub struct CmdDiskAttach {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskAttach {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -59,6 +60,7 @@ pub struct CmdDiskCreate {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskCreate {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -139,6 +141,7 @@ pub struct CmdDiskDetach {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskDetach {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -151,6 +154,7 @@ pub struct CmdDiskEdit {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskEdit {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -163,6 +167,7 @@ pub struct CmdDiskList {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskList {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
@@ -179,6 +184,7 @@ pub struct CmdDiskView {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskView {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
