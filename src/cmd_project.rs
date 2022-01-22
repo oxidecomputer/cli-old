@@ -51,11 +51,11 @@ impl crate::cmd::Command for CmdProjectCreate {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdProjectDelete {
-    /// The name of the project to delete.
+    /// The project to delete. Can be an ID or name.
     #[clap(name = "project", required = true)]
     pub project: String,
 
-    /// The name of the organization to delete the project from.
+    /// The organization to delete the project from.
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
 
@@ -96,7 +96,12 @@ impl crate::cmd::Command for CmdProjectDelete {
         client.projects().delete(&self.organization, &self.project).await?;
 
         let cs = ctx.io.color_scheme();
-        writeln!(ctx.io.out, "{} Deleted project {}", cs.success_icon(), full_name)?;
+        writeln!(
+            ctx.io.out,
+            "{} Deleted project {}",
+            cs.success_icon_with_color(ansi_term::Color::Red),
+            full_name
+        )?;
 
         Ok(())
     }
@@ -123,7 +128,7 @@ impl crate::cmd::Command for CmdProjectEdit {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdProjectList {
-    /// The name of the organization to list projects for.
+    /// The organization to list projects for.
     #[clap(name = "organization", required = false)]
     pub organization: String,
 
@@ -209,11 +214,11 @@ impl crate::cmd::Command for CmdProjectList {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdProjectView {
-    /// The name of the project to view.
+    /// The project to view.
     #[clap(name = "project", required = true)]
     pub project: String,
 
-    /// The name of the organization to view the project.
+    /// The organization to view the project.
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
 
