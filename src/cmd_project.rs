@@ -315,14 +315,14 @@ impl crate::cmd::Command for CmdProjectView {
             writeln!(
                 tw,
                 "created:\t{}",
-                chrono_humanize::HumanTime::from((chrono::Utc::now() - time_created)).to_string()
+                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_created)
             )?;
         }
         if let Some(time_modified) = project.time_modified {
             writeln!(
                 tw,
                 "modified:\t{}",
-                chrono_humanize::HumanTime::from((chrono::Utc::now() - time_modified)).to_string()
+                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_modified)
             )?;
         }
 
