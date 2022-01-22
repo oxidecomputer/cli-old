@@ -69,7 +69,7 @@ impl crate::cmd::Command for CmdProjectCreate {
                 .with_prompt("Project organization:")
                 .interact_text()
             {
-                Ok(org) => organization = org.to_string(),
+                Ok(org) => organization = org,
                 Err(err) => {
                     return Err(anyhow!("prompt failed: {}", err));
                 }
@@ -81,7 +81,7 @@ impl crate::cmd::Command for CmdProjectCreate {
                 .with_prompt("Project name:")
                 .interact_text()
             {
-                Ok(name) => project_name = name.to_string(),
+                Ok(name) => project_name = name,
                 Err(err) => {
                     return Err(anyhow!("prompt failed: {}", err));
                 }
@@ -93,7 +93,7 @@ impl crate::cmd::Command for CmdProjectCreate {
                     .with_prompt("Project description:")
                     .interact_text()
                 {
-                    Ok(desc) => description = desc.to_string(),
+                    Ok(desc) => description = desc,
                     Err(err) => {
                         return Err(anyhow!("prompt failed: {}", err));
                     }
