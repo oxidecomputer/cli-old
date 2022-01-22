@@ -63,6 +63,10 @@ pub struct CmdApi {
     /// Include HTTP response headers in the output.
     #[clap(short, long)]
     pub include: bool,
+
+    /// Add a HTTP request header in `key:value` format.
+    #[clap(short = 'H', long)]
+    pub header: Vec<String>,
 }
 
 /// The JSON type for a paginated response.
@@ -139,8 +143,16 @@ impl crate::cmd::Command for CmdApi {
                 Some(reqwest::Body::from(bytes.clone()))
             };
 
-            // TODO: We could also add flags for setting headers, etc.
-            let req = client.request_raw(self.method.clone(), &endpoint, body).await?;
+            let mut req = client.request_raw(self.method.clone(), &endpoint, body).await?;
+
+            // Let's add our headers.
+            let headers = self.parse_headers()?;
+            if !headers.is_empty() {
+                for (key, value) in headers {
+                    req = req.header(key, value);
+                }
+            }
+
             let resp = req.send().await?;
 
             // Print the response headers if requested.
@@ -194,6 +206,20 @@ impl crate::cmd::Command for CmdApi {
 }
 
 impl CmdApi {
+    fn parse_headers(&self) -> Result<HashMap<String, String>> {
+        let mut headers: HashMap<String, String> = HashMap::new();
+
+        for h in self.header.iter() {
+            let mut parts = h.splitn(2, ':');
+            let key = parts.next().ok_or_else(|| anyhow!("missing key in --header"))?;
+            let value = parts.next().ok_or_else(|| anyhow!("missing value in --header"))?;
+
+            headers.insert(key.to_string(), value.to_string());
+        }
+
+        Ok(headers)
+    }
+
     fn parse_fields(&self) -> Result<HashMap<String, serde_json::Value>> {
         let mut params: HashMap<String, serde_json::Value> = HashMap::new();
 
