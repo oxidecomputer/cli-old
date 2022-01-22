@@ -40,12 +40,54 @@ impl crate::cmd::Command for CmdDisk {
 /// Attach a disk to an instance.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdDiskAttach {}
+pub struct CmdDiskAttach {
+    /// The disk to attach. Can be an ID or name.
+    #[clap(name = "disk", required = true)]
+    disk: String,
+
+    /// The instance to attach the disk to. Can be an ID or name.
+    #[clap(name = "instance", required = true)]
+    instance: String,
+
+    /// The project that holds the disk and instance.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskAttach {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let client = ctx.api_client("")?;
+
+        let full_name = format!("{}/{}", self.organization, self.project);
+
+        // Attach the disk.
+        client
+            .instances()
+            .disks_attach(
+                &self.instance,
+                &self.organization,
+                &self.project,
+                &oxide_api::types::DiskIdentifier {
+                    disk: self.disk.to_string(),
+                },
+            )
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Attached disk {} to instance {} in project {}",
+            cs.success_icon(),
+            self.disk,
+            self.instance,
+            full_name
+        )?;
+
         Ok(())
     }
 }
@@ -117,7 +159,7 @@ impl crate::cmd::Command for CmdDiskDelete {
         // Delete the project.
         client
             .disks()
-            .delete(&self.organization, &self.project, &self.disk)
+            .delete(&self.disk, &self.organization, &self.project)
             .await?;
 
         let cs = ctx.io.color_scheme();
@@ -136,12 +178,54 @@ impl crate::cmd::Command for CmdDiskDelete {
 /// Detach a disk from an instance.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdDiskDetach {}
+pub struct CmdDiskDetach {
+    /// The disk to detach. Can be an ID or name.
+    #[clap(name = "disk", required = true)]
+    disk: String,
+
+    /// The instance to detach the disk from. Can be an ID or name.
+    #[clap(name = "instance", required = true)]
+    instance: String,
+
+    /// The project that holds the disk and instance.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskDetach {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let client = ctx.api_client("")?;
+
+        let full_name = format!("{}/{}", self.organization, self.project);
+
+        // Detach the disk.
+        client
+            .instances()
+            .disks_detach(
+                &self.instance,
+                &self.organization,
+                &self.project,
+                &oxide_api::types::DiskIdentifier {
+                    disk: self.disk.to_string(),
+                },
+            )
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Detached disk {} from instance {} in project {}",
+            cs.success_icon_with_color(ansi_term::Color::Red),
+            self.disk,
+            self.instance,
+            full_name
+        )?;
+
         Ok(())
     }
 }

@@ -103,10 +103,10 @@ impl crate::cmd::Command for CmdInstanceDelete {
             }
         }
 
-        // Delete the project.
+        // Delete the instance.
         client
             .instances()
-            .delete(&self.organization, &self.project, &self.instance)
+            .delete(&self.instance, &self.organization, &self.project)
             .await?;
 
         let cs = ctx.io.color_scheme();
