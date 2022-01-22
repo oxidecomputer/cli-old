@@ -293,10 +293,35 @@ impl crate::cmd::Command for CmdProjectView {
             );
 
             ctx.browser("", &url)?;
+            return Ok(());
         }
 
-        // TODO: do the rest of the command.
-        println!("Not implemented yet.");
+        let client = ctx.api_client("")?;
+
+        let project = client.projects().get(&self.organization, &self.project).await?;
+
+        if self.json {
+            // If they specified --json, just dump the JSON.
+            ctx.io.write_json(&serde_json::json!(project))?;
+            return Ok(());
+        }
+
+        let mut tw = tabwriter::TabWriter::new(vec![]);
+        writeln!(tw, "id:\t{}", project.id)?;
+        writeln!(tw, "name:\t{}", project.name)?;
+        writeln!(tw, "description:\t{}", project.description)?;
+        writeln!(tw, "organization:\t{}", project.organization_id)?;
+        if let Some(time_created) = project.time_created {
+            writeln!(tw, "created:\t{}", time_created)?;
+        }
+        if let Some(time_modified) = project.time_modified {
+            writeln!(tw, "modified:\t{}", time_modified)?;
+        }
+
+        tw.flush()?;
+
+        let table = String::from_utf8(tw.into_inner()?)?;
+        writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
     }
