@@ -15,6 +15,7 @@ pub struct CmdInstance {
 enum SubCommand {
     Create(CmdInstanceCreate),
     Delete(CmdInstanceDelete),
+    Disks(CmdInstanceDisks),
     Edit(CmdInstanceEdit),
     List(CmdInstanceList),
     Start(CmdInstanceStart),
@@ -29,6 +30,7 @@ impl crate::cmd::Command for CmdInstance {
         match &self.subcmd {
             SubCommand::Create(cmd) => cmd.run(ctx).await,
             SubCommand::Delete(cmd) => cmd.run(ctx).await,
+            SubCommand::Disks(cmd) => cmd.run(ctx).await,
             SubCommand::Edit(cmd) => cmd.run(ctx).await,
             SubCommand::List(cmd) => cmd.run(ctx).await,
             SubCommand::Start(cmd) => cmd.run(ctx).await,
@@ -118,6 +120,19 @@ impl crate::cmd::Command for CmdInstanceDelete {
             full_name
         )?;
 
+        Ok(())
+    }
+}
+
+/// List the disks attached to an instance.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdInstanceDisks {}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdInstanceDisks {
+    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        println!("Not implemented yet.");
         Ok(())
     }
 }
