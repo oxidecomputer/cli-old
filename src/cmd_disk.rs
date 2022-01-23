@@ -39,6 +39,8 @@ impl crate::cmd::Command for CmdDisk {
     }
 }
 
+// TODO: on attach we could do it interactively and list the instances in the project
+// as a selection list.
 /// Attach a disk to an instance.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
