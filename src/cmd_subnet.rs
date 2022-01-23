@@ -215,8 +215,8 @@ impl crate::cmd::Command for CmdSubnetList {
                 "{}\t{}\t{}\t{}\t{}\t{}",
                 &subnet.name,
                 &subnet.description,
-                &subnet.ipv_4_block,
-                &subnet.ipv_6_block,
+                &subnet.ipv4_block,
+                &subnet.ipv6_block,
                 &subnet.vpc_id,
                 cs.gray(&chrono_humanize::HumanTime::from(last_updated).to_string())
             )?;
@@ -297,8 +297,8 @@ impl crate::cmd::Command for CmdSubnetView {
         writeln!(tw, "id:\t{}", subnet.id)?;
         writeln!(tw, "name:\t{}", subnet.name)?;
         writeln!(tw, "description:\t{}", subnet.description)?;
-        writeln!(tw, "ipv4 block:\t{}", subnet.ipv_4_block)?;
-        writeln!(tw, "ipv6 block:\t{}", subnet.ipv_6_block)?;
+        writeln!(tw, "ipv4 block:\t{}", subnet.ipv4_block)?;
+        writeln!(tw, "ipv6 block:\t{}", subnet.ipv6_block)?;
         writeln!(tw, "vpc:\t{}", subnet.vpc_id)?;
         if let Some(time_created) = subnet.time_created {
             writeln!(

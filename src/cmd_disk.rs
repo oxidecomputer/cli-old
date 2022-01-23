@@ -318,7 +318,7 @@ impl crate::cmd::Command for CmdDiskList {
             let last_updated = chrono::Utc::now() - disk.time_modified.unwrap_or_else(|| disk.time_created.unwrap());
             writeln!(
                 tw,
-                "{}\t{}\t{:?}\t{}\t{}",
+                "{}\t{}\t{}\t{}\t{}",
                 &disk.name,
                 &disk.description,
                 &disk.state,
@@ -398,8 +398,7 @@ impl crate::cmd::Command for CmdDiskView {
         writeln!(tw, "id:\t{}", disk.id)?;
         writeln!(tw, "name:\t{}", disk.name)?;
         writeln!(tw, "description:\t{}", disk.description)?;
-        // TODO: implement display for these enums in the api lib.
-        writeln!(tw, "state:\t{:?}", disk.state)?;
+        writeln!(tw, "state:\t{}", disk.state)?;
         writeln!(tw, "size:\t{}", disk.size)?;
         writeln!(tw, "device path:\t{}", disk.device_path)?;
         writeln!(tw, "snapshot:\t{}", disk.snapshot_id)?;

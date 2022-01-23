@@ -225,7 +225,7 @@ impl crate::cmd::Command for CmdRouteList {
             let last_updated = chrono::Utc::now() - route.time_modified.unwrap_or_else(|| route.time_created.unwrap());
             writeln!(
                 tw,
-                "{}\t{}\t{}\t{:?}\t{:?}\t{}\t{}",
+                "{}\t{}\t{}\t{}\t{}\t{}\t{}",
                 &route.name,
                 &route.description,
                 &route.kind,
@@ -316,9 +316,8 @@ impl crate::cmd::Command for CmdRouteView {
         writeln!(tw, "name:\t{}", route.name)?;
         writeln!(tw, "description:\t{}", route.description)?;
         writeln!(tw, "kind:\t{}", route.kind)?;
-        // TODO: implement display for these enums in the api lib.
-        writeln!(tw, "destination:\t{:?}", route.destination)?;
-        writeln!(tw, "target:\t{:?}", route.target)?;
+        writeln!(tw, "destination:\t{}", route.destination)?;
+        writeln!(tw, "target:\t{}", route.target)?;
         writeln!(tw, "router:\t{}", route.router_id)?;
         if let Some(time_created) = route.time_created {
             writeln!(
