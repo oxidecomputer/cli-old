@@ -52,6 +52,7 @@ pub struct CmdProjectCreate {
     pub description: String,
 }
 
+// TODO: in interactive create it should default to the user's org.
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdProjectCreate {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {

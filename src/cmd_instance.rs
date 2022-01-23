@@ -50,6 +50,7 @@ impl crate::cmd::Command for CmdInstance {
 #[clap(verbatim_doc_comment)]
 pub struct CmdInstanceCreate {}
 
+// TODO: in interactive create it should list the projects from the org as a select.
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceCreate {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
