@@ -165,12 +165,43 @@ impl crate::cmd::Command for CmdInstanceList {
 /// Start an instance.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdInstanceStart {}
+pub struct CmdInstanceStart {
+    /// The instance to start. Can be an ID or name.
+    #[clap(name = "instance", required = true)]
+    instance: String,
+
+    /// The project that holds the instance.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceStart {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let client = ctx.api_client("")?;
+
+        let full_name = format!("{}/{}", self.organization, self.project);
+
+        // Start the instance.
+        // TODO: Do we want a progress bar here?
+        client
+            .instances()
+            .start(&self.instance, &self.organization, &self.project)
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Started instance {} in {}",
+            cs.success_icon(),
+            self.instance,
+            full_name
+        )?;
+
         Ok(())
     }
 }
@@ -178,12 +209,68 @@ impl crate::cmd::Command for CmdInstanceStart {
 /// Stop an instance.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdInstanceStop {}
+pub struct CmdInstanceStop {
+    /// The instance to stop. Can be an ID or name.
+    #[clap(name = "instance", required = true)]
+    instance: String,
+
+    /// The project that holds the instance.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// Confirm stop without prompting.
+    #[clap(long)]
+    pub confirm: bool,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceStop {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if !ctx.io.can_prompt() && !self.confirm {
+            return Err(anyhow!("--confirm required when not running interactively"));
+        }
+
+        let client = ctx.api_client("")?;
+
+        let full_name = format!("{}/{}", self.organization, self.project);
+
+        // Confirm stop.
+        if !self.confirm {
+            if let Err(err) = dialoguer::Input::<String>::new()
+                .with_prompt(format!("Type {} to confirm stop:", self.instance))
+                .validate_with(|input: &String| -> Result<(), &str> {
+                    if input.trim() == full_name {
+                        Ok(())
+                    } else {
+                        Err("mismatched confirmation")
+                    }
+                })
+                .interact_text()
+            {
+                return Err(anyhow!("prompt failed: {}", err));
+            }
+        }
+
+        // Stop the instance.
+        // TODO: Do we want a progress bar here?
+        client
+            .instances()
+            .stop(&self.instance, &self.organization, &self.project)
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Stopped instance {} in {}",
+            cs.failure_icon_with_color(ansi_term::Color::Green),
+            self.instance,
+            full_name
+        )?;
+
         Ok(())
     }
 }
@@ -191,12 +278,68 @@ impl crate::cmd::Command for CmdInstanceStop {
 /// Reboot an instance.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdInstanceReboot {}
+pub struct CmdInstanceReboot {
+    /// The instance to reboot. Can be an ID or name.
+    #[clap(name = "instance", required = true)]
+    instance: String,
+
+    /// The project that holds the instance.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// Confirm reboot without prompting.
+    #[clap(long)]
+    pub confirm: bool,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceReboot {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if !ctx.io.can_prompt() && !self.confirm {
+            return Err(anyhow!("--confirm required when not running interactively"));
+        }
+
+        let client = ctx.api_client("")?;
+
+        let full_name = format!("{}/{}", self.organization, self.project);
+
+        // Confirm reboot.
+        if !self.confirm {
+            if let Err(err) = dialoguer::Input::<String>::new()
+                .with_prompt(format!("Type {} to confirm reboot:", self.instance))
+                .validate_with(|input: &String| -> Result<(), &str> {
+                    if input.trim() == full_name {
+                        Ok(())
+                    } else {
+                        Err("mismatched confirmation")
+                    }
+                })
+                .interact_text()
+            {
+                return Err(anyhow!("prompt failed: {}", err));
+            }
+        }
+
+        // Reboot the instance.
+        // TODO: Do we want a progress bar here?
+        client
+            .instances()
+            .reboot(&self.instance, &self.organization, &self.project)
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Rebooted instance {} in {}",
+            cs.success_icon(),
+            self.instance,
+            full_name
+        )?;
+
         Ok(())
     }
 }

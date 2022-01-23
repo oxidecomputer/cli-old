@@ -127,6 +127,10 @@ impl ColorScheme {
     pub fn failure_icon(&self) -> String {
         self.red("✘")
     }
+
+    pub fn failure_icon_with_color(&self, color: ansi_term::Colour) -> String {
+        color.paint("✘").to_string()
+    }
 }
 
 #[cfg(test)]
