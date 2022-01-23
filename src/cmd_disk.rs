@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use anyhow::{anyhow, Result};
 use clap::Parser;
 
@@ -246,12 +248,87 @@ impl crate::cmd::Command for CmdDiskEdit {
 /// List disks owned by a project.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdDiskList {}
+pub struct CmdDiskList {
+    /// The project that holds the disks.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// Maximum number of disks to list.
+    #[clap(long, short, default_value = "30")]
+    pub limit: u32,
+
+    /// Make additional HTTP requests to fetch all pages of disks.
+    #[clap(long)]
+    pub paginate: bool,
+
+    /// Output JSON.
+    #[clap(long)]
+    pub json: bool,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskList {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if self.limit < 1 {
+            return Err(anyhow!("--limit must be greater than 0"));
+        }
+
+        let client = ctx.api_client("")?;
+
+        let disks = if self.paginate {
+            client
+                .disks()
+                .get_all(
+                    oxide_api::types::NameSortModeAscending::NameAscending,
+                    &self.organization,
+                    &self.project,
+                )
+                .await?
+        } else {
+            client
+                .disks()
+                .get_page(
+                    self.limit,
+                    "",
+                    oxide_api::types::NameSortModeAscending::NameAscending,
+                    &self.organization,
+                    &self.project,
+                )
+                .await?
+        };
+
+        if self.json {
+            // If they specified --json, just dump the JSON.
+            ctx.io.write_json(&serde_json::json!(disks))?;
+            return Ok(());
+        }
+
+        let cs = ctx.io.color_scheme();
+
+        // TODO: add more columns, maybe make customizable.
+        let mut tw = tabwriter::TabWriter::new(vec![]);
+        writeln!(tw, "NAME\tDESCRTIPTION\tSTATE\tDEVICE PATH\tLAST UPDATED")?;
+        for disk in disks {
+            let last_updated = chrono::Utc::now() - disk.time_modified.unwrap_or_else(|| disk.time_created.unwrap());
+            writeln!(
+                tw,
+                "{}\t{}\t{:?}\t{}\t{}",
+                &disk.name,
+                &disk.description,
+                &disk.state,
+                &disk.device_path,
+                cs.gray(&chrono_humanize::HumanTime::from(last_updated).to_string())
+            )?;
+        }
+        tw.flush()?;
+
+        let table = String::from_utf8(tw.into_inner()?)?;
+        writeln!(ctx.io.out, "{}", table)?;
+
         Ok(())
     }
 }
@@ -263,12 +340,87 @@ impl crate::cmd::Command for CmdDiskList {
 /// With '--web', open the disk in a web browser instead.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdDiskView {}
+pub struct CmdDiskView {
+    /// The disk to view.
+    #[clap(name = "disk", required = true)]
+    pub disk: String,
+
+    /// The project that holds the disk.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization to view the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// Open a project in the browser.
+    #[clap(short, long)]
+    pub web: bool,
+
+    /// Output JSON.
+    #[clap(long)]
+    pub json: bool,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskView {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if self.web {
+            // TODO: make sure this is the correct URL.
+            let url = format!(
+                "https://{}/{}/{}/disks/{}",
+                ctx.config.default_host()?,
+                self.organization,
+                self.project,
+                self.disk
+            );
+
+            ctx.browser("", &url)?;
+            return Ok(());
+        }
+
+        let client = ctx.api_client("")?;
+
+        let disk = client
+            .disks()
+            .get(&self.disk, &self.organization, &self.project)
+            .await?;
+
+        if self.json {
+            // If they specified --json, just dump the JSON.
+            ctx.io.write_json(&serde_json::json!(disk))?;
+            return Ok(());
+        }
+
+        let mut tw = tabwriter::TabWriter::new(vec![]);
+        writeln!(tw, "id:\t{}", disk.id)?;
+        writeln!(tw, "name:\t{}", disk.name)?;
+        writeln!(tw, "description:\t{}", disk.description)?;
+        // TODO: implement display for these enums in the api lib.
+        writeln!(tw, "state:\t{:?}", disk.state)?;
+        writeln!(tw, "size:\t{}", disk.size)?;
+        writeln!(tw, "device path:\t{}", disk.device_path)?;
+        writeln!(tw, "snapshot:\t{}", disk.snapshot_id)?;
+        if let Some(time_created) = disk.time_created {
+            writeln!(
+                tw,
+                "created:\t{}",
+                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_created)
+            )?;
+        }
+        if let Some(time_modified) = disk.time_modified {
+            writeln!(
+                tw,
+                "modified:\t{}",
+                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_modified)
+            )?;
+        }
+
+        tw.flush()?;
+
+        let table = String::from_utf8(tw.into_inner()?)?;
+        writeln!(ctx.io.out, "{}", table)?;
+
         Ok(())
     }
 }
