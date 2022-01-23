@@ -56,6 +56,14 @@ pub struct CmdRouteDelete {
     #[clap(name = "route", required = true)]
     route: String,
 
+    /// The router the route belongs to.
+    #[clap(long, short, required = true)]
+    pub router: String,
+
+    /// The vpc that holds the route.
+    #[clap(long, short, required = true)]
+    pub vpc: String,
+
     /// The project to delete the route from.
     #[clap(long, short, required = true)]
     pub project: String,
@@ -100,16 +108,18 @@ impl crate::cmd::Command for CmdRouteDelete {
         // Delete the project.
         client
             .routes()
-            .delete(&self.route, &self.organization, &self.project)
+            .delete(&self.organization, &self.project, &self.route, &self.router, &self.vpc)
             .await?;
 
         let cs = ctx.io.color_scheme();
         writeln!(
             ctx.io.out,
-            "{} Deleted route {} from {}",
+            "{} Deleted route {} from {} in vpc {} and router {}",
             cs.success_icon_with_color(ansi_term::Color::Red),
             self.route,
-            full_name
+            full_name,
+            self.router,
+            self.vpc
         )?;
 
         Ok(())
@@ -133,6 +143,14 @@ impl crate::cmd::Command for CmdRouteEdit {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdRouteList {
+    /// The router the routes belong to.
+    #[clap(long, short, required = true)]
+    pub router: String,
+
+    /// The vpc that holds the router.
+    #[clap(long, short, required = true)]
+    pub vpc: String,
+
     /// The project that holds the routes.
     #[clap(long, short, required = true)]
     pub project: String,
@@ -170,6 +188,8 @@ impl crate::cmd::Command for CmdRouteList {
                     oxide_api::types::NameSortModeAscending::NameAscending,
                     &self.organization,
                     &self.project,
+                    &self.router,
+                    &self.vpc,
                 )
                 .await?
         } else {
@@ -181,6 +201,8 @@ impl crate::cmd::Command for CmdRouteList {
                     oxide_api::types::NameSortModeAscending::NameAscending,
                     &self.organization,
                     &self.project,
+                    &self.router,
+                    &self.vpc,
                 )
                 .await?
         };
@@ -203,7 +225,7 @@ impl crate::cmd::Command for CmdRouteList {
             let last_updated = chrono::Utc::now() - route.time_modified.unwrap_or_else(|| route.time_created.unwrap());
             writeln!(
                 tw,
-                "{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                "{}\t{}\t{}\t{:?}\t{:?}\t{}\t{}",
                 &route.name,
                 &route.description,
                 &route.kind,
@@ -233,6 +255,14 @@ pub struct CmdRouteView {
     /// The route to view.
     #[clap(name = "route", required = true)]
     pub route: String,
+
+    /// The router the route belongs to.
+    #[clap(long, short, required = true)]
+    pub router: String,
+
+    /// The vpc that holds the route.
+    #[clap(long, short, required = true)]
+    pub vpc: String,
 
     /// The project that holds the route.
     #[clap(long, short, required = true)]
@@ -272,7 +302,7 @@ impl crate::cmd::Command for CmdRouteView {
 
         let route = client
             .routes()
-            .get(&self.route, &self.organization, &self.project)
+            .get(&self.organization, &self.project, &self.route, &self.router, &self.vpc)
             .await?;
 
         if self.json {
