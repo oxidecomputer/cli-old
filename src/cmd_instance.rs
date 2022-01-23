@@ -129,12 +129,72 @@ impl crate::cmd::Command for CmdInstanceDelete {
 /// List the disks attached to an instance.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdInstanceDisks {}
+pub struct CmdInstanceDisks {
+    /// The instance to view the disks for.
+    #[clap(name = "instance", required = true)]
+    pub instance: String,
+
+    /// The project that holds the instance.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization to view the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// Open a project in the browser.
+    #[clap(short, long)]
+    pub web: bool,
+
+    /// Output JSON.
+    #[clap(long)]
+    pub json: bool,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceDisks {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let client = ctx.api_client("")?;
+
+        let disks = client
+            .instances()
+            .disks_get_all(
+                oxide_api::types::NameSortModeAscending::NameAscending,
+                &self.instance,
+                &self.organization,
+                &self.project,
+            )
+            .await?;
+
+        if self.json {
+            // If they specified --json, just dump the JSON.
+            ctx.io.write_json(&serde_json::json!(disks))?;
+            return Ok(());
+        }
+
+        let cs = ctx.io.color_scheme();
+
+        // TODO: add more columns, maybe make customizable.
+        // TODO: for state the api lib should implement display
+        let mut tw = tabwriter::TabWriter::new(vec![]);
+        writeln!(tw, "NAME\tDESCRTIPTION\tSTATE\tDEVICE PATH\tLAST UPDATED")?;
+        for disk in disks {
+            let last_updated = chrono::Utc::now() - disk.time_modified.unwrap_or_else(|| disk.time_created.unwrap());
+            writeln!(
+                tw,
+                "{}\t{}\t{:?}\t{}\t{}",
+                &disk.name,
+                &disk.description,
+                &disk.state,
+                &disk.device_path,
+                cs.gray(&chrono_humanize::HumanTime::from(last_updated).to_string())
+            )?;
+        }
+        tw.flush()?;
+
+        let table = String::from_utf8(tw.into_inner()?)?;
+        writeln!(ctx.io.out, "{}", table)?;
+
         Ok(())
     }
 }
