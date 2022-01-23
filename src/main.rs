@@ -23,10 +23,18 @@ pub mod cmd_generate;
 pub mod cmd_instance;
 /// The project command.
 pub mod cmd_project;
+/// The route command.
+pub mod cmd_route;
+/// The router command.
+pub mod cmd_router;
 /// The ssh-key command.
 pub mod cmd_ssh_key;
+/// The subnet command.
+pub mod cmd_subnet;
 /// The version command.
 pub mod cmd_version;
+/// The vpc command.
+pub mod cmd_vpc;
 mod colors;
 mod config;
 mod config_alias;
@@ -103,8 +111,12 @@ enum SubCommand {
     Generate(cmd_generate::CmdGenerate),
     Instance(cmd_instance::CmdInstance),
     Project(cmd_project::CmdProject),
+    Route(cmd_route::CmdRoute),
+    Router(cmd_router::CmdRouter),
     SshKey(cmd_ssh_key::CmdSSHKey),
+    Subnet(cmd_subnet::CmdSubnet),
     Version(cmd_version::CmdVersion),
+    Vpc(cmd_vpc::CmdVpc),
 }
 
 #[tokio::main]
@@ -201,8 +213,12 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Generate(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Instance(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Project(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Route(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Router(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::SshKey(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Subnet(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Version(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Vpc(cmd) => run_cmd(&cmd, ctx).await,
     }
 
     Ok(0)
