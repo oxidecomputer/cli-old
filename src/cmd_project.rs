@@ -43,6 +43,8 @@ pub struct CmdProjectCreate {
     #[clap(name = "project", default_value = "")]
     pub project: String,
 
+    // TODO: This should default to the user's org since they shouldn't be
+    // able to create projects in other orgs.
     /// The organization that will hold the project.
     #[clap(long, short, env = "OXIDE_ORG", default_value = "")]
     pub organization: String,
