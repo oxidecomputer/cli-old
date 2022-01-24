@@ -21,6 +21,8 @@ pub mod cmd_disk;
 pub mod cmd_generate;
 /// The instance command.
 pub mod cmd_instance;
+/// The organization command.
+pub mod cmd_org;
 /// The project command.
 pub mod cmd_project;
 /// The route command.
@@ -110,6 +112,7 @@ enum SubCommand {
     Disk(cmd_disk::CmdDisk),
     Generate(cmd_generate::CmdGenerate),
     Instance(cmd_instance::CmdInstance),
+    Org(cmd_org::CmdOrganization),
     Project(cmd_project::CmdProject),
     Route(cmd_route::CmdRoute),
     Router(cmd_router::CmdRouter),
@@ -212,6 +215,7 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Disk(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Generate(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Instance(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Org(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Project(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Route(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Router(cmd) => run_cmd(&cmd, ctx).await,

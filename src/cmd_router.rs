@@ -347,7 +347,7 @@ impl crate::cmd::Command for CmdRouterEdit {
     }
 }
 
-/// List routers owned by a project.
+/// List routers owned by a VPC.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdRouterList {

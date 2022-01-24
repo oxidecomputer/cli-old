@@ -163,7 +163,7 @@ impl crate::cmd::Command for CmdRouteEdit {
     }
 }
 
-/// List routes owned by a project.
+/// List routes owned by a Router.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdRouteList {

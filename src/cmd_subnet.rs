@@ -407,7 +407,7 @@ impl crate::cmd::Command for CmdSubnetEdit {
     }
 }
 
-/// List subnets owned by a project.
+/// List subnets owned by a VPC.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSubnetList {
