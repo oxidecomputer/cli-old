@@ -3,7 +3,7 @@ use std::io::Write;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 
-/// Create, list, edit, view, and delete vpcs.
+/// Create, list, edit, view, and delete VPCs.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdVpc {
@@ -33,30 +33,162 @@ impl crate::cmd::Command for CmdVpc {
     }
 }
 
-/// Create a new vpc.
+/// Create a new VPC.
 ///
-/// To create a vpc interactively, use `oxide vpc create` with no arguments.
+/// To create a VPC interactively, use `oxide vpc create` with no arguments.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdVpcCreate {}
+pub struct CmdVpcCreate {
+    /// The name of the VPC to create.
+    #[clap(name = "vpc", default_value = "")]
+    pub vpc: String,
+
+    /// The project that will hold the VPC.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// The description for the VPC.
+    #[clap(long = "description", short = 'D', default_value = "")]
+    pub description: String,
+
+    /// The dns_name for the VPC.
+    #[clap(long = "dns_name", default_value = "")]
+    pub dns_name: String,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdVpcCreate {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let mut vpc_name = self.vpc.to_string();
+        let mut project_name = self.project.to_string();
+        let mut description = self.description.to_string();
+        let mut organization = self.organization.to_string();
+
+        let mut dns_name = self.dns_name.to_string();
+
+        if (project_name.is_empty() || organization.is_empty() || vpc_name.is_empty()) && !ctx.io.can_prompt() {
+            return Err(anyhow!("at least one argument required in non-interactive mode"));
+        }
+
+        // If they didn't specify an organization, prompt for it.
+        if organization.is_empty() {
+            match dialoguer::Input::<String>::new()
+                .with_prompt("Project organization:")
+                .interact_text()
+            {
+                Ok(org) => organization = org,
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        let client = ctx.api_client("")?;
+
+        if project_name.is_empty() {
+            let mut org_projects: Vec<String> = Vec::new();
+            let projects = client
+                .projects()
+                .get_all(oxide_api::types::NameSortMode::NameAscending, &organization)
+                .await?;
+            for project in projects {
+                org_projects.push(project.name.to_string());
+            }
+
+            // Select the project from the selected organization.
+            match dialoguer::Select::new()
+                .with_prompt("Select project:")
+                .items(&org_projects)
+                .interact()
+            {
+                Ok(index) => project_name = org_projects[index].to_string(),
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        // Prompt for the vpc name.
+        if vpc_name.is_empty() {
+            match dialoguer::Input::<String>::new()
+                .with_prompt("VPC name:")
+                .interact_text()
+            {
+                Ok(name) => vpc_name = name,
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+
+            // Propmt for a description if they didn't provide one.
+            if description.is_empty() {
+                match dialoguer::Input::<String>::new()
+                    .with_prompt("VPC description:")
+                    .interact_text()
+                {
+                    Ok(desc) => description = desc,
+                    Err(err) => {
+                        return Err(anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+
+            if dns_name.is_empty() {
+                // TODO: we should generate a dns_name as the default.
+                match dialoguer::Input::<String>::new()
+                    .with_prompt("DNS name:")
+                    .interact_text()
+                {
+                    Ok(name) => dns_name = name,
+                    Err(err) => {
+                        return Err(anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+        }
+
+        let full_name = format!("{}/{}", organization, project_name);
+
+        // Create the disk.
+        client
+            .vpcs()
+            .post(
+                &organization,
+                &project_name,
+                &oxide_api::types::VpcCreate {
+                    name: vpc_name.to_string(),
+                    description: description.to_string(),
+                    dns_name: dns_name.to_string(),
+                },
+            )
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Successfully created VPC {} in {}",
+            cs.success_icon(),
+            vpc_name,
+            full_name
+        )?;
+
         Ok(())
     }
 }
 
-/// Delete a vpc.
+/// Delete a VPC.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdVpcDelete {
-    /// The vpc to delete. Can be an ID or name.
+    /// The VPC to delete. Can be an ID or name.
     #[clap(name = "vpc", required = true)]
     vpc: String,
 
-    /// The project to delete the vpc from.
+    /// The project to delete the VPC from.
     #[clap(long, short, required = true)]
     pub project: String,
 
@@ -106,7 +238,7 @@ impl crate::cmd::Command for CmdVpcDelete {
         let cs = ctx.io.color_scheme();
         writeln!(
             ctx.io.out,
-            "{} Deleted vpc {} from {}",
+            "{} Deleted VPC {} from {}",
             cs.success_icon_with_color(ansi_term::Color::Red),
             self.vpc,
             full_name
@@ -116,24 +248,15 @@ impl crate::cmd::Command for CmdVpcDelete {
     }
 }
 
-/// Edit vpc settings.
+/// Edit VPC settings.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdVpcEdit {}
+pub struct CmdVpcEdit {
+    /// The VPC to edit.
+    #[clap(name = "vpc", required = true)]
+    pub vpc: String,
 
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdVpcEdit {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
-        Ok(())
-    }
-}
-
-/// List vpcs owned by a project.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdVpcList {
-    /// The project that holds the vpcs.
+    /// The project that holds the VPC.
     #[clap(long, short, required = true)]
     pub project: String,
 
@@ -141,11 +264,86 @@ pub struct CmdVpcList {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
 
-    /// Maximum number of vpcs to list.
+    /// The new name for the VPC.
+    #[clap(long = "name", short)]
+    pub new_name: Option<String>,
+
+    /// The new description for the VPC.
+    #[clap(long = "description", short = 'D')]
+    pub new_description: Option<String>,
+
+    /// The new DNS name for the VPC.
+    #[clap(long = "description", short = 'D')]
+    pub new_dns_name: Option<String>,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdVpcEdit {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if self.new_name.is_none() && self.new_description.is_none() && self.new_dns_name.is_none() {
+            return Err(anyhow!("nothing to edit"));
+        }
+
+        let full_name = format!("{}/{}", self.organization, self.project);
+        let mut name = self.vpc.clone();
+
+        let client = ctx.api_client("")?;
+
+        let mut body = oxide_api::types::VpcUpdate {
+            name: "".to_string(),
+            description: "".to_string(),
+            dns_name: "".to_string(),
+        };
+
+        if let Some(n) = &self.new_name {
+            body.name = n.to_string();
+            // Update the name so when we spit it back out it is correct.
+            name = n.to_string();
+        }
+
+        if let Some(d) = &self.new_description {
+            body.description = d.to_string();
+        }
+
+        if let Some(d) = &self.new_dns_name {
+            body.dns_name = d.to_string();
+        }
+
+        client
+            .vpcs()
+            .put(&self.organization, &self.project, &self.vpc, &body)
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Successfully edited VPC {} in {}",
+            cs.success_icon(),
+            name,
+            full_name
+        )?;
+
+        Ok(())
+    }
+}
+
+/// List VPCs owned by a project.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdVpcList {
+    /// The project that holds the VPCs.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// Maximum number of VPCs to list.
     #[clap(long, short, default_value = "30")]
     pub limit: u32,
 
-    /// Make additional HTTP requests to fetch all pages of vpcs.
+    /// Make additional HTTP requests to fetch all pages of VPCs.
     #[clap(long)]
     pub paginate: bool,
 
@@ -225,11 +423,11 @@ impl crate::cmd::Command for CmdVpcList {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdVpcView {
-    /// The vpc to view.
+    /// The VPC to view.
     #[clap(name = "vpc", required = true)]
     pub vpc: String,
 
-    /// The project that holds the vpc.
+    /// The project that holds the VPC.
     #[clap(long, short, required = true)]
     pub project: String,
 
