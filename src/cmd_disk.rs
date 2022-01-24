@@ -107,11 +107,11 @@ pub struct CmdDiskCreate {
     pub disk: String,
 
     /// The project that will hold the disk.
-    #[clap(long, short, required = true)]
+    #[clap(long, short, default_value = "")]
     pub project: String,
 
     /// The organization that holds the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    #[clap(long, short, default_value = "", env = "OXIDE_ORG")]
     pub organization: String,
 
     /// The description for the disk.
