@@ -101,12 +101,167 @@ impl crate::cmd::Command for CmdDiskAttach {
 /// To create a disk interactively, use `oxide disk create` with no arguments.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdDiskCreate {}
+pub struct CmdDiskCreate {
+    /// The name of the disk to create.
+    #[clap(name = "disk", default_value = "")]
+    pub disk: String,
+
+    /// The project that will hold the disk.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// The description for the disk.
+    #[clap(long = "description", short = 'D', default_value = "")]
+    pub description: String,
+
+    /// The snapshot for the disk.
+    #[clap(long = "snapshot", default_value = "")]
+    pub snapshot: String,
+
+    // TODO: handle human-like input for sizes.
+    /// The size to allocate for the disk, in bytes.
+    #[clap(long, short, default_value = "0")]
+    pub size: i64,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskCreate {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let mut disk_name = self.disk.to_string();
+        let mut project_name = self.project.to_string();
+        let mut description = self.description.to_string();
+        let mut organization = self.organization.to_string();
+
+        let mut size = self.size;
+        let mut snapshot = self.snapshot.to_string();
+
+        if (project_name.is_empty()
+            || organization.is_empty()
+            || disk_name.is_empty()
+            || snapshot.is_empty()
+            || size == 0)
+            && !ctx.io.can_prompt()
+        {
+            return Err(anyhow!("at least one argument required in non-interactive mode"));
+        }
+
+        // If they didn't specify an organization, prompt for it.
+        if organization.is_empty() {
+            match dialoguer::Input::<String>::new()
+                .with_prompt("Project organization:")
+                .interact_text()
+            {
+                Ok(org) => organization = org,
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        let client = ctx.api_client("")?;
+
+        if project_name.is_empty() {
+            let mut org_projects: Vec<String> = Vec::new();
+            let projects = client
+                .projects()
+                .get_all(oxide_api::types::NameSortMode::NameAscending, &organization)
+                .await?;
+            for project in projects {
+                org_projects.push(project.name.to_string());
+            }
+
+            // Select the project from the selected organization.
+            match dialoguer::Select::new()
+                .with_prompt("Select project:")
+                .items(&org_projects)
+                .interact()
+            {
+                Ok(index) => project_name = org_projects[index].to_string(),
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        // Prompt for the disk name.
+        if disk_name.is_empty() {
+            match dialoguer::Input::<String>::new()
+                .with_prompt("Disk name:")
+                .interact_text()
+            {
+                Ok(name) => disk_name = name,
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+
+            // Propmt for a description if they didn't provide one.
+            if description.is_empty() {
+                match dialoguer::Input::<String>::new()
+                    .with_prompt("Disk description:")
+                    .interact_text()
+                {
+                    Ok(desc) => description = desc,
+                    Err(err) => {
+                        return Err(anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+
+            if snapshot.is_empty() {
+                // TODO: this should be a select from all the snapshots.
+                match dialoguer::Input::<String>::new()
+                    .with_prompt("Disk snapshot:")
+                    .interact_text()
+                {
+                    Ok(name) => snapshot = name,
+                    Err(err) => {
+                        return Err(anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+
+            if size == 0 {
+                // TODO: make this a select.
+                match dialoguer::Input::<i64>::new().with_prompt("Disk size:").interact_text() {
+                    Ok(m) => size = m,
+                    Err(err) => {
+                        return Err(anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+        }
+
+        let full_name = format!("{}/{}", organization, project_name);
+
+        // Create the disk.
+        client
+            .disks()
+            .post(
+                &organization,
+                &project_name,
+                &oxide_api::types::DiskCreate {
+                    name: disk_name.to_string(),
+                    description: description.to_string(),
+                    snapshot_id: snapshot.to_string(),
+                    size,
+                },
+            )
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Successfully created disk {} in {}",
+            cs.success_icon(),
+            disk_name,
+            full_name
+        )?;
+
         Ok(())
     }
 }

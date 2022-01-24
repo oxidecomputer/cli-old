@@ -202,7 +202,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
 
         let full_name = format!("{}/{}", organization, project_name);
 
-        // Create the project.
+        // Create the disk.
         client
             .instances()
             .post(
