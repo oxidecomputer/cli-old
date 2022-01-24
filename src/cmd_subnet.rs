@@ -56,7 +56,7 @@ pub struct CmdSubnetDelete {
     #[clap(name = "subnet", required = true)]
     subnet: String,
 
-    /// The vpc that holds the subnet.
+    /// The VPC that holds the subnet.
     #[clap(long, short, required = true)]
     pub vpc: String,
 
@@ -110,7 +110,7 @@ impl crate::cmd::Command for CmdSubnetDelete {
         let cs = ctx.io.color_scheme();
         writeln!(
             ctx.io.out,
-            "{} Deleted subnet {} from {} in vpc {}",
+            "{} Deleted subnet {} from {} in VPC {}",
             cs.success_icon_with_color(ansi_term::Color::Red),
             self.subnet,
             full_name,
@@ -138,11 +138,11 @@ impl crate::cmd::Command for CmdSubnetEdit {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSubnetList {
-    /// The vpc that holds the subnets.
+    /// The VPC that holds the subnets.
     #[clap(long, short, required = true)]
     pub vpc: String,
 
-    /// The project that holds the vpc.
+    /// The project that holds the VPC.
     #[clap(long, short, required = true)]
     pub project: String,
 
@@ -242,7 +242,7 @@ pub struct CmdSubnetView {
     #[clap(name = "subnet", required = true)]
     pub subnet: String,
 
-    /// The vpc that holds the subnet.
+    /// The VPC that holds the subnet.
     #[clap(long, short, required = true)]
     pub vpc: String,
 

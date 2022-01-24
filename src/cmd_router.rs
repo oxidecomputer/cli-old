@@ -56,7 +56,7 @@ pub struct CmdRouterDelete {
     #[clap(name = "router", required = true)]
     router: String,
 
-    /// The vpc that holds the subnet.
+    /// The VPC that holds the router.
     #[clap(long, short, required = true)]
     pub vpc: String,
 
@@ -110,7 +110,7 @@ impl crate::cmd::Command for CmdRouterDelete {
         let cs = ctx.io.color_scheme();
         writeln!(
             ctx.io.out,
-            "{} Deleted router {} from {} in vpc {}",
+            "{} Deleted router {} from {} in VPC {}",
             cs.success_icon_with_color(ansi_term::Color::Red),
             self.router,
             full_name,
@@ -138,7 +138,7 @@ impl crate::cmd::Command for CmdRouterEdit {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdRouterList {
-    /// The vpc that holds the routers.
+    /// The VPC that holds the routers.
     #[clap(long, short, required = true)]
     pub vpc: String,
 
@@ -241,7 +241,7 @@ pub struct CmdRouterView {
     #[clap(name = "router", required = true)]
     pub router: String,
 
-    /// The vpc that holds the router.
+    /// The VPC that holds the router.
     #[clap(long, short, required = true)]
     pub vpc: String,
 

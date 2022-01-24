@@ -60,7 +60,7 @@ pub struct CmdRouteDelete {
     #[clap(long, short, required = true)]
     pub router: String,
 
-    /// The vpc that holds the route.
+    /// The VPC that holds the route.
     #[clap(long, short, required = true)]
     pub vpc: String,
 
@@ -114,7 +114,7 @@ impl crate::cmd::Command for CmdRouteDelete {
         let cs = ctx.io.color_scheme();
         writeln!(
             ctx.io.out,
-            "{} Deleted route {} from {} in vpc {} and router {}",
+            "{} Deleted route {} from {} in VPC {} and router {}",
             cs.success_icon_with_color(ansi_term::Color::Red),
             self.route,
             full_name,
@@ -147,7 +147,7 @@ pub struct CmdRouteList {
     #[clap(long, short, required = true)]
     pub router: String,
 
-    /// The vpc that holds the router.
+    /// The VPC that holds the router.
     #[clap(long, short, required = true)]
     pub vpc: String,
 
@@ -260,7 +260,7 @@ pub struct CmdRouteView {
     #[clap(long, short, required = true)]
     pub router: String,
 
-    /// The vpc that holds the route.
+    /// The VPC that holds the route.
     #[clap(long, short, required = true)]
     pub vpc: String,
 
