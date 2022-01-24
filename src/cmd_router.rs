@@ -38,12 +38,162 @@ impl crate::cmd::Command for CmdRouter {
 /// To create a router interactively, use `oxide router create` with no arguments.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdRouterCreate {}
+pub struct CmdRouterCreate {
+    /// The name of the router to create.
+    #[clap(name = "router", default_value = "")]
+    pub router: String,
+
+    /// The VPC that will hold the router.
+    #[clap(long, short, required = true)]
+    pub vpc: String,
+
+    /// The project that holds the VPC.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// The description for the router.
+    #[clap(long = "description", short = 'D', default_value = "")]
+    pub description: String,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdRouterCreate {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let mut router_name = self.router.to_string();
+        let mut project_name = self.project.to_string();
+        let mut description = self.description.to_string();
+        let mut organization = self.organization.to_string();
+
+        let mut vpc_name = self.vpc.to_string();
+
+        if (project_name.is_empty() || organization.is_empty() || vpc_name.is_empty() || router_name.is_empty())
+            && !ctx.io.can_prompt()
+        {
+            return Err(anyhow!("at least one argument required in non-interactive mode"));
+        }
+
+        // If they didn't specify an organization, prompt for it.
+        if organization.is_empty() {
+            match dialoguer::Input::<String>::new()
+                .with_prompt("Project organization:")
+                .interact_text()
+            {
+                Ok(org) => organization = org,
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        let client = ctx.api_client("")?;
+
+        if project_name.is_empty() {
+            let mut org_projects: Vec<String> = Vec::new();
+            let projects = client
+                .projects()
+                .get_all(oxide_api::types::NameSortMode::NameAscending, &organization)
+                .await?;
+            for project in projects {
+                org_projects.push(project.name.to_string());
+            }
+
+            // Select the project from the selected organization.
+            match dialoguer::Select::new()
+                .with_prompt("Select project:")
+                .items(&org_projects)
+                .interact()
+            {
+                Ok(index) => project_name = org_projects[index].to_string(),
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        // Select the VPC from the selected project.
+        if vpc_name.is_empty() {
+            let mut pvpcs: Vec<String> = Vec::new();
+            let vpcs = client
+                .vpcs()
+                .get_all(
+                    oxide_api::types::NameSortModeAscending::NameAscending,
+                    &organization,
+                    &project_name,
+                )
+                .await?;
+            for vpc in vpcs {
+                pvpcs.push(vpc.name.to_string());
+            }
+
+            // Select the vpc from the selected project.
+            match dialoguer::Select::new()
+                .with_prompt("Select VPC:")
+                .items(&pvpcs)
+                .interact()
+            {
+                Ok(index) => vpc_name = pvpcs[index].to_string(),
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        // Prompt for the router name.
+        if router_name.is_empty() {
+            match dialoguer::Input::<String>::new()
+                .with_prompt("Router name:")
+                .interact_text()
+            {
+                Ok(name) => router_name = name,
+                Err(err) => {
+                    return Err(anyhow!("prompt failed: {}", err));
+                }
+            }
+
+            // Propmt for a description if they didn't provide one.
+            if description.is_empty() {
+                match dialoguer::Input::<String>::new()
+                    .with_prompt("Router description:")
+                    .interact_text()
+                {
+                    Ok(desc) => description = desc,
+                    Err(err) => {
+                        return Err(anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+        }
+
+        let full_name = format!("{}/{}", organization, project_name);
+
+        // Create the disk.
+        client
+            .routers()
+            .post(
+                &organization,
+                &project_name,
+                &vpc_name,
+                &oxide_api::types::RouterCreate {
+                    name: router_name.to_string(),
+                    description: description.to_string(),
+                },
+            )
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Successfully created router {} in {} VPC {}",
+            cs.success_icon(),
+            router_name,
+            full_name,
+            vpc_name
+        )?;
+
         Ok(())
     }
 }
@@ -124,12 +274,75 @@ impl crate::cmd::Command for CmdRouterDelete {
 /// Edit router settings.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdRouterEdit {}
+pub struct CmdRouterEdit {
+    /// The router to edit.
+    #[clap(name = "router", required = true)]
+    pub router: String,
+
+    /// The VPC that holds the router.
+    #[clap(long, short, required = true)]
+    pub vpc: String,
+
+    /// The project that holds the VPC.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// The new name for the router.
+    #[clap(long = "name", short)]
+    pub new_name: Option<String>,
+
+    /// The new description for the router.
+    #[clap(long = "description", short = 'D')]
+    pub new_description: Option<String>,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdRouterEdit {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if self.new_name.is_none() && self.new_description.is_none() {
+            return Err(anyhow!("nothing to edit"));
+        }
+
+        let full_name = format!("{}/{}", self.organization, self.project);
+
+        let mut name = self.router.clone();
+
+        let client = ctx.api_client("")?;
+
+        let mut body = oxide_api::types::RouterUpdate {
+            name: "".to_string(),
+            description: "".to_string(),
+        };
+
+        if let Some(n) = &self.new_name {
+            body.name = n.to_string();
+            // Update the name so when we spit it back out it is correct.
+            name = n.to_string();
+        }
+
+        if let Some(d) = &self.new_description {
+            body.description = d.to_string();
+        }
+
+        client
+            .routers()
+            .put(&self.organization, &self.project, &self.router, &self.vpc, &body)
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Successfully edited router {} in {} VPC {}",
+            cs.success_icon(),
+            name,
+            full_name,
+            self.vpc,
+        )?;
+
         Ok(())
     }
 }
