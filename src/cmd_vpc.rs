@@ -273,7 +273,7 @@ pub struct CmdVpcEdit {
     pub new_description: Option<String>,
 
     /// The new DNS name for the VPC.
-    #[clap(long = "description", short = 'D')]
+    #[clap(long = "dns_name")]
     pub new_dns_name: Option<String>,
 }
 
