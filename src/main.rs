@@ -107,6 +107,7 @@ struct Opts {
 enum SubCommand {
     Alias(cmd_alias::CmdAlias),
     Api(cmd_api::CmdApi),
+    Auth(cmd_auth::CmdAuth),
     Completion(cmd_completion::CmdCompletion),
     Config(cmd_config::CmdConfig),
     Disk(cmd_disk::CmdDisk),
@@ -210,6 +211,7 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
     match opts.subcmd {
         SubCommand::Alias(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Api(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Auth(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Completion(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Config(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Disk(cmd) => run_cmd(&cmd, ctx).await,
