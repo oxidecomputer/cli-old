@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{App, IntoApp, Parser};
-use clap_generate::{generate, Shell};
+use clap_complete::{generate, Shell};
 
 /// Generate shell completion scripts.
 ///
