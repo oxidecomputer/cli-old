@@ -259,7 +259,7 @@ fn handle_update(
 
             if is_homebrew {
                 writeln!(
-                    &mut ctx.io.err_out,
+                    ctx.io.err_out,
                     "To upgrade, run: brew update && brew upgrade oxide"
                 )?;
             }
