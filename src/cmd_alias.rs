@@ -413,7 +413,7 @@ mod test {
             TestAlias {
                 name: "list after delete".to_string(),
                 cmd: crate::cmd_alias::SubCommand::List(crate::cmd_alias::CmdAliasList {}),
-                want_out: "cs:   \"config set $1 $2\"\n".to_string(),
+                want_out: "cs:  \"config set $1 $2\"\n".to_string(),
                 want_err: "".to_string(),
             },
         ];
