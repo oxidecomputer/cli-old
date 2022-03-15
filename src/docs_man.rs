@@ -20,7 +20,7 @@ impl Default for Man {
 }
 
 /// Generate manpage for your application using the most common default values.
-pub fn generate_manpage<'a>(app: &clap::Command<'a>, buf: &mut dyn Write, title: &str, root: &clap::Command) {
+pub fn generate_manpage(app: &clap::Command, buf: &mut dyn Write, title: &str, root: &clap::Command) {
     let man = Man::default();
     man.render(app, buf, title, root);
 }
