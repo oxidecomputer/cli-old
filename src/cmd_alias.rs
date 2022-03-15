@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use anyhow::{bail, Result};
-use clap::{App, IntoApp, Parser};
+use clap::{Command, CommandFactory, Parser};
 
 /// Create command shortcuts.
 ///
@@ -219,7 +219,7 @@ pub fn valid_command(args: &str) -> bool {
     }
 
     // Convert our opts into a clap app.
-    let app: App = crate::Opts::into_app();
+    let app: Command = crate::Opts::command();
 
     // Try to get matches.
     for subcmd in app.get_subcommands() {

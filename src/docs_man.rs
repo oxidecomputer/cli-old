@@ -1,6 +1,5 @@
 use std::io::Write;
 
-use clap::{AppSettings, ArgSettings};
 use roff::{bold, escape, italic, list, paragraph, ManSection, Roff, Troffable};
 
 /// Man page generator
@@ -21,14 +20,14 @@ impl Default for Man {
 }
 
 /// Generate manpage for your application using the most common default values.
-pub fn generate_manpage<'a>(app: &clap::App<'a>, buf: &mut dyn Write, title: &str, root: &clap::App) {
+pub fn generate_manpage<'a>(app: &clap::Command<'a>, buf: &mut dyn Write, title: &str, root: &clap::Command) {
     let man = Man::default();
     man.render(app, buf, title, root);
 }
 
 impl Man {
     /// Write the manpage to a buffer.
-    pub fn render(self, app: &clap::App, buf: &mut dyn std::io::Write, title: &str, root: &clap::App) {
+    pub fn render(self, app: &clap::Command, buf: &mut dyn std::io::Write, title: &str, root: &clap::Command) {
         let mut page = Roff::new(root.get_name(), self.get_section())
             .source(&format!(
                 "{} {}",
@@ -91,26 +90,26 @@ impl Man {
     }
 }
 
-fn app_has_version(app: &clap::App) -> bool {
+fn app_has_version(app: &clap::Command) -> bool {
     app.get_long_version().or_else(|| app.get_version()).is_some()
 }
 
-fn app_has_arguments(app: &clap::App) -> bool {
+fn app_has_arguments(app: &clap::Command) -> bool {
     app.get_arguments().any(|i| !i.is_set(clap::ArgSettings::Hidden))
 }
 
-fn app_has_subcommands(app: &clap::App) -> bool {
+fn app_has_subcommands(app: &clap::Command) -> bool {
     app.get_subcommands().any(|i| !i.is_set(clap::AppSettings::Hidden))
 }
 
-fn subcommand_heading(app: &clap::App) -> String {
+fn subcommand_heading(app: &clap::Command) -> String {
     match app.get_subommand_help_heading() {
         Some(title) => title.to_string(),
         None => "Subcommands".to_string(),
     }
 }
 
-fn about(app: &clap::App, title: &str) -> String {
+fn about(app: &clap::Command, title: &str) -> String {
     let t = title.replace(' ', "-");
     match app.get_about().or_else(|| app.get_long_about()) {
         Some(about) => format!("{} - {}", t, about),
@@ -118,7 +117,7 @@ fn about(app: &clap::App, title: &str) -> String {
     }
 }
 
-fn description(app: &clap::App) -> Vec<String> {
+fn description(app: &clap::Command) -> Vec<String> {
     match app.get_long_about().or_else(|| app.get_about()) {
         Some(about) => about
             .lines()
@@ -128,7 +127,7 @@ fn description(app: &clap::App) -> Vec<String> {
     }
 }
 
-fn synopsis(app: &clap::App, title: &str) -> String {
+fn synopsis(app: &clap::Command, title: &str) -> String {
     let mut res = String::new();
 
     res.push_str(&italic(title));
@@ -166,9 +165,12 @@ fn synopsis(app: &clap::App, title: &str) -> String {
     res.trim().to_string()
 }
 
-fn options(app: &clap::App) -> Vec<String> {
+fn options(app: &clap::Command) -> Vec<String> {
     let mut res = Vec::new();
-    let items: Vec<_> = app.get_arguments().filter(|i| !i.is_set(ArgSettings::Hidden)).collect();
+    let items: Vec<_> = app
+        .get_arguments()
+        .filter(|i| !i.is_set(clap::ArgSettings::Hidden))
+        .collect();
 
     for opt in items.iter().filter(|a| !a.is_positional()) {
         let mut body = Vec::new();
@@ -229,9 +231,9 @@ fn options(app: &clap::App) -> Vec<String> {
     res
 }
 
-fn subcommands(app: &clap::App, section: i8, title: &str) -> Vec<String> {
+fn subcommands(app: &clap::Command, section: i8, title: &str) -> Vec<String> {
     app.get_subcommands()
-        .filter(|s| !s.is_set(AppSettings::Hidden))
+        .filter(|s| !s.is_set(clap::AppSettings::Hidden))
         .map(|command| {
             let name = format!("{}-{}({})", title.replace(' ', "-"), command.get_name(), section);
 
@@ -250,7 +252,7 @@ fn subcommands(app: &clap::App, section: i8, title: &str) -> Vec<String> {
         .collect()
 }
 
-fn version(app: &clap::App) -> String {
+fn version(app: &clap::Command) -> String {
     format!("v{}", app.get_long_version().or_else(|| app.get_version()).unwrap())
 }
 
@@ -270,7 +272,7 @@ fn see_also(split: Vec<&str>) -> Vec<String> {
     result
 }
 
-fn after_help(app: &clap::App) -> Vec<String> {
+fn after_help(app: &clap::Command) -> Vec<String> {
     match app.get_after_long_help().or_else(|| app.get_after_help()) {
         Some(about) => about
             .lines()
@@ -280,12 +282,14 @@ fn after_help(app: &clap::App) -> Vec<String> {
     }
 }
 
-fn subcommand_markers(cmd: &clap::App) -> (&'static str, &'static str) {
-    markers(cmd.is_set(AppSettings::SubcommandRequired) || cmd.is_set(AppSettings::SubcommandRequiredElseHelp))
+fn subcommand_markers(cmd: &clap::Command) -> (&'static str, &'static str) {
+    markers(
+        cmd.is_set(clap::AppSettings::SubcommandRequired) || cmd.is_set(clap::AppSettings::SubcommandRequiredElseHelp),
+    )
 }
 
 fn option_markers(opt: &clap::Arg) -> (&'static str, &'static str) {
-    markers(opt.is_set(ArgSettings::Required))
+    markers(opt.is_set(clap::ArgSettings::Required))
 }
 
 fn markers(required: bool) -> (&'static str, &'static str) {
@@ -305,7 +309,7 @@ fn long_option(opt: &str) -> String {
 }
 
 fn option_environment(opt: &clap::Arg) -> Option<String> {
-    if opt.is_set(ArgSettings::HideEnv) {
+    if opt.is_set(clap::ArgSettings::HideEnv) {
         return None;
     } else if let Some(env) = opt.get_env() {
         return Some(paragraph(&format!(

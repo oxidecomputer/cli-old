@@ -67,7 +67,7 @@ fn should_check_for_update() -> bool {
 
 /// If we are running in a CI environment.
 fn is_ci() -> bool {
-    !get_env_var("CI").is_empty() || // GitHub Actions, Travis CI, CircleCI, Cirrus CI, GitLab CI, AppVeyor, CodeShip, dsari
+    !get_env_var("CI").is_empty() || // GitHub Actions, Travis CI, CircleCI, Cirrus CI, GitLab CI, CommandVeyor, CodeShip, dsari
 		!get_env_var("BUILD_NUMBER").is_empty() || // Jenkins, TeamCity
 		!get_env_var("RUN_ID").is_empty() // TaskCluster, dsari
 }

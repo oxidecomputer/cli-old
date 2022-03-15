@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::{App, IntoApp, Parser};
+use clap::{Command, CommandFactory, Parser};
 use clap_complete::{generate, Shell};
 
 /// Generate shell completion scripts.
@@ -60,7 +60,7 @@ pub struct CmdCompletion {
 impl crate::cmd::Command for CmdCompletion {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         // Convert our opts into a clap app.
-        let mut app: App = crate::Opts::into_app();
+        let mut app: Command = crate::Opts::command();
         let name = app.get_name().to_string();
         // Generate the completion script.
         generate(self.shell, &mut app, name, &mut ctx.io.out);

@@ -11,13 +11,13 @@ const XDG_CONFIG_HOME: &str = "XDG_CONFIG_HOME";
 const XDG_STATE_HOME: &str = "XDG_STATE_HOME";
 #[allow(dead_code)]
 const XDG_DATA_HOME: &str = "XDG_DATA_HOME";
-const APP_DATA: &str = "AppData";
-const LOCAL_APP_DATA: &str = "LocalAppData";
+const APP_DATA: &str = "CommandData";
+const LOCAL_APP_DATA: &str = "LocalCommandData";
 
 // Config path precedence
 // 1. OXIDE_CONFIG_DIR
 // 2. XDG_CONFIG_HOME
-// 3. AppData (windows only)
+// 3. CommandData (windows only)
 // 4. HOME
 pub fn config_dir() -> Result<String> {
     let path: PathBuf;
@@ -52,7 +52,7 @@ pub fn config_dir() -> Result<String> {
 
 // State path precedence
 // 2. XDG_STATE_HOME
-// 3. LocalAppData (windows only)
+// 3. LocalCommandData (windows only)
 // 4. HOME
 pub fn state_dir() -> Result<String> {
     let path: PathBuf;
@@ -84,7 +84,7 @@ pub fn state_dir() -> Result<String> {
 
 // Data path precedence
 // 2. XDG_DATA_HOME
-// 3. LocalAppData (windows only)
+// 3. LocalCommandData (windows only)
 // 4. HOME
 #[allow(dead_code)]
 pub fn data_dir() -> Result<String> {

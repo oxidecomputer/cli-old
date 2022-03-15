@@ -1,7 +1,7 @@
 use std::{fs, io::Write};
 
 use anyhow::{Context, Result};
-use clap::{App, IntoApp, Parser};
+use clap::{Command, CommandFactory, Parser};
 
 /// Generate various documentation files for the oxide command line.
 #[derive(Parser, Debug, Clone)]
@@ -39,7 +39,7 @@ pub struct CmdGenerateMarkdown {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdGenerateMarkdown {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let mut app: App = crate::Opts::into_app();
+        let mut app: Command = crate::Opts::command();
         app._build_all();
 
         // Make sure the output directory exists.
@@ -54,7 +54,7 @@ impl crate::cmd::Command for CmdGenerateMarkdown {
 }
 
 impl CmdGenerateMarkdown {
-    fn generate(&self, ctx: &mut crate::context::Context, app: &App, parent: &str) -> Result<()> {
+    fn generate(&self, ctx: &mut crate::context::Context, app: &Command, parent: &str) -> Result<()> {
         let mut p = parent.to_string();
         if !p.is_empty() {
             p = format!("{}_{}", p, app.get_name());
@@ -112,7 +112,7 @@ pub struct CmdGenerateManPages {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdGenerateManPages {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let mut app: App = crate::Opts::into_app();
+        let mut app: Command = crate::Opts::command();
         app._build_all();
 
         // Make sure the output directory exists.
@@ -128,7 +128,13 @@ impl crate::cmd::Command for CmdGenerateManPages {
 
 impl CmdGenerateManPages {
     // TODO: having the root like this sucks, clean this up.
-    fn generate(&self, ctx: &mut crate::context::Context, app: &App, parent: &str, root: &clap::App) -> Result<()> {
+    fn generate(
+        &self,
+        ctx: &mut crate::context::Context,
+        app: &Command,
+        parent: &str,
+        root: &clap::Command,
+    ) -> Result<()> {
         let mut p = parent.to_string();
         if !p.is_empty() {
             p = format!("{}-{}", p, app.get_name());
@@ -159,34 +165,34 @@ impl CmdGenerateManPages {
 }
 
 #[cfg(test)]
-fn test_app() -> clap::App<'static> {
+fn test_app() -> clap::Command<'static> {
     // Define our app.
-    clap::App::new("git")
+    clap::Command::new("git")
         .about("A fictional versioning CLI")
-        .setting(clap::AppSettings::SubcommandRequiredElseHelp)
-        .setting(clap::AppSettings::AllowExternalSubcommands)
-        .setting(clap::AppSettings::AllowInvalidUtf8ForExternalSubcommands)
+        .setting(clap::CommandSettings::SubcommandRequiredElseHelp)
+        .setting(clap::CommandSettings::AllowExternalSubcommands)
+        .setting(clap::CommandSettings::AllowInvalidUtf8ForExternalSubcommands)
         .subcommand(
-            App::new("clone")
+            Command::new("clone")
                 .about("Clones repos")
                 .arg(clap::arg!(<REMOTE> "The remote to clone"))
-                .setting(clap::AppSettings::ArgRequiredElseHelp),
+                .setting(clap::CommandSettings::ArgRequiredElseHelp),
         )
         .subcommand(
-            clap::App::new("push")
+            clap::Command::new("push")
                 .about("pushes things")
                 .arg(clap::arg!(<REMOTE> "The remote to target"))
-                .setting(clap::AppSettings::ArgRequiredElseHelp),
+                .setting(clap::CommandSettings::ArgRequiredElseHelp),
         )
         .subcommand(
-            clap::App::new("add")
+            clap::Command::new("add")
                 .about("adds things")
-                .setting(clap::AppSettings::ArgRequiredElseHelp)
+                .setting(clap::CommandSettings::ArgRequiredElseHelp)
                 .arg(clap::arg!(<PATH> ... "Stuff to add").allow_invalid_utf8(true))
                 .subcommand(
-                    clap::App::new("new")
+                    clap::Command::new("new")
                         .about("subcommand for adding new stuff")
-                        .subcommand(clap::App::new("foo").about("sub subcommand")),
+                        .subcommand(clap::Command::new("foo").about("sub subcommand")),
                 ),
         )
 }

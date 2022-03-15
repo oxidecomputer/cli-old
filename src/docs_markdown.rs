@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::App;
+use clap::Command;
 use pulldown_cmark_to_cmark::cmark;
 
 struct MarkdownDocument<'a>(Vec<pulldown_cmark::Event<'a>>);
@@ -37,7 +37,7 @@ impl MarkdownDocument<'_> {
     }
 }
 
-fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
+fn do_markdown(doc: &mut MarkdownDocument, app: &Command, title: &str) {
     // We don't need the header since our renderer will do that for us.
     //doc.header(app.get_name().to_string(), pulldown_cmark::HeadingLevel::H2);
 
@@ -147,8 +147,8 @@ fn do_markdown(doc: &mut MarkdownDocument, app: &App, title: &str) {
     }
 }
 
-/// Convert a clap App to markdown documentation.
-pub fn app_to_markdown(app: &App, title: &str) -> Result<String> {
+/// Convert a clap Command to markdown documentation.
+pub fn app_to_markdown(app: &Command, title: &str) -> Result<String> {
     let mut document = MarkdownDocument(Vec::new());
 
     do_markdown(&mut document, app, title);

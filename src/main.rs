@@ -258,10 +258,7 @@ fn handle_update(
             )?;
 
             if is_homebrew {
-                writeln!(
-                    ctx.io.err_out,
-                    "To upgrade, run: brew update && brew upgrade oxide"
-                )?;
+                writeln!(ctx.io.err_out, "To upgrade, run: brew update && brew upgrade oxide")?;
             }
 
             writeln!(ctx.io.err_out, "{}\n\n", cs.yellow(&latest_release.url))?;
