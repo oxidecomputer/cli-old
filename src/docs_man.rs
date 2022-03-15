@@ -95,11 +95,11 @@ fn app_has_version(app: &clap::Command) -> bool {
 }
 
 fn app_has_arguments(app: &clap::Command) -> bool {
-    app.get_arguments().any(|i| !i.is_set(clap::ArgSettings::Hidden))
+    app.get_arguments().any(|i| !i.is_hide_set())
 }
 
 fn app_has_subcommands(app: &clap::Command) -> bool {
-    app.get_subcommands().any(|i| !i.is_set(clap::AppSettings::Hidden))
+    app.get_subcommands().any(|i| !i.is_hide_set())
 }
 
 fn subcommand_heading(app: &clap::Command) -> String {
@@ -145,7 +145,7 @@ fn synopsis(app: &clap::Command, title: &str) -> String {
 
     for arg in app.get_positionals() {
         let (lhs, rhs) = option_markers(arg);
-        res.push_str(&format!("{}{}{} ", lhs, arg.get_name(), rhs));
+        res.push_str(&format!("{}{}{} ", lhs, arg.get_id(), rhs));
     }
 
     if app.has_subcommands() {
@@ -167,10 +167,7 @@ fn synopsis(app: &clap::Command, title: &str) -> String {
 
 fn options(app: &clap::Command) -> Vec<String> {
     let mut res = Vec::new();
-    let items: Vec<_> = app
-        .get_arguments()
-        .filter(|i| !i.is_set(clap::ArgSettings::Hidden))
-        .collect();
+    let items: Vec<_> = app.get_arguments().filter(|i| !i.is_hide_set()).collect();
 
     for opt in items.iter().filter(|a| !a.is_positional()) {
         let mut body = Vec::new();
@@ -207,7 +204,7 @@ fn options(app: &clap::Command) -> Vec<String> {
 
     for pos in items.iter().filter(|a| a.is_positional()) {
         let (lhs, rhs) = option_markers(pos);
-        let name = format!("{}{}{}", lhs, pos.get_name(), rhs);
+        let name = format!("{}{}{}", lhs, pos.get_id(), rhs);
 
         let mut header = vec![bold(&name)];
 
@@ -233,7 +230,7 @@ fn options(app: &clap::Command) -> Vec<String> {
 
 fn subcommands(app: &clap::Command, section: i8, title: &str) -> Vec<String> {
     app.get_subcommands()
-        .filter(|s| !s.is_set(clap::AppSettings::Hidden))
+        .filter(|s| !s.is_hide_set())
         .map(|command| {
             let name = format!("{}-{}({})", title.replace(' ', "-"), command.get_name(), section);
 
@@ -283,13 +280,11 @@ fn after_help(app: &clap::Command) -> Vec<String> {
 }
 
 fn subcommand_markers(cmd: &clap::Command) -> (&'static str, &'static str) {
-    markers(
-        cmd.is_set(clap::AppSettings::SubcommandRequired) || cmd.is_set(clap::AppSettings::SubcommandRequiredElseHelp),
-    )
+    markers(cmd.is_subcommand_required_set() || cmd.is_arg_required_else_help_set())
 }
 
 fn option_markers(opt: &clap::Arg) -> (&'static str, &'static str) {
-    markers(opt.is_set(clap::ArgSettings::Required))
+    markers(opt.is_required_set())
 }
 
 fn markers(required: bool) -> (&'static str, &'static str) {
@@ -309,7 +304,7 @@ fn long_option(opt: &str) -> String {
 }
 
 fn option_environment(opt: &clap::Arg) -> Option<String> {
-    if opt.is_set(clap::ArgSettings::HideEnv) {
+    if opt.is_hide_env_set() {
         return None;
     } else if let Some(env) = opt.get_env() {
         return Some(paragraph(&format!(
