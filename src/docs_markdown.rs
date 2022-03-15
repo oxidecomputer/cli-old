@@ -154,7 +154,7 @@ pub fn app_to_markdown(app: &Command, title: &str) -> Result<String> {
     do_markdown(&mut document, app, title);
 
     let mut result = String::new();
-    cmark(document.0.iter(), &mut result, None)?;
+    cmark(document.0.iter(), &mut result)?;
 
     Ok(result)
 }
