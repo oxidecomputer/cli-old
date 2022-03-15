@@ -169,25 +169,25 @@ fn test_app() -> clap::Command<'static> {
     // Define our app.
     clap::Command::new("git")
         .about("A fictional versioning CLI")
-        .setting(clap::CommandSettings::SubcommandRequiredElseHelp)
-        .setting(clap::CommandSettings::AllowExternalSubcommands)
-        .setting(clap::CommandSettings::AllowInvalidUtf8ForExternalSubcommands)
+        .subcommand_required(true)
+        .allow_external_subcommands(true)
+        .allow_invalid_utf8_for_external_subcommands(true)
         .subcommand(
             Command::new("clone")
                 .about("Clones repos")
                 .arg(clap::arg!(<REMOTE> "The remote to clone"))
-                .setting(clap::CommandSettings::ArgRequiredElseHelp),
+                .arg_required_else_help(true),
         )
         .subcommand(
             clap::Command::new("push")
                 .about("pushes things")
                 .arg(clap::arg!(<REMOTE> "The remote to target"))
-                .setting(clap::CommandSettings::ArgRequiredElseHelp),
+                .arg_required_else_help(true),
         )
         .subcommand(
             clap::Command::new("add")
                 .about("adds things")
-                .setting(clap::CommandSettings::ArgRequiredElseHelp)
+                .arg_required_else_help(true)
                 .arg(clap::arg!(<PATH> ... "Stuff to add").allow_invalid_utf8(true))
                 .subcommand(
                     clap::Command::new("new")
@@ -542,7 +542,7 @@ Generating man page for `git add` -> git-add.1
 .SH "NAME"
 git\-add \- adds things
 .SH "SYNOPSIS"
-\fIgit add\fP [\-\-help] [\-\-version] <PATH> [subcommands]
+\fIgit add\fP [\-\-help] [\-\-version] <PATH> <subcommands>
 .SH "DESCRIPTION"
 
 .sp
