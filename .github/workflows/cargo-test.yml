@@ -33,16 +33,28 @@ jobs:
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: start omicron locally
+        shell: bash
+        run: |
+          make start-omicron
+
       - name: Run cargo test
         run: |
           cargo test -- --test-threads=1
         shell: bash
+        env:
+          OXIDE_TOKEN: ${{secrets.OXIDE_TOKEN}}
+          OXIDE_HOST: localhost:8888
 
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
         with:
           version: '0.15.0'
           args: '-- --test-threads 1'
+        env:
+          OXIDE_TOKEN: ${{secrets.OXIDE_TOKEN}}
+          OXIDE_HOST: localhost:8888
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v2
