@@ -100,13 +100,12 @@ impl IoStreams {
         self.stdin_is_tty = is_tty;
     }
 
-    // TODO: fix and do others.
     pub fn is_stdin_tty(&self) -> bool {
         if self.stdin_tty_override {
             return self.stdin_is_tty;
         }
 
-        false
+        isatty::stdin_isatty()
     }
 
     pub fn set_stdout_tty(&mut self, is_tty: bool) {
@@ -120,7 +119,7 @@ impl IoStreams {
             return self.stdout_is_tty;
         }
 
-        false
+        isatty::stdout_isatty()
     }
 
     pub fn set_stderr_tty(&mut self, is_tty: bool) {

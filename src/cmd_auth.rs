@@ -122,7 +122,13 @@ impl crate::cmd::Command for CmdAuthLogin {
             return ctx.config.write();
         }
 
-        let existing_token = ctx.config.get(&host, "token")?;
+        // We don't want to capture the error here just in case we have no host config
+        // for this specific host yet.
+        let existing_token = if let Ok(existing_token) = ctx.config.get(&host, "token") {
+            existing_token
+        } else {
+            String::new()
+        };
         if !existing_token.is_empty() && interactive {
             match dialoguer::Confirm::new()
                 .with_prompt(format!(
@@ -142,7 +148,7 @@ impl crate::cmd::Command for CmdAuthLogin {
         }
 
         // Do the login flow.
-        let _cs = ctx.io.color_scheme();
+        let cs = ctx.io.color_scheme();
 
         writeln!(
             ctx.io.err_out,
@@ -163,23 +169,21 @@ impl crate::cmd::Command for CmdAuthLogin {
         // Set the token in the config file.
         ctx.config.set(&host, "token", &auth_token)?;
 
-        /*let client = ctx.api_client(&host)?;
+        let client = ctx.api_client(&host)?;
 
         // Get the session for the token.
-        let session = client.session().await?;
+        let session = client.hidden().session_me().await?;
 
         // Set the user.
-        ctx.config.set(&host, "user", &session.email)?;
+        // TODO: This should instead store the email, or some username or something
+        // that is human knowable.
+        let email = session.id.to_string();
+        ctx.config.set(&host, "user", &email)?;
 
         // Save the config.
         ctx.config.write()?;
 
-        writeln!(
-            ctx.io.out,
-            "{} Logged in as {}",
-            cs.success_icon(),
-            cs.bold(session.email)
-        )?;*/
+        writeln!(ctx.io.out, "{} Logged in as {}", cs.success_icon(), cs.bold(&email))?;
 
         Ok(())
     }
@@ -267,24 +271,18 @@ impl crate::cmd::Command for CmdAuthLogout {
             return Err(err);
         }
 
-        let _client = ctx.api_client(&hostname)?;
+        let client = ctx.api_client(&hostname)?;
 
         // TODO: Get the current user.
-        // let session = client.session().await?;
+        let session = client.hidden().session_me().await?;
 
-        /*let username_str = if session.email.is_empty() {
-            "".to_string()
-        } else {
-            format!(" account '{}'", session.email)
-        };*/
-        let username_str = "".to_string();
+        // TODO: this should be the users email or something better.
+        // make it consistent with login.
+        let email = session.id.to_string();
 
         if ctx.io.can_prompt() {
             match dialoguer::Confirm::new()
-                .with_prompt(format!(
-                    "Are you sure you want to log out of {}{}?",
-                    hostname, username_str
-                ))
+                .with_prompt(format!("Are you sure you want to log out of {}{}?", hostname, email))
                 .interact()
             {
                 Ok(true) => {}
@@ -309,7 +307,7 @@ impl crate::cmd::Command for CmdAuthLogout {
             "{} Logged out of {}{}",
             cs.success_icon(),
             cs.bold(&hostname),
-            username_str
+            email
         )?;
 
         Ok(())
@@ -350,7 +348,7 @@ impl crate::cmd::Command for CmdAuthStatus {
             return Err(anyhow!(""));
         }
 
-        let failed = false;
+        let mut failed = false;
         let mut hostname_found = false;
 
         for hostname in &hostnames {
@@ -360,32 +358,35 @@ impl crate::cmd::Command for CmdAuthStatus {
 
             hostname_found = true;
 
-            let (_token, _token_source) = ctx.config.get_with_source(hostname, "token")?;
+            let (token, token_source) = ctx.config.get_with_source(hostname, "token")?;
 
-            let _client = ctx.api_client(hostname)?;
+            let client = ctx.api_client(hostname)?;
 
-            let host_status: Vec<String> = vec![];
+            let mut host_status: Vec<String> = vec![];
 
-            /*match client.session().await {
+            match client.hidden().session_me().await {
                 Ok(session) => {
+                    // TODO: this should be the users email or something consistent with login
+                    // and logout.
+                    let email = session.id.to_string();
                     // Let the user know if their token is invalid.
-                    if !session.is_valid() {
-                        host_status.push(format!(
-                            "{} Logged in to {} as {} ({}) with an invalid token",
-                            cs.failure_icon(),
-                            hostname,
-                            cs.bold(session.email),
-                            token_source
-                        ));
-                        failed = true;
-                        continue;
-                    }
+                    /*if !session.is_valid() {
+                    host_status.push(format!(
+                        "{} Logged in to {} as {} ({}) with an invalid token",
+                        cs.failure_icon(),
+                        hostname,
+                        cs.bold(&email),
+                        token_source
+                    ));
+                    failed = true;
+                    continue;
+                    }*/
 
                     host_status.push(format!(
                         "{} Logged in to {} as {} ({})",
                         cs.success_icon(),
                         hostname,
-                        cs.bold(session.email),
+                        cs.bold(&email),
                         token_source
                     ));
                     let mut token_display = "*******************".to_string();
@@ -399,7 +400,7 @@ impl crate::cmd::Command for CmdAuthStatus {
                     failed = true;
                     continue;
                 }
-            }*/
+            }
 
             status_info.insert(hostname.to_string(), host_status);
         }

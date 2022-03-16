@@ -122,7 +122,8 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--restart=always \
 		--name=nexus \
 		--hostname=nexus \
-		--net host \
+		-p 0.0.0.0:8888:8888 \
+		-p 0.0.0.0:12221:12221 \
 		-v "$(CURDIR)/tests/omicron.toml:/etc/omicron/config.toml:ro"  \
 		--entrypoint=nexus \
 		ghcr.io/oxidecomputer/omicron:main \
@@ -132,7 +133,7 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--restart=always \
 		--name=sled-agent \
 		--hostname=sled-agent \
-		--net host \
+		-p 0.0.0.0:12345:12345 \
 		--entrypoint=sled-agent-sim \
 		ghcr.io/oxidecomputer/omicron:main \
 			B100B75C-D2EF-415F-A07E-D3915470913D 0.0.0.0:12345 0.0.0.0:12221
