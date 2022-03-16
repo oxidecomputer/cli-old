@@ -127,7 +127,9 @@ pub struct CmdConfigList {
 impl crate::cmd::Command for CmdConfigList {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let host = if self.host.is_empty() {
-            ctx.config.default_host().unwrap_or_default()
+            // We don't want to do the default host here since we want to show the default's for
+            // all hosts, even if OXIDE_HOST is set.
+            "".to_string()
         } else {
             self.host.to_string()
         };
