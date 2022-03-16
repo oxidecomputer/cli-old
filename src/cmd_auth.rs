@@ -115,59 +115,54 @@ impl crate::cmd::Command for CmdAuthLogin {
             return Err(err);
         }
 
-        if !token.is_empty() {
-            ctx.config.set(&host, "token", &token)?;
+        let cs = ctx.io.color_scheme();
 
-            // Write the token to the config file.
-            return ctx.config.write();
-        }
-
-        // We don't want to capture the error here just in case we have no host config
-        // for this specific host yet.
-        let existing_token = if let Ok(existing_token) = ctx.config.get(&host, "token") {
-            existing_token
-        } else {
-            String::new()
-        };
-        if !existing_token.is_empty() && interactive {
-            match dialoguer::Confirm::new()
-                .with_prompt(format!(
-                    "You're already logged into {}. Do you want to re-authenticate?",
-                    host
-                ))
-                .interact()
-            {
-                Ok(true) => {}
-                Ok(false) => {
-                    return Ok(());
+        // Do the login flow if we didn't get a token from stdin.
+        if token.is_empty() {
+            // We don't want to capture the error here just in case we have no host config
+            // for this specific host yet.
+            let existing_token = if let Ok(existing_token) = ctx.config.get(&host, "token") {
+                existing_token
+            } else {
+                String::new()
+            };
+            if !existing_token.is_empty() && interactive {
+                match dialoguer::Confirm::new()
+                    .with_prompt(format!(
+                        "You're already logged into {}. Do you want to re-authenticate?",
+                        host
+                    ))
+                    .interact()
+                {
+                    Ok(true) => {}
+                    Ok(false) => {
+                        return Ok(());
+                    }
+                    Err(err) => {
+                        return Err(anyhow!("prompt failed: {}", err));
+                    }
                 }
+            }
+
+            writeln!(
+                ctx.io.err_out,
+                "Tip: you can generate an API Token here https://{}/account",
+                host
+            )?;
+
+            token = match dialoguer::Input::<String>::new()
+                .with_prompt("Paste your authentication token:")
+                .interact_text()
+            {
+                Ok(input) => input,
                 Err(err) => {
                     return Err(anyhow!("prompt failed: {}", err));
                 }
-            }
+            };
         }
 
-        // Do the login flow.
-        let cs = ctx.io.color_scheme();
-
-        writeln!(
-            ctx.io.err_out,
-            "Tip: you can generate an API Token here https://{}/account",
-            host
-        )?;
-
-        let auth_token: String = match dialoguer::Input::<String>::new()
-            .with_prompt("Paste your authentication token:")
-            .interact_text()
-        {
-            Ok(input) => input,
-            Err(err) => {
-                return Err(anyhow!("prompt failed: {}", err));
-            }
-        };
-
         // Set the token in the config file.
-        ctx.config.set(&host, "token", &auth_token)?;
+        ctx.config.set(&host, "token", &token)?;
 
         let client = ctx.api_client(&host)?;
 
@@ -474,13 +469,23 @@ mod test {
                 want_err: "".to_string(),
             },
             TestItem {
-                name: "login".to_string(),
+                name: "login --with-token=false".to_string(),
+                cmd: crate::cmd_auth::SubCommand::Login(crate::cmd_auth::CmdAuthLogin {
+                    host: test_host.to_string(),
+                    with_token: false,
+                }),
+                stdin: test_token.to_string(),
+                want_out: "".to_string(),
+                want_err: "--with-token required when not running interactively".to_string(),
+            },
+            TestItem {
+                name: "login --with-token=true".to_string(),
                 cmd: crate::cmd_auth::SubCommand::Login(crate::cmd_auth::CmdAuthLogin {
                     host: test_host.to_string(),
                     with_token: true,
                 }),
                 stdin: test_token.to_string(),
-                want_out: "".to_string(),
+                want_out: "✔ Logged in as ".to_string(),
                 want_err: "".to_string(),
             },
             TestItem {

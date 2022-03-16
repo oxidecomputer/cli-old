@@ -105,7 +105,11 @@ impl IoStreams {
             return self.stdin_is_tty;
         }
 
-        isatty::stdin_isatty()
+        if cfg!(windows) {
+            true // TODO: actually implement a real check for windows.
+        } else {
+            isatty::stdin_isatty()
+        }
     }
 
     pub fn set_stdout_tty(&mut self, is_tty: bool) {
