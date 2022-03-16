@@ -304,7 +304,7 @@ impl crate::cmd::Command for CmdAuthLogout {
         let cs = ctx.io.color_scheme();
         writeln!(
             ctx.io.out,
-            "{} Logged out of {}{}",
+            "{} Logged out of {} {}",
             cs.success_icon(),
             cs.bold(&hostname),
             email
@@ -444,7 +444,7 @@ fn clean_hostname(host: &str) -> String {
 
 #[cfg(test)]
 mod test {
-    use pretty_assertions::assert_eq;
+    //use pretty_assertions::assert_eq;
 
     use crate::cmd::Command;
 
@@ -493,6 +493,22 @@ mod test {
                 want_out: format!("{}\n✔ Logged in to {} as", test_host, test_host),
                 want_err: "".to_string(),
             },
+            TestItem {
+                name: "logout no prompt no host".to_string(),
+                cmd: crate::cmd_auth::SubCommand::Logout(crate::cmd_auth::CmdAuthLogout { host: "".to_string() }),
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--host required when not running interactively".to_string(),
+            },
+            TestItem {
+                name: "logout no prompt with host".to_string(),
+                cmd: crate::cmd_auth::SubCommand::Logout(crate::cmd_auth::CmdAuthLogout {
+                    host: test_host.to_string(),
+                }),
+                stdin: "".to_string(),
+                want_out: "✔ Logged out of localhost:8888 ".to_string(),
+                want_err: "".to_string(),
+            },
         ];
 
         let mut config = crate::config::new_blank_config().unwrap();
@@ -506,6 +522,8 @@ mod test {
             // We need to also turn off the fancy terminal colors.
             // This ensures it also works in GitHub actions/any CI.
             io.set_color_enabled(false);
+            // TODO: we should figure out how to test the prompts.
+            io.set_never_prompt(true);
             let mut ctx = crate::context::Context {
                 config: &mut c,
                 io,
