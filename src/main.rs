@@ -271,9 +271,11 @@ fn handle_update(
 #[cfg(test)]
 mod test {
 
+    #[derive(Default, Debug, Clone, PartialEq, Eq)]
     pub struct TestItem {
         name: String,
         args: Vec<String>,
+        stdin: Option<String>,
         want_out: String,
         want_err: String,
         want_code: i32,
@@ -281,6 +283,10 @@ mod test {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_main() {
+        let test_host = std::env::var("OXIDE_TEST_HOST").unwrap_or_default().to_string();
+        let test_token = std::env::var("OXIDE_TEST_TOKEN").unwrap_or_default().to_string();
+        let version = clap::crate_version!();
+
         let tests: Vec<TestItem> = vec![
             TestItem {
                 name: "existing command".to_string(),
@@ -288,6 +294,7 @@ mod test {
                 want_out: "complete -F _oxide -o bashdefault -o default oxide\n".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
+                ..Default::default()
             },
             TestItem {
                 name: "existing command with args".to_string(),
@@ -300,6 +307,7 @@ mod test {
                 want_out: "_oxide \"$@\"\n".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
+                ..Default::default()
             },
             TestItem {
                 name: "add an alias".to_string(),
@@ -313,6 +321,7 @@ mod test {
                 want_out: "- Adding alias for foo: completion -s zsh\n✔ Added alias.".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
+                ..Default::default()
             },
             TestItem {
                 name: "add a shell alias".to_string(),
@@ -327,6 +336,7 @@ mod test {
                 want_out: "- Adding alias for bar: !which bash\n✔ Added alias.".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
+                ..Default::default()
             },
             TestItem {
                 name: "list our aliases".to_string(),
@@ -334,6 +344,7 @@ mod test {
                 want_out: "\"completion -s zsh\"".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
+                ..Default::default()
             },
             TestItem {
                 name: "call alias".to_string(),
@@ -341,6 +352,7 @@ mod test {
                 want_out: "_oxide \"$@\"\n".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
+                ..Default::default()
             },
             TestItem {
                 name: "call alias with different binary name".to_string(),
@@ -348,6 +360,7 @@ mod test {
                 want_out: "_oxide \"$@\"\n".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
+                ..Default::default()
             },
             TestItem {
                 name: "call shell alias".to_string(),
@@ -355,6 +368,31 @@ mod test {
                 want_out: "/bash".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "version".to_string(),
+                args: vec!["oxide".to_string(), "version".to_string()],
+                want_out: format!("oxide {}\n{}", version, crate::cmd_version::changelog_url(&version)),
+                want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "login".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "auth".to_string(),
+                    "login".to_string(),
+                    "--host".to_string(),
+                    test_host.clone(),
+                    "--with-token".to_string(),
+                ],
+                stdin: Some(test_token.clone()),
+                want_out: "✔ Logged in as ".to_string(),
+                want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
             },
         ];
 
@@ -365,6 +403,9 @@ mod test {
             let (mut io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
             io.set_stdout_tty(false);
             io.set_color_enabled(false);
+            if let Some(stdin) = t.stdin {
+                io.stdin = Box::new(std::io::Cursor::new(stdin));
+            }
             let mut ctx = crate::context::Context {
                 config: &mut c,
                 io,

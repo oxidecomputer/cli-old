@@ -19,6 +19,7 @@ impl crate::cmd::Command for CmdVersion {
     }
 }
 
-fn changelog_url(version: &str) -> String {
+/// Returns the URL to the changelog for the given version.
+pub fn changelog_url(version: &str) -> String {
     format!("https://github.com/oxidecomputer/cli/releases/tag/v{}", version)
 }
