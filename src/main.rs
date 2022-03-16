@@ -54,6 +54,7 @@ use std::io::{Read, Write};
 
 use anyhow::Result;
 use clap::Parser;
+use slog::Drain;
 
 /// Work seamlessly with Oxide from the command line.
 ///
@@ -208,7 +209,21 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
     // Set our debug flag.
     ctx.debug = opts.debug;
 
-    match opts.subcmd {
+    // Setup our logger. This is mainly for debug purposes.
+    // And getting debug logs from other libraries we consume, like even Oxide.
+    if ctx.debug {
+        /* let decorator = slog_term::TermDecorator::new().build();
+        let drain = slog_term::FullFormat::new(decorator).build().fuse();
+        let drain = slog_async::Async::new(drain).build().fuse();
+
+        let logger = slog::Logger::root(drain, slog::o!());
+
+        let _scope_guard = slog_scope::set_global_logger(logger);
+
+        let _log_guard = slog_stdlog::init_with_level(log::Level::Debug).unwrap();*/
+    }
+
+    let result = match opts.subcmd {
         SubCommand::Alias(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Api(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Auth(cmd) => run_cmd(&cmd, ctx).await,
@@ -225,16 +240,18 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Subnet(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Version(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Vpc(cmd) => run_cmd(&cmd, ctx).await,
+    };
+
+    result
+}
+
+async fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context<'_>) -> Result<i32> {
+    if let Err(err) = cmd.run(ctx).await {
+        writeln!(ctx.io.err_out, "{}", err).unwrap();
+        return Ok(1);
     }
 
     Ok(0)
-}
-
-async fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context<'_>) {
-    if let Err(err) = cmd.run(ctx).await {
-        writeln!(ctx.io.err_out, "{}", err).unwrap();
-        std::process::exit(1);
-    }
 }
 
 fn handle_update(
@@ -398,8 +415,23 @@ mod test {
             TestItem {
                 name: "list orgs empty".to_string(),
                 args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
-                want_out: "✔ Logged in as ".to_string(),
+                want_out: "NAME  DESCRTIPTION  UPDATED\n".to_string(),
                 want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "create an org no description".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "org".to_string(),
+                    "create".to_string(),
+                    "maze-war".to_string(),
+                ],
+                want_out: "".to_string(),
+                want_err: r#"The following required arguments were not provided:
+                        --description <DESCRIPTION>"#
+                    .to_string(),
                 want_code: 0,
                 ..Default::default()
             },
@@ -410,16 +442,25 @@ mod test {
                     "org".to_string(),
                     "create".to_string(),
                     "maze-war".to_string(),
+                    "-D".to_string(),
+                    "The Maze War game organization".to_string(),
                 ],
-                want_out: "✔ Logged in as ".to_string(),
+                want_out: "✔ Successfully created organization maze-war\n".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
                 ..Default::default()
             },
             TestItem {
                 name: "create another org".to_string(),
-                args: vec!["oxide".to_string(), "org".to_string(), "create".to_string()],
-                want_out: "✔ Logged in as ".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "org".to_string(),
+                    "create".to_string(),
+                    "dune".to_string(),
+                    "-D".to_string(),
+                    "A sandy desert game".to_string(),
+                ],
+                want_out: "✔ Successfully created organization dune\n".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
                 ..Default::default()
@@ -427,15 +468,23 @@ mod test {
             TestItem {
                 name: "list orgs".to_string(),
                 args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
-                want_out: "✔ Logged in as ".to_string(),
+                want_out: r#"NAME      DESCRTIPTION                    UPDATED
+            dune      A sandy desert game             "#
+                    .to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
                 ..Default::default()
             },
             TestItem {
                 name: "delete an org".to_string(),
-                args: vec!["oxide".to_string(), "org".to_string(), "delete".to_string()],
-                want_out: "✔ Logged in as ".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "org".to_string(),
+                    "delete".to_string(),
+                    "dune".to_string(),
+                    "--confirm".to_string(),
+                ],
+                want_out: "✔ Deleted organization dune".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
                 ..Default::default()
@@ -443,23 +492,39 @@ mod test {
             TestItem {
                 name: "list orgs after delete".to_string(),
                 args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
-                want_out: "✔ Logged in as ".to_string(),
+                want_out: r#"NAME      DESCRTIPTION                    UPDATED
+maze-war  The Maze War game organization"#
+                    .to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
                 ..Default::default()
             },
             TestItem {
                 name: "list projects empty".to_string(),
-                args: vec!["oxide".to_string(), "project".to_string(), "list".to_string()],
-                want_out: "✔ Logged in as ".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "project".to_string(),
+                    "list".to_string(),
+                    "maze-war".to_string(),
+                ],
+                want_out: "NAME  DESCRTIPTION  UPDATED\n".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
                 ..Default::default()
             },
             TestItem {
                 name: "create a project".to_string(),
-                args: vec!["oxide".to_string(), "project".to_string(), "create".to_string()],
-                want_out: "✔ Logged in as ".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "project".to_string(),
+                    "create".to_string(),
+                    "--organization".to_string(),
+                    "maze-war".to_string(),
+                    "development".to_string(),
+                    "-D".to_string(),
+                    "The development project".to_string(),
+                ],
+                want_out: "✔ Successfully created project maze-war/development".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,
                 ..Default::default()

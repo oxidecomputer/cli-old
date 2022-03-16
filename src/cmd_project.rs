@@ -50,7 +50,7 @@ pub struct CmdProjectCreate {
     pub organization: String,
 
     /// The description for the project.
-    #[clap(long = "description", short = 'D', default_value = "")]
+    #[clap(long = "description", short = 'D', required = true)]
     pub description: String,
 }
 
@@ -315,7 +315,7 @@ impl crate::cmd::Command for CmdProjectList {
         let cs = ctx.io.color_scheme();
 
         let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tLAST UPDATED")?;
+        writeln!(tw, "NAME\tDESCRTIPTION\tUPDATED")?;
         for project in projects {
             // TODO: There should be a way to do this without so many http requests.
             let org = client.organizations().get(&project.organization_id).await?;

@@ -44,7 +44,7 @@ pub struct CmdOrganizationCreate {
     pub organization: String,
 
     /// The description for the organization.
-    #[clap(long = "description", short = 'D', default_value = "", required = true)]
+    #[clap(long = "description", short = 'D', required = true)]
     pub description: String,
 }
 
@@ -247,7 +247,6 @@ impl crate::cmd::Command for CmdOrganizationList {
 
         let client = ctx.api_client("")?;
 
-        // TODO: Make this work for a user's organizations.
         let organizations = if self.paginate {
             client
                 .organizations()
@@ -269,7 +268,7 @@ impl crate::cmd::Command for CmdOrganizationList {
         let cs = ctx.io.color_scheme();
 
         let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tLAST UPDATED")?;
+        writeln!(tw, "NAME\tDESCRTIPTION\tUPDATED")?;
         for organization in organizations {
             let last_updated = chrono::Utc::now()
                 - organization
@@ -280,7 +279,7 @@ impl crate::cmd::Command for CmdOrganizationList {
                 "{}\t{}\t{}",
                 cs.bold(&organization.name),
                 &organization.description,
-                cs.gray(&chrono_humanize::HumanTime::from(last_updated).to_string())
+                cs.gray(&chrono_humanize::HumanTime::from(-last_updated).to_string())
             )?;
         }
         tw.flush()?;
