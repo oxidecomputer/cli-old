@@ -469,9 +469,8 @@ mod test {
                     host: "".to_string(),
                 }),
                 stdin: "".to_string(),
-                want_out:
-                    "You are not logged into any Oxide hosts. Run \u{1b}[1moxide auth login\u{1b}[0m to authenticate.\n"
-                        .to_string(),
+                want_out: "You are not logged into any Oxide hosts. Run oxide auth login to authenticate.\n"
+                    .to_string(),
                 want_err: "".to_string(),
             },
             TestItem {
@@ -491,10 +490,7 @@ mod test {
                     host: "".to_string(),
                 }),
                 stdin: "".to_string(),
-                want_out: format!(
-                    "\u{1b}[1m{}\u{1b}[0m\n\u{1b}[32m✔\u{1b}[0m Logged in to {} as",
-                    test_host, test_host
-                ),
+                want_out: format!("{}\n✔ Logged in to {} as", test_host, test_host),
                 want_err: "".to_string(),
             },
         ];
@@ -507,6 +503,9 @@ mod test {
             if !t.stdin.is_empty() {
                 io.stdin = Box::new(std::io::Cursor::new(t.stdin));
             }
+            // We need to also turn off the fancy terminal colors.
+            // This ensures it also works in GitHub actions/any CI.
+            io.set_color_enabled(false);
             let mut ctx = crate::context::Context {
                 config: &mut c,
                 io,
