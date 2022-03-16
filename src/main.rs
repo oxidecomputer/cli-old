@@ -270,6 +270,7 @@ fn handle_update(
 
 #[cfg(test)]
 mod test {
+    use pretty_assertions::assert_eq;
 
     #[derive(Default, Debug, Clone, PartialEq, Eq)]
     pub struct TestItem {
@@ -389,6 +390,75 @@ mod test {
                     "--with-token".to_string(),
                 ],
                 stdin: Some(test_token.clone()),
+                want_out: "✔ Logged in as ".to_string(),
+                want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "list orgs empty".to_string(),
+                args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
+                want_out: "✔ Logged in as ".to_string(),
+                want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "create an org".to_string(),
+                args: vec![
+                    "oxide".to_string(),
+                    "org".to_string(),
+                    "create".to_string(),
+                    "maze-war".to_string(),
+                ],
+                want_out: "✔ Logged in as ".to_string(),
+                want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "create another org".to_string(),
+                args: vec!["oxide".to_string(), "org".to_string(), "create".to_string()],
+                want_out: "✔ Logged in as ".to_string(),
+                want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "list orgs".to_string(),
+                args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
+                want_out: "✔ Logged in as ".to_string(),
+                want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "delete an org".to_string(),
+                args: vec!["oxide".to_string(), "org".to_string(), "delete".to_string()],
+                want_out: "✔ Logged in as ".to_string(),
+                want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "list orgs after delete".to_string(),
+                args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
+                want_out: "✔ Logged in as ".to_string(),
+                want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "list projects empty".to_string(),
+                args: vec!["oxide".to_string(), "project".to_string(), "list".to_string()],
+                want_out: "✔ Logged in as ".to_string(),
+                want_err: "".to_string(),
+                want_code: 0,
+                ..Default::default()
+            },
+            TestItem {
+                name: "create a project".to_string(),
+                args: vec!["oxide".to_string(), "project".to_string(), "create".to_string()],
                 want_out: "✔ Logged in as ".to_string(),
                 want_err: "".to_string(),
                 want_code: 0,

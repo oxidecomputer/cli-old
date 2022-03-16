@@ -214,6 +214,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
                     hostname: hostname.to_string(),
                     memory,
                     ncpus,
+                    network_interfaces: Default::default(),
                 },
             )
             .await?;

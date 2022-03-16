@@ -100,16 +100,23 @@ impl IoStreams {
         self.stdin_is_tty = is_tty;
     }
 
+    #[cfg(target_os = "windows")]
+    // TODO: actually implement a real check for windows.
     pub fn is_stdin_tty(&self) -> bool {
         if self.stdin_tty_override {
             return self.stdin_is_tty;
         }
 
-        if cfg!(windows) {
-            true // TODO: actually implement a real check for windows.
-        } else {
-            isatty::stdin_isatty()
+        true
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub fn is_stdin_tty(&self) -> bool {
+        if self.stdin_tty_override {
+            return self.stdin_is_tty;
         }
+
+        isatty::stdin_isatty()
     }
 
     pub fn set_stdout_tty(&mut self, is_tty: bool) {

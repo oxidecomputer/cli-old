@@ -439,7 +439,7 @@ fn clean_hostname(host: &str) -> String {
 
 #[cfg(test)]
 mod test {
-    //use pretty_assertions::assert_eq;
+    use pretty_assertions::assert_eq;
 
     use crate::cmd::Command;
 

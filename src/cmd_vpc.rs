@@ -163,6 +163,7 @@ impl crate::cmd::Command for CmdVpcCreate {
                     name: vpc_name.to_string(),
                     description: description.to_string(),
                     dns_name: dns_name.to_string(),
+                    ipv_6_prefix: "".to_string(),
                 },
             )
             .await?;
