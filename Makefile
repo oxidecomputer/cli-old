@@ -88,6 +88,55 @@ clean: ## Cleanup any build binaries or packages.
 build: Cargo.toml $(wildcard src/*.rs) ## Build the Rust crate.
 	cargo build
 
+
+.PHONY: start-cockroachdb
+start-cockroachdb: ## Start CockroachDB.
+	@echo "+ $@"
+	@docker rm -f cockroachdb || true
+	docker run -d \
+		--restart=always \
+		--name=cockroachdb \
+		--hostname=cockroachdb \
+		-p 0.0.0.0:26257:26257 \
+		-p 0.0.0.0:1234:8080  \
+		cockroachdb/cockroach start-single-node \
+			--insecure
+	@echo "Waiting for CockroachDB to start..."
+	@sleep 5
+
+.PHONY: start-omicron
+start-omicron: start-cockroachdb ## Start Omicron.
+	@echo "+ $@"
+	@docker rm -f nexus || true
+	@docker rm -f sled-agent || true
+	@echo "Populating the database for omicron...."
+	docker run --rm -i \
+		--name=bootstrap_db \
+		--hostname=nexus \
+		--net host \
+		--entrypoint=omicron-dev \
+		ghcr.io/oxidecomputer/omicron:main \
+			db-populate --database-url "postgresql://root@0.0.0.0:26257/omicron?sslmode=disable"
+	@echo "Starting nexus..."
+	docker run -d \
+		--restart=always \
+		--name=nexus \
+		--hostname=nexus \
+		--net host \
+		-v "$(CURDIR)/tests/omicron.toml:/etc/omicron/config.toml:ro"  \
+		--entrypoint=nexus \
+		ghcr.io/oxidecomputer/omicron:main \
+			/etc/omicron/config.toml
+	@echo "Starting sled-agent..."
+	docker run -d \
+		--restart=always \
+		--name=sled-agent \
+		--hostname=sled-agent \
+		--net host \
+		--entrypoint=sled-agent-sim \
+		ghcr.io/oxidecomputer/omicron:main \
+			B100B75C-D2EF-415F-A07E-D3915470913D 0.0.0.0:12345 0.0.0.0:12221
+
 .PHONY: gen-docs
 gen-docs: gen-md gen-man ## Generate all the docs.
 
