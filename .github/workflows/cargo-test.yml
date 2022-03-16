@@ -50,8 +50,8 @@ jobs:
           cargo test -- --test-threads=1
         shell: bash
         env:
-          OXIDE_TOKEN: ${{secrets.OXIDE_TOKEN}}
-          OXIDE_HOST: localhost:8888
+          OXIDE_TEST_TOKEN: ${{secrets.OXIDE_TOKEN}}
+          OXIDE_TEST_HOST: localhost:8888
 
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
@@ -59,8 +59,8 @@ jobs:
           version: '0.15.0'
           args: '-- --test-threads 1'
         env:
-          OXIDE_TOKEN: ${{secrets.OXIDE_TOKEN}}
-          OXIDE_HOST: localhost:8888
+          OXIDE_TEST_TOKEN: ${{secrets.OXIDE_TOKEN}}
+          OXIDE_TEST_HOST: localhost:8888
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v2

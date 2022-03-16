@@ -341,11 +341,11 @@ impl crate::cmd::Command for CmdAuthStatus {
 
         if hostnames.is_empty() {
             writeln!(
-                ctx.io.err_out,
+                ctx.io.out,
                 "You are not logged into any Oxide hosts. Run {} to authenticate.",
                 cs.bold("oxide auth login")
             )?;
-            return Err(anyhow!(""));
+            return Ok(());
         }
 
         let mut failed = false;
@@ -440,4 +440,99 @@ fn clean_hostname(host: &str) -> String {
     host.trim_start_matches("https://")
         .trim_start_matches("http://")
         .to_string()
+}
+
+#[cfg(test)]
+mod test {
+    use pretty_assertions::assert_eq;
+
+    use crate::cmd::Command;
+
+    pub struct TestItem {
+        name: String,
+        cmd: crate::cmd_auth::SubCommand,
+        stdin: String,
+        want_out: String,
+        want_err: String,
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_cmd_auth() {
+        let test_host = std::env::var("OXIDE_TEST_HOST").unwrap_or_default().to_string();
+        let test_token = std::env::var("OXIDE_TEST_TOKEN").unwrap_or_default().to_string();
+
+        let tests: Vec<TestItem> = vec![
+            TestItem {
+                name: "status".to_string(),
+                cmd: crate::cmd_auth::SubCommand::Status(crate::cmd_auth::CmdAuthStatus {
+                    show_token: false,
+                    host: "".to_string(),
+                }),
+                stdin: "".to_string(),
+                want_out:
+                    "You are not logged into any Oxide hosts. Run \u{1b}[1moxide auth login\u{1b}[0m to authenticate.\n"
+                        .to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "login".to_string(),
+                cmd: crate::cmd_auth::SubCommand::Login(crate::cmd_auth::CmdAuthLogin {
+                    host: test_host.to_string(),
+                    with_token: true,
+                }),
+                stdin: test_token.to_string(),
+                want_out: "".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "status".to_string(),
+                cmd: crate::cmd_auth::SubCommand::Status(crate::cmd_auth::CmdAuthStatus {
+                    show_token: false,
+                    host: "".to_string(),
+                }),
+                stdin: "".to_string(),
+                want_out: format!(
+                    "\u{1b}[1m{}\u{1b}[0m\n\u{1b}[32m✔\u{1b}[0m Logged in to {} as",
+                    test_host, test_host
+                ),
+                want_err: "".to_string(),
+            },
+        ];
+
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        for t in tests {
+            let (mut io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
+            if !t.stdin.is_empty() {
+                io.stdin = Box::new(std::io::Cursor::new(t.stdin));
+            }
+            let mut ctx = crate::context::Context {
+                config: &mut c,
+                io,
+                debug: false,
+            };
+
+            let cmd_auth = crate::cmd_auth::CmdAuth { subcmd: t.cmd };
+            match cmd_auth.run(&mut ctx).await {
+                Ok(()) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert!(stderr.is_empty(), "test {}: {}", t.name, stderr);
+                    if !stdout.contains(&t.want_out) {
+                        assert_eq!(stdout, t.want_out, "test {}: stdout mismatch", t.name);
+                    }
+                }
+                Err(err) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert_eq!(stdout, t.want_out, "test {}", t.name);
+                    if !err.to_string().contains(&t.want_err) {
+                        assert_eq!(err.to_string(), t.want_err, "test {}: err mismatch", t.name);
+                    }
+                    assert!(stderr.is_empty(), "test {}: {}", t.name, stderr);
+                }
+            }
+        }
+    }
 }
