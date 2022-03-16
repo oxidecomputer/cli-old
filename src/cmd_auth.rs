@@ -177,7 +177,7 @@ impl crate::cmd::Command for CmdAuthLogin {
         // Set the user.
         // TODO: This should instead store the email, or some username or something
         // that is human knowable.
-        let email = session.id.to_string();
+        let email = session.id;
         ctx.config.set(&host, "user", &email)?;
 
         // Save the config.
@@ -278,7 +278,7 @@ impl crate::cmd::Command for CmdAuthLogout {
 
         // TODO: this should be the users email or something better.
         // make it consistent with login.
-        let email = session.id.to_string();
+        let email = session.id;
 
         if ctx.io.can_prompt() {
             match dialoguer::Confirm::new()

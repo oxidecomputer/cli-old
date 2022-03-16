@@ -129,6 +129,7 @@ impl crate::cmd::Command for CmdConfigList {
         let host = if self.host.is_empty() {
             // We don't want to do the default host here since we want to show the default's for
             // all hosts, even if OXIDE_HOST is set.
+            // TODO: in this case we should print all the hosts configs, not just the default.
             "".to_string()
         } else {
             self.host.to_string()
@@ -231,9 +232,9 @@ mod test {
                 want_err: "Key 'blah' not found".to_string(),
             },
             TestItem {
-                name: "list all".to_string(),
+                name: "list all default".to_string(),
                 cmd: crate::cmd_config::SubCommand::List(crate::cmd_config::CmdConfigList { host: "".to_string() }),
-                want_out: "prompt=disabled\n".to_string(),
+                want_out: "editor=\nprompt=enabled\npager=\nbrowser=bar\n".to_string(),
                 want_err: "".to_string(),
             },
         ];
