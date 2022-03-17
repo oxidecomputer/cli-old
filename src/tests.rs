@@ -249,7 +249,7 @@ async fn test_main(ctx: &mut MainContext) {
             name: "list orgs".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
             want_out: r#"NAME      DESCRTIPTION                    UPDATED
-    dune      A sandy desert game             "#
+dune      A sandy desert game             "#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -264,7 +264,7 @@ async fn test_main(ctx: &mut MainContext) {
                 "dune".to_string(),
                 "--confirm".to_string(),
             ],
-            want_out: "Deleted organization dune".to_string(),
+            want_out: "✔ Deleted organization dune".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -273,7 +273,7 @@ async fn test_main(ctx: &mut MainContext) {
             name: "list orgs after delete".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
             want_out: r#"NAME      DESCRTIPTION                    UPDATED
-    maze-war  The Maze War game organization"#
+maze-war  The Maze War game organization"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -318,7 +318,7 @@ async fn test_main(ctx: &mut MainContext) {
                 "maze-war".to_string(),
             ],
             want_out: r#"NAME                  DESCRTIPTION             UPDATED
-    maze-war/development  The development project"#
+maze-war/development  The development project"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -377,7 +377,7 @@ async fn test_main(ctx: &mut MainContext) {
                 "development".to_string(),
             ],
             want_out: r#"NAME   DESCRTIPTION  STATE     UPDATED
-    my-db  My database   starting"#
+my-db  My database   starting"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -423,6 +423,29 @@ async fn test_main(ctx: &mut MainContext) {
             ..Default::default()
         },
         TestItem {
+            name: "create another disk".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "disk".to_string(),
+                "create".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "second-disk".to_string(),
+                /*"--snapshot".to_string(),
+                "42583766-9318-4339-A2A2-EE286F0F5B26".to_string(),*/
+                "--size".to_string(),
+                "1024".to_string(),
+                "-D".to_string(),
+                "My second new disk".to_string(),
+            ],
+            want_out: "✔ Successfully created disk second-disk in maze-war/development\n".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "list disks".to_string(),
             args: vec![
                 "oxide".to_string(),
@@ -433,9 +456,27 @@ async fn test_main(ctx: &mut MainContext) {
                 "--project".to_string(),
                 "development".to_string(),
             ],
-            want_out: r#"NAME      DESCRTIPTION  STATE     DEVICE PATH    UPDATED
-    new-disk  My new disk   detached  /mnt/new-disk"#
+            want_out: r#"NAME         DESCRTIPTION        STATE     DEVICE PATH       UPDATED
+new-disk     My new disk         detached  /mnt/new-disk"#
                 .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "delete a disk".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "disk".to_string(),
+                "delete".to_string(),
+                "second-disk".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "--confirm".to_string(),
+            ],
+            want_out: "✔ Deleted disk second-disk".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -459,6 +500,24 @@ async fn test_main(ctx: &mut MainContext) {
             ..Default::default()
         },
         TestItem {
+            name: "detach a disk from an instance".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "disk".to_string(),
+                "detach".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "new-disk".to_string(),
+                "my-db".to_string(),
+            ],
+            want_out: "✔ Detached disk new-disk from instance my-db in project maze-war/development".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "list vpcs default".to_string(),
             args: vec![
                 "oxide".to_string(),
@@ -470,7 +529,7 @@ async fn test_main(ctx: &mut MainContext) {
                 "development".to_string(),
             ],
             want_out: r#"NAME     DESCRTIPTION  DNS      SYSTEM ROUTER                         UPDATED
-    default  Default VPC   default"#
+default  Default VPC   default"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,

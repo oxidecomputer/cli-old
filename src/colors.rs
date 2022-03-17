@@ -116,7 +116,11 @@ impl ColorScheme {
     }
 
     pub fn success_icon_with_color(&self, color: ansi_term::Colour) -> String {
-        color.paint("✔").to_string()
+        if self.enabled {
+            return color.paint("✔").to_string();
+        }
+
+        "✔".to_string()
     }
 
     pub fn warning_icon(&self) -> String {
@@ -129,7 +133,11 @@ impl ColorScheme {
     }
 
     pub fn failure_icon_with_color(&self, color: ansi_term::Colour) -> String {
-        color.paint("✘").to_string()
+        if self.enabled {
+            return color.paint("✘").to_string();
+        }
+
+        "✘".to_string()
     }
 }
 
