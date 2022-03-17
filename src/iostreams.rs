@@ -116,7 +116,7 @@ impl IoStreams {
             return self.stdin_is_tty;
         }
 
-        isatty::stdin_isatty()
+        atty::is(atty::Stream::Stdin)
     }
 
     pub fn set_stdout_tty(&mut self, is_tty: bool) {
@@ -124,18 +124,26 @@ impl IoStreams {
         self.stdout_is_tty = is_tty;
     }
 
-    // TODO: fix and do others.
     pub fn is_stdout_tty(&self) -> bool {
         if self.stdout_tty_override {
             return self.stdout_is_tty;
         }
 
-        isatty::stdout_isatty()
+        atty::is(atty::Stream::Stdout)
     }
 
     pub fn set_stderr_tty(&mut self, is_tty: bool) {
         self.stderr_tty_override = true;
         self.stderr_is_tty = is_tty;
+    }
+
+    #[allow(dead_code)]
+    pub fn is_stderr_tty(&self) -> bool {
+        if self.stderr_tty_override {
+            return self.stderr_is_tty;
+        }
+
+        atty::is(atty::Stream::Stderr)
     }
 
     #[allow(dead_code)]
