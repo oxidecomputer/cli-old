@@ -897,8 +897,11 @@ state:"#
                 "--json".to_string(),
                 "--paginate".to_string(),
             ],
-            want_out: r#"NAME         DESCRTIPTION        STATE     DEVICE PATH       UPDATED
-new-disk     My new disk         detached  /mnt/new-disk"#
+            want_out: r#"[
+  {
+    "description": "My new disk",
+    "device_path": "/mnt/new-disk",
+    "id": ""#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -1075,7 +1078,12 @@ default  Default VPC   default"#
                 "--json".to_string(),
                 "--paginate".to_string(),
             ],
-            want_out: "new-network  My new network  new-network".to_string(),
+            want_out: r#"[
+  {
+    "description": "Default VPC",
+    "dns_name": "default",
+    "id": ""#
+                .to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
