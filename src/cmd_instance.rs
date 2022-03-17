@@ -452,7 +452,7 @@ impl crate::cmd::Command for CmdInstanceList {
 
         // TODO: add more columns, maybe make customizable.
         let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tSTATE\tLAST UPDATED")?;
+        writeln!(tw, "NAME\tDESCRTIPTION\tSTATE\tUPDATED")?;
         for instance in instances {
             let last_updated = chrono::Utc::now()
                 - instance

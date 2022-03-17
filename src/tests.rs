@@ -306,9 +306,12 @@ maze-war/development  The development project"#
             name: "list instances empty".to_string(),
             args: vec![
                 "oxide".to_string(),
-                "project".to_string(),
+                "instance".to_string(),
                 "list".to_string(),
+                "--organization".to_string(),
                 "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
             ],
             want_out: "NAME  DESCRTIPTION  STATE  UPDATED\n".to_string(),
             want_err: "".to_string(),
