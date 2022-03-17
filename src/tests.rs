@@ -186,6 +186,28 @@ async fn test_main(ctx: &mut MainContext) {
             ..Default::default()
         },
         TestItem {
+            name: "api /session/me".to_string(),
+            args: vec!["oxide".to_string(), "api".to_string(), "/session/me".to_string()],
+            want_out: r#"{
+  "id": "001de000-05e4-4000-8000-000000004007"
+}"#
+            .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "api session/me (no leading /)".to_string(),
+            args: vec!["oxide".to_string(), "api".to_string(), "session/me".to_string()],
+            want_out: r#"{
+  "id": "001de000-05e4-4000-8000-000000004007"
+}"#
+            .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "list orgs empty".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
             want_out: "NAME  DESCRTIPTION  UPDATED\n".to_string(),
@@ -227,7 +249,7 @@ async fn test_main(ctx: &mut MainContext) {
             name: "list orgs".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
             want_out: r#"NAME      DESCRTIPTION                    UPDATED
-dune      A sandy desert game             "#
+    dune      A sandy desert game             "#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -251,7 +273,7 @@ dune      A sandy desert game             "#
             name: "list orgs after delete".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
             want_out: r#"NAME      DESCRTIPTION                    UPDATED
-maze-war  The Maze War game organization"#
+    maze-war  The Maze War game organization"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -296,7 +318,7 @@ maze-war  The Maze War game organization"#
                 "maze-war".to_string(),
             ],
             want_out: r#"NAME                  DESCRTIPTION             UPDATED
-maze-war/development  The development project"#
+    maze-war/development  The development project"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -355,7 +377,7 @@ maze-war/development  The development project"#
                 "development".to_string(),
             ],
             want_out: r#"NAME   DESCRTIPTION  STATE     UPDATED
-my-db  My database   starting"#
+    my-db  My database   starting"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -412,7 +434,7 @@ my-db  My database   starting"#
                 "development".to_string(),
             ],
             want_out: r#"NAME      DESCRTIPTION  STATE     DEVICE PATH    UPDATED
-new-disk  My new disk   detached  /mnt/new-disk"#
+    new-disk  My new disk   detached  /mnt/new-disk"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -448,7 +470,7 @@ new-disk  My new disk   detached  /mnt/new-disk"#
                 "development".to_string(),
             ],
             want_out: r#"NAME     DESCRTIPTION  DNS      SYSTEM ROUTER                         UPDATED
-default  Default VPC   default"#
+    default  Default VPC   default"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
