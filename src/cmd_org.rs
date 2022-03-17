@@ -111,60 +111,6 @@ impl crate::cmd::Command for CmdOrganizationCreate {
     }
 }
 
-/// Delete a organization.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdOrganizationDelete {
-    /// The organization to delete. Can be an ID or name.
-    #[clap(name = "organization", required = true)]
-    pub organization: String,
-
-    /// Confirm deletion without prompting.
-    #[clap(long)]
-    pub confirm: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdOrganizationDelete {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if !ctx.io.can_prompt() && !self.confirm {
-            return Err(anyhow!("--confirm required when not running interactively"));
-        }
-
-        let client = ctx.api_client("")?;
-
-        // Confirm deletion.
-        if !self.confirm {
-            if let Err(err) = dialoguer::Input::<String>::new()
-                .with_prompt(format!("Type {} to confirm deletion:", self.organization))
-                .validate_with(|input: &String| -> Result<(), &str> {
-                    if input.trim() == self.organization {
-                        Ok(())
-                    } else {
-                        Err("mismatched confirmation")
-                    }
-                })
-                .interact_text()
-            {
-                return Err(anyhow!("prompt failed: {}", err));
-            }
-        }
-
-        // Delete the organization.
-        client.organizations().delete(&self.organization).await?;
-
-        let cs = ctx.io.color_scheme();
-        writeln!(
-            ctx.io.out,
-            "{} Deleted organization {}",
-            cs.success_icon_with_color(ansi_term::Color::Red),
-            self.organization
-        )?;
-
-        Ok(())
-    }
-}
-
 /// Edit organization settings.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]

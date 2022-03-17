@@ -1,5 +1,7 @@
 extern crate proc_macro;
 
+use std::collections::BTreeMap;
+
 use anyhow::Result;
 use inflector::cases::titlecase::to_title_case;
 use proc_macro2::TokenStream;
@@ -88,6 +90,40 @@ impl<T> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
     }
 }
 
+trait ParameterExt {
+    fn data(&self) -> Option<openapiv3::ParameterData>;
+}
+
+impl ParameterExt for openapiv3::Parameter {
+    fn data(&self) -> Option<openapiv3::ParameterData> {
+        match self {
+            openapiv3::Parameter::Path {
+                parameter_data,
+                style: openapiv3::PathStyle::Simple,
+            } => return Some(parameter_data.clone()),
+            openapiv3::Parameter::Header {
+                parameter_data,
+                style: openapiv3::HeaderStyle::Simple,
+            } => return Some(parameter_data.clone()),
+            openapiv3::Parameter::Cookie {
+                parameter_data,
+                style: openapiv3::CookieStyle::Form,
+            } => return Some(parameter_data.clone()),
+            openapiv3::Parameter::Query {
+                parameter_data,
+                allow_reserved: _,
+                style: openapiv3::QueryStyle::Form,
+                allow_empty_value: _,
+            } => {
+                return Some(parameter_data.clone());
+            }
+            _ => (),
+        }
+
+        None
+    }
+}
+
 struct Operation {
     op: openapiv3::Operation,
     method: String,
@@ -100,6 +136,141 @@ impl Operation {
     fn is_root_level_operation(&self, tag: &str) -> bool {
         self.id
             .ends_with(&format!("{}_{}", self.method.to_lowercase(), singular(tag)))
+    }
+
+    fn get_parameters(&self) -> Result<BTreeMap<String, openapiv3::Parameter>> {
+        let mut parameters = BTreeMap::new();
+
+        for param in self.op.parameters.iter() {
+            let param = param.item()?;
+
+            let parameter_data = match param.data() {
+                Some(s) => s,
+                None => return Ok(parameters),
+            };
+
+            parameters.insert(parameter_data.name.to_string(), param.clone());
+        }
+
+        Ok(parameters)
+    }
+
+    fn is_parameter(&self, parameter: &str) -> bool {
+        for param in self.op.parameters.iter() {
+            let param = match param.item() {
+                Ok(i) => i,
+                Err(_) => return false,
+            };
+
+            let parameter_data = match param.data() {
+                Some(s) => s,
+                None => return false,
+            };
+
+            if parameter_data.name == parameter || parameter_data.name.starts_with(&format!("{}_", parameter)) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    fn get_request_body_properties(&self) -> Result<BTreeMap<String, Box<openapiv3::Schema>>> {
+        let mut properties = BTreeMap::new();
+
+        let request_body = match self.op.request_body.as_ref() {
+            Some(r) => r,
+            None => return Ok(properties),
+        }
+        .item()?;
+
+        let content = match request_body.content.get("application/json") {
+            Some(c) => c,
+            None => return Ok(properties),
+        };
+
+        let schema = match content.schema.as_ref() {
+            Some(s) => s,
+            None => return Ok(properties),
+        }
+        .item()?;
+
+        let obj = match &schema.schema_kind {
+            openapiv3::SchemaKind::Type(t) => match t {
+                openapiv3::Type::Object(o) => o,
+                _ => return Ok(properties),
+            },
+            _ => return Ok(properties),
+        };
+
+        for (key, prop) in obj.properties.iter() {
+            properties.insert(key.clone(), prop.item()?.clone());
+        }
+
+        Ok(properties)
+    }
+
+    fn is_request_body_property(&self, property: &str) -> bool {
+        let request_body = match self.op.request_body.as_ref() {
+            Some(r) => r,
+            None => return false,
+        };
+
+        let request_body = match request_body.item() {
+            Ok(i) => i,
+            Err(_) => return false,
+        };
+
+        let content = match request_body.content.get("application/json") {
+            Some(c) => c,
+            None => return false,
+        };
+
+        let schema = match content.schema.as_ref() {
+            Some(s) => s,
+            None => return false,
+        };
+
+        let schema = match schema.item() {
+            Ok(s) => s,
+            Err(_) => return false,
+        };
+
+        let obj = match &schema.schema_kind {
+            openapiv3::SchemaKind::Type(t) => match t {
+                openapiv3::Type::Object(o) => o,
+                _ => return false,
+            },
+            _ => return false,
+        };
+
+        for (key, _) in obj.properties.iter() {
+            if key == property {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Gets a list of all the string parameters for the operation.
+    /// This includes the path parameters, query parameters, and request_body parameters.
+    fn get_all_param_names(&self) -> Result<Vec<String>> {
+        let mut param_names = Vec::new();
+
+        for param in self.get_parameters()?.keys() {
+            param_names.push(param.to_string());
+        }
+
+        for param in self.get_request_body_properties()?.keys() {
+            param_names.push(param.to_string());
+        }
+
+        // Since we sort in the client, we also sort here such that parameters wind up in the right
+        // order always.
+        param_names.sort();
+
+        Ok(param_names)
     }
 
     /// Generate the delete command.
@@ -117,21 +288,73 @@ impl Operation {
         let struct_inner_name_doc = format!("The {} to delete. Can be an ID or name.", singular_tag_str);
         let struct_inner_project_doc = format!("The project to delete the {} from.", singular_tag_str);
 
-        // TODO: We should standardize the order of these in the client.
-        let api_call = if tag == "vpcs" {
-            quote! (
-                        client
-                            .#tag_ident()
-                            .delete(&self.organization, &self.project, &self.#singular_tag_lc)
-                            .await?;
-            )
+        let mut api_call_params: Vec<TokenStream> = Vec::new();
+        for p in self.get_all_param_names()? {
+            let p = format_ident!("{}", p.trim_end_matches("_name"));
+            api_call_params.push(quote!(&self.#p));
+        }
+
+        // We need to check if project is a parameter to this call.
+        let project_param = if self.is_parameter("project") && tag != "projects" {
+            quote! {
+                #[doc = #struct_inner_project_doc]
+                #[clap(long, short, required = true)]
+                pub project: String,
+            }
         } else {
-            quote! (
-                        client
-                            .#tag_ident()
-                            .delete(&self.#singular_tag_lc, &self.organization, &self.project)
-                            .await?;
-            )
+            quote!()
+        };
+
+        // We need to check if organization is a parameter to this call.
+        let organization_param = if self.is_parameter("organization") && tag != "organizations" {
+            quote! {
+                /// The organization that holds the project.
+                #[clap(long, short, required = true, env = "OXIDE_ORG")]
+                pub organization: String,
+            }
+        } else {
+            quote!()
+        };
+
+        // We need to form the output back to the client.
+        let output = if self.is_parameter("organization") && self.is_parameter("project") {
+            let start = quote! {
+                let full_name = format!("{}/{}", self.organization, self.project);
+            };
+            if tag != "projects" {
+                quote! {
+                    #start
+                    writeln!(
+                        ctx.io.out,
+                        "{} Deleted {} {} from {}",
+                        cs.success_icon_with_color(ansi_term::Color::Red),
+                        #singular_tag_str,
+                        self.#singular_tag_lc,
+                        full_name
+                    )?;
+                }
+            } else {
+                quote! {
+                    #start
+                    writeln!(
+                        ctx.io.out,
+                        "{} Deleted {} {}",
+                        cs.success_icon_with_color(ansi_term::Color::Red),
+                        #singular_tag_str,
+                        full_name
+                    )?;
+                }
+            }
+        } else {
+            quote! {
+                writeln!(
+                    ctx.io.out,
+                    "{} Deleted {} {}",
+                    cs.success_icon_with_color(ansi_term::Color::Red),
+                    #singular_tag_str,
+                    self.#singular_tag_lc
+                )?;
+            }
         };
 
         let cmd = quote!(
@@ -143,13 +366,9 @@ impl Operation {
                 #[clap(name = #singular_tag_str, required = true)]
                 #singular_tag_lc: String,
 
-                #[doc = #struct_inner_project_doc]
-                #[clap(long, short, required = true)]
-                pub project: String,
+                #project_param
 
-                /// The organization that holds the project.
-                #[clap(long, short, required = true, env = "OXIDE_ORG")]
-                pub organization: String,
+                #organization_param
 
                 /// Confirm deletion without prompting.
                 #[clap(long)]
@@ -160,19 +379,18 @@ impl Operation {
             impl crate::cmd::Command for #struct_name {
                 async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
                     if !ctx.io.can_prompt() && !self.confirm {
-                        return Err(anyhow!("--confirm required when not running interactively"));
+                        return Err(anyhow::anyhow!("--confirm required when not running interactively"));
                     }
 
                     let client = ctx.api_client("")?;
 
-                    let full_name = format!("{}/{}", self.organization, self.project);
 
                     // Confirm deletion.
                     if !self.confirm {
                         if let Err(err) = dialoguer::Input::<String>::new()
                             .with_prompt(format!("Type {} to confirm deletion:", self.#singular_tag_lc))
                             .validate_with(|input: &String| -> Result<(), &str> {
-                                if input.trim() == full_name {
+                                if input.trim() == self.#singular_tag_lc {
                                     Ok(())
                                 } else {
                                     Err("mismatched confirmation")
@@ -184,18 +402,15 @@ impl Operation {
                         }
                     }
 
-                    // Delete the project.
-                    #api_call
+
+                    client
+                        .#tag_ident()
+                        .delete(#(#api_call_params),*,)
+                        .await?;
 
                     let cs = ctx.io.color_scheme();
-                    writeln!(
-                        ctx.io.out,
-                        "{} Deleted {} {} from {}",
-                        cs.success_icon_with_color(ansi_term::Color::Red),
-                        #singular_tag_str,
-                        self.#singular_tag_lc,
-                        full_name
-                    )?;
+
+                    #output
 
                     Ok(())
                 }
@@ -268,7 +483,7 @@ mod tests {
 
     #[test]
     fn test_crud_gen() {
-        let ret = do_gen(
+        let mut ret = do_gen(
             quote! {
                 tag = "disks",
             },
@@ -284,7 +499,7 @@ mod tests {
                 }
             },
         );
-        let expected = quote! {
+        let mut expected = quote! {
             #[derive(Parser, Debug, Clone)]
             enum SubCommand {
                 Attach(CmdDiskAttach),
@@ -321,19 +536,17 @@ mod tests {
             impl crate::cmd::Command for CmdDiskDelete {
                 async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
                     if !ctx.io.can_prompt() && !self.confirm {
-                        return Err(anyhow!("--confirm required when not running interactively"));
+                        return Err(anyhow::anyhow!("--confirm required when not running interactively"));
                     }
 
                     let client = ctx.api_client("")?;
-
-                    let full_name = format!("{}/{}", self.organization, self.project);
 
                     // Confirm deletion.
                     if !self.confirm {
                         if let Err(err) = dialoguer::Input::<String>::new()
                             .with_prompt(format!("Type {} to confirm deletion:", self.disk))
                             .validate_with(|input: &String| -> Result<(), &str> {
-                                if input.trim() == full_name {
+                                if input.trim() == self.disk {
                                     Ok(())
                                 } else {
                                     Err("mismatched confirmation")
@@ -345,13 +558,14 @@ mod tests {
                         }
                     }
 
-                    // Delete the project.
                     client
                         .disks()
-                        .delete(&self.disk, &self.organization, &self.project)
+                        .delete(&self.disk, &self.organization, &self.project,)
                         .await?;
 
                     let cs = ctx.io.color_scheme();
+
+                    let full_name = format!("{}/{}", self.organization, self.project);
                     writeln!(
                         ctx.io.out,
                         "{} Deleted {} {} from {}",
@@ -359,6 +573,79 @@ mod tests {
                         "disk",
                         self.disk,
                         full_name
+                    )?;
+
+                    Ok(())
+                }
+            }
+        };
+
+        assert_eq!(expected.to_string(), ret.unwrap().to_string());
+
+        ret = do_gen(
+            quote! {
+                tag = "organizations",
+            },
+            quote! {
+                #[derive(Parser, Debug, Clone)]
+                enum SubCommand {}
+            },
+        );
+
+        expected = quote! {
+            #[derive(Parser, Debug, Clone)]
+            enum SubCommand {
+                Delete(CmdOrganizationDelete)
+            }
+
+            #[doc = "Delete a organization."]
+            #[derive(clap::Parser, Debug, Clone)]
+            #[clap(verbatim_doc_comment)]
+            pub struct CmdOrganizationDelete {
+                #[doc = "The organization to delete. Can be an ID or name."]
+                #[clap(name = "organization", required = true)]
+                pub organization: String,
+
+                /// Confirm deletion without prompting.
+                #[clap(long)]
+                pub confirm: bool,
+            }
+
+            #[async_trait::async_trait]
+            impl crate::cmd::Command for CmdOrganizationDelete {
+                async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+                    if !ctx.io.can_prompt() && !self.confirm {
+                        return Err(anyhow::anyhow!("--confirm required when not running interactively"));
+                    }
+
+                    let client = ctx.api_client("")?;
+
+                    // Confirm deletion.
+                    if !self.confirm {
+                        if let Err(err) = dialoguer::Input::<String>::new()
+                            .with_prompt(format!("Type {} to confirm deletion:", self.organization))
+                            .validate_with(|input: &String| -> Result<(), &str> {
+                                if input.trim() == self.organization {
+                                    Ok(())
+                                } else {
+                                    Err("mismatched confirmation")
+                                }
+                            })
+                            .interact_text()
+                        {
+                            return Err(anyhow::anyhow!("prompt failed: {}", err));
+                        }
+                    }
+
+                    client.organizations().delete(&self.organization,).await?;
+
+                    let cs = ctx.io.color_scheme();
+                    writeln!(
+                        ctx.io.out,
+                        "{} Deleted {} {}",
+                        cs.success_icon_with_color(ansi_term::Color::Red),
+                        "organization",
+                        self.organization
                     )?;
 
                     Ok(())
