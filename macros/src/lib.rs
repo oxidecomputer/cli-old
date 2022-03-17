@@ -113,6 +113,23 @@ impl Operation {
         let struct_inner_name_doc = format!("The {} to delete. Can be an ID or name.", singular_tag_str);
         let struct_inner_project_doc = format!("The project to delete the {} from.", singular_tag_str);
 
+        // TODO: We should standardize the order of these in the client.
+        let api_call = if tag == "vpcs" {
+            quote! (
+                        client
+                            .#tag_ident()
+                            .delete(&self.organization, &self.project, &self.#singular_tag_lc)
+                            .await?;
+            )
+        } else {
+            quote! (
+                        client
+                            .#tag_ident()
+                            .delete(&self.#singular_tag_lc, &self.organization, &self.project)
+                            .await?;
+            )
+        };
+
         let cmd = quote!(
             #[doc = #struct_doc]
             #[derive(clap::Parser, Debug, Clone)]
@@ -164,10 +181,7 @@ impl Operation {
                     }
 
                     // Delete the project.
-                    client
-                        .#tag_ident()
-                        .delete(&self.#singular_tag_lc, &self.organization, &self.project)
-                        .await?;
+                    #api_call
 
                     let cs = ctx.io.color_scheme();
                     writeln!(
