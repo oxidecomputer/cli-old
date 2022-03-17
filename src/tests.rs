@@ -539,6 +539,73 @@ maze-war/development  The development project"#
             ..Default::default()
         },
         TestItem {
+            name: "create another instance".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "create".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "my-app".to_string(),
+                "--cpus".to_string(),
+                "1".to_string(),
+                "--memory".to_string(),
+                "1024".to_string(),
+                "--hostname".to_string(),
+                "my-app".to_string(),
+                "--description".to_string(),
+                "My application".to_string(),
+            ],
+            want_out: "✔ Successfully created instance my-app in maze-war/development\n".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "view an instance".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "view".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "my-app".to_string(),
+            ],
+            want_out: r#"name:           my-app
+description:    My application
+state:"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "view an instance --json".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "view".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "my-app".to_string(),
+                "--json".to_string(),
+            ],
+            want_out: r#"{
+  "description": "My application",
+  "hostname": "my-app",
+  "id": ""#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "list instances".to_string(),
             args: vec![
                 "oxide".to_string(),
@@ -549,9 +616,80 @@ maze-war/development  The development project"#
                 "--project".to_string(),
                 "development".to_string(),
             ],
-            want_out: r#"NAME   DESCRTIPTION  STATE     UPDATED
-my-db  My database   starting"#
+            want_out: r#"NAME    DESCRTIPTION    STATE     UPDATED
+my-app  My application  starting"#
                 .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "stop an instance".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "stop".to_string(),
+                "my-app".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "--confirm".to_string(),
+            ],
+            want_out: "✘ Stopped instance my-app in maze-war/development".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "start an instance".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "start".to_string(),
+                "my-app".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+            ],
+            want_out: "✔ Started instance my-app in maze-war/development".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "reboot an instance".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "reboot".to_string(),
+                "my-app".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "--confirm".to_string(),
+            ],
+            want_out: "✔ Rebooted instance my-app in maze-war/development".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "stop an instance again".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "stop".to_string(),
+                "my-app".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "--confirm".to_string(),
+            ],
+            want_out: "✘ Stopped instance my-app in maze-war/development".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -673,6 +811,26 @@ new-disk     My new disk         detached  /mnt/new-disk"#
             ..Default::default()
         },
         TestItem {
+            name: "list instance disks".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "disks".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "my-db".to_string(),
+            ],
+            want_out:
+                "NAME      DESCRTIPTION  STATE                                              DEVICE PATH    UPDATED
+new-disk  My new disk"
+                    .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "view a disk".to_string(),
             args: vec![
                 "oxide".to_string(),
@@ -786,6 +944,24 @@ default  Default VPC   default"#
                 "development".to_string(),
             ],
             want_out: "new-network  My new network  new-network".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "delete an instance".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "delete".to_string(),
+                "my-app".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "--confirm".to_string(),
+            ],
+            want_out: "✔ Deleted instance my-app".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()

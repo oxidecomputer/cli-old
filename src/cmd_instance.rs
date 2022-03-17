@@ -403,7 +403,7 @@ pub struct CmdInstanceEdit {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceEdit {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
+        println!("Not implemented yet in omicron.");
         Ok(())
     }
 }
