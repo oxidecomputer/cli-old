@@ -920,7 +920,7 @@ state:"#
                 "development".to_string(),
                 "--confirm".to_string(),
             ],
-            want_out: "✔ Deleted disk second-disk".to_string(),
+            want_out: "✔ Deleted disk second-disk from maze-war/development".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -1240,7 +1240,7 @@ system router:"#
                 "development".to_string(),
                 "--confirm".to_string(),
             ],
-            want_out: "✔ Deleted instance my-app".to_string(),
+            want_out: "✔ Deleted instance my-app from maze-war/development".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
