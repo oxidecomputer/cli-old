@@ -297,7 +297,7 @@ fn print_headers(ctx: &mut crate::context::Context, headers: &reqwest::header::H
 
         let value = headers.get(name.as_str()).unwrap();
 
-        writeln!(tw, "{}:\t{:?}\n", cs.cyan(&name), value)?;
+        writeln!(tw, "{}:\t{:?}", cs.cyan(&name), value)?;
     }
 
     tw.flush()?;

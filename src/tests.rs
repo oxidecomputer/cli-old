@@ -208,6 +208,74 @@ async fn test_main(ctx: &mut MainContext) {
             ..Default::default()
         },
         TestItem {
+            name: "api session/me with header".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "api".to_string(),
+                "session/me".to_string(),
+                "-H".to_string(),
+                "Origin: https://example.com".to_string(),
+            ],
+            want_out: r#"{
+  "id": "001de000-05e4-4000-8000-000000004007"
+}"#
+            .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "api session/me with headers".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "api".to_string(),
+                "session/me".to_string(),
+                "-H".to_string(),
+                "Origin: https://example.com".to_string(),
+                "-H".to_string(),
+                "Another: thing".to_string(),
+            ],
+            want_out: r#"{
+  "id": "001de000-05e4-4000-8000-000000004007"
+}"#
+            .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "api session/me with output headers".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "api".to_string(),
+                "session/me".to_string(),
+                "--include".to_string(),
+            ],
+            want_out: r#"HTTP/1.1 200 OK
+content-length:  "45"
+content-type:    "application/json"
+date:"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "try to paginate over a post".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "api".to_string(),
+                "organizations".to_string(),
+                "--method".to_string(),
+                "POST".to_string(),
+                "--paginate".to_string(),
+            ],
+            want_out: "".to_string(),
+            want_err: "the `--paginate` option is not supported for non-GET request".to_string(),
+            want_code: 1,
+            ..Default::default()
+        },
+        TestItem {
             name: "list orgs empty".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
             want_out: "NAME  DESCRTIPTION  UPDATED\n".to_string(),
@@ -631,7 +699,22 @@ default  Default VPC   default"#
             Ok(code) => {
                 assert_eq!(code, t.want_code, "test {}", t.name);
                 assert_eq!(stdout.is_empty(), t.want_out.is_empty(), "test {}", t.name);
-                assert!(stderr.is_empty(), "test {}", t.name);
+                assert_eq!(
+                    stderr.to_string().is_empty(),
+                    t.want_err.is_empty(),
+                    "test {} -> stderr: {}\nwant_err: {}",
+                    t.name,
+                    stderr,
+                    t.want_err
+                );
+                assert!(
+                    stderr.contains(&t.want_err),
+                    "test {} ->\nstderr: {}\nwant: {}\n\nstdout: {}",
+                    t.name,
+                    stderr,
+                    t.want_err,
+                    stdout,
+                );
             }
             Err(err) => {
                 assert!(!t.want_err.is_empty(), "test {}", t.name);
