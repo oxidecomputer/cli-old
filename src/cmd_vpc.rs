@@ -491,7 +491,7 @@ impl crate::cmd::Command for CmdVpcView {
 
         let client = ctx.api_client("")?;
 
-        let vpc = client.vpcs().get(&self.vpc, &self.organization, &self.project).await?;
+        let vpc = client.vpcs().get(&self.organization, &self.project, &self.vpc).await?;
 
         if self.json {
             // If they specified --json, just dump the JSON.

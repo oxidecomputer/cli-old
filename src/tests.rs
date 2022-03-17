@@ -1125,6 +1125,27 @@ default  Default VPC   default"#
             ..Default::default()
         },
         TestItem {
+            name: "view a vpc".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "vpc".to_string(),
+                "view".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "netns2".to_string(),
+            ],
+            want_out: r#"name:           netns2
+description:    The real deal netns
+dns name:       netns
+system router:"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "edit a vpc again".to_string(),
             args: vec![
                 "oxide".to_string(),
@@ -1139,6 +1160,28 @@ default  Default VPC   default"#
                 "The realest of  deals netns".to_string(),
             ],
             want_out: "✔ Successfully edited VPC netns2 in maze-war/development".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "view a vpc --json".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "vpc".to_string(),
+                "view".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "netns2".to_string(),
+                "--json".to_string(),
+            ],
+            want_out: r#"{
+  "description": "The realest of  deals netns",
+  "dns_name": "netns",
+  "id": ""#
+                .to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
