@@ -20,8 +20,8 @@ struct MainContext {
 impl AsyncTestContext for MainContext {
     async fn setup() -> Self {
         Self {
-            test_host: std::env::var("OXIDE_TEST_HOST").unwrap_or_default().to_string(),
-            test_token: std::env::var("OXIDE_TEST_TOKEN").unwrap_or_default().to_string(),
+            test_host: std::env::var("OXIDE_TEST_HOST").unwrap_or_default(),
+            test_token: std::env::var("OXIDE_TEST_TOKEN").unwrap_or_default(),
         }
     }
 
@@ -164,7 +164,7 @@ async fn test_main(ctx: &mut MainContext) {
         TestItem {
             name: "version".to_string(),
             args: vec!["oxide".to_string(), "version".to_string()],
-            want_out: format!("oxide {}\n{}", version, crate::cmd_version::changelog_url(&version)),
+            want_out: format!("oxide {}\n{}", version, crate::cmd_version::changelog_url(version)),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()

@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+
 
 extern crate proc_macro;
 
@@ -8,7 +8,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use serde::Deserialize;
 use serde_tokenstream::from_tokenstream;
-use syn::{Field, ItemStruct, Type};
+
 
 /// The parameters passed to our macro.
 #[derive(Deserialize, Debug)]
@@ -36,16 +36,14 @@ fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     // Let's iterate over the paths and generate the code.
     for op in ops {
         // Let's generate the delete command if it exists.
-        if op.is_root_level_operation(&params.tag) {
-            if op.method == "DELETE" {
-                let delete_cmd = op.generate_delete_command(&params.tag)?;
+        if op.is_root_level_operation(&params.tag) && op.method == "DELETE" {
+            let delete_cmd = op.generate_delete_command(&params.tag)?;
 
-                commands = quote! {
-                    #commands
+            commands = quote! {
+                #commands
 
-                    #delete_cmd
-                };
-            }
+                #delete_cmd
+            };
         }
     }
 
@@ -227,7 +225,7 @@ fn get_operations_with_tag(api: &openapiv3::OpenAPI, tag: &str) -> Result<Vec<Op
 
 /// Return the singular version of a string (if it plural).
 fn singular(s: &str) -> String {
-    if s.ends_with("s") {
+    if s.ends_with('s') {
         s[..s.len() - 1].to_string()
     } else {
         s.to_string()
@@ -245,12 +243,10 @@ mod tests {
         let ret = do_gen(
             quote! {
                 tag = "disks",
-            }
-            .into(),
+            },
             quote! {
                 enum SubCommand {}
-            }
-            .into(),
+            },
         );
         let expected = quote! {
             enum SubCommand {}

@@ -409,8 +409,8 @@ mod test {
             };
 
             // Set our test values.
-            let test_host = std::env::var("OXIDE_TEST_HOST").unwrap_or_default().to_string();
-            let test_token = std::env::var("OXIDE_TEST_TOKEN").unwrap_or_default().to_string();
+            let test_host = std::env::var("OXIDE_TEST_HOST").unwrap_or_default();
+            let test_token = std::env::var("OXIDE_TEST_TOKEN").unwrap_or_default();
             std::env::set_var("OXIDE_HOST", test_host);
             std::env::set_var("OXIDE_TOKEN", test_token);
 
