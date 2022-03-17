@@ -14,10 +14,10 @@ pub struct CmdDisk {
     subcmd: SubCommand,
 }
 
-#[derive(Parser, Debug, Clone)]
 #[crud_gen {
     tag = "disks",
 }]
+#[derive(Parser, Debug, Clone)]
 enum SubCommand {
     Attach(CmdDiskAttach),
     Create(CmdDiskCreate),
