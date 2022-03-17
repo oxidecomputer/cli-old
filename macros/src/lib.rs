@@ -364,7 +364,7 @@ impl Operation {
             pub struct #struct_name {
                 #[doc = #struct_inner_name_doc]
                 #[clap(name = #singular_tag_str, required = true)]
-                #singular_tag_lc: String,
+                pub #singular_tag_lc: String,
 
                 #project_param
 
@@ -517,7 +517,7 @@ mod tests {
             pub struct CmdDiskDelete {
                 #[doc = "The disk to delete. Can be an ID or name."]
                 #[clap(name = "disk", required = true)]
-                disk: String,
+                pub disk: String,
 
                 #[doc = "The project to delete the disk from."]
                 #[clap(long, short, required = true)]
