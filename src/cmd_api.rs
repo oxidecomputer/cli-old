@@ -91,7 +91,7 @@ impl crate::cmd::Command for CmdApi {
         }
 
         // Parse the fields.
-        let params = self.parse_fields()?;
+        let params = self.parse_fields(ctx)?;
 
         // Set them as our body if they exist.
         let mut b = String::new();
@@ -118,9 +118,15 @@ impl crate::cmd::Command for CmdApi {
         // Parse the input file.
         if !self.input.is_empty() {
             // Read the input file.
+
             let mut buf = Vec::new();
-            let mut input_file = std::fs::File::open(&self.input)?;
-            input_file.read_to_end(&mut buf)?;
+            if self.input == "-" {
+                // Read from stdin.
+                ctx.io.stdin.read_to_end(&mut buf)?;
+            } else {
+                let mut input_file = std::fs::File::open(&self.input)?;
+                input_file.read_to_end(&mut buf)?;
+            }
 
             // Set this as our body.
             bytes = buf.clone();
@@ -227,7 +233,7 @@ impl CmdApi {
         Ok(headers)
     }
 
-    fn parse_fields(&self) -> Result<HashMap<String, serde_json::Value>> {
+    fn parse_fields(&self, ctx: &mut crate::context::Context) -> Result<HashMap<String, serde_json::Value>> {
         let mut params: HashMap<String, serde_json::Value> = HashMap::new();
 
         // Parse the raw fields.
@@ -275,7 +281,7 @@ impl CmdApi {
                     } else if value == "-" {
                         // Read from stdin.
                         let mut contents = String::new();
-                        std::io::stdin().read_to_string(&mut contents)?;
+                        ctx.io.stdin.read_to_string(&mut contents)?;
                         serde_json::Value::String(contents)
                     } else {
                         serde_json::Value::String(value.to_string())
