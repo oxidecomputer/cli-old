@@ -216,15 +216,16 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
     // Setup our logger. This is mainly for debug purposes.
     // And getting debug logs from other libraries we consume, like even Oxide.
     if ctx.debug {
-        /* let decorator = slog_term::TermDecorator::new().build();
+        let decorator = slog_term::TermDecorator::new().build();
         let drain = slog_term::FullFormat::new(decorator).build().fuse();
         let drain = slog_async::Async::new(drain).build().fuse();
 
         let logger = slog::Logger::root(drain, slog::o!());
 
-        let _scope_guard = slog_scope::set_global_logger(logger);
+        let scope_guard = slog_scope::set_global_logger(logger);
+        scope_guard.cancel_reset();
 
-        let _log_guard = slog_stdlog::init_with_level(log::Level::Debug).unwrap();*/
+        let _log_guard = slog_stdlog::init_with_level(log::Level::Debug).unwrap();
     }
 
     let result = match opts.subcmd {

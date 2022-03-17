@@ -317,9 +317,7 @@ impl crate::cmd::Command for CmdProjectList {
         let mut tw = tabwriter::TabWriter::new(vec![]);
         writeln!(tw, "NAME\tDESCRTIPTION\tUPDATED")?;
         for project in projects {
-            // TODO: There should be a way to do this without so many http requests.
-            let org = client.organizations().get(&project.organization_id).await?;
-            let full_name = format!("{}/{}", org.name, project.name);
+            let full_name = format!("{}/{}", self.organization, project.name);
 
             let last_updated =
                 chrono::Utc::now() - project.time_modified.unwrap_or_else(|| project.time_created.unwrap());

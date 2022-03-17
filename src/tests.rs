@@ -26,7 +26,7 @@ impl AsyncTestContext for MainContext {
     }
 
     async fn teardown(self) {
-        let oxide = oxide_api::Client::new(&self.test_token, format!("http://{}", &self.test_host));
+        /*let oxide = oxide_api::Client::new(&self.test_token, format!("http://{}", &self.test_host));
 
         // Get all the orgs.
         let orgs = oxide
@@ -69,7 +69,7 @@ impl AsyncTestContext for MainContext {
                     panic!("Failed to delete org {}: {}", org.name, e);
                 }
             };
-        }
+        }*/
     }
 }
 
@@ -287,6 +287,19 @@ maze-war  The Maze War game organization"#
             want_code: 0,
             ..Default::default()
         },
+        TestItem {
+            name: "list projects".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "project".to_string(),
+                "list".to_string(),
+                "maze-war".to_string(),
+            ],
+            want_out: "NAME  DESCRTIPTION  UPDATED thing\n".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
     ];
 
     let mut config = crate::config::new_blank_config().unwrap();
@@ -312,10 +325,11 @@ maze-war  The Maze War game organization"#
 
         assert!(
             stdout.contains(&t.want_out),
-            "test {} ->\nstdout: {}\nwant: {}",
+            "test {} ->\nstdout: {}\nwant: {}\n\nstderr: {}",
             t.name,
             stdout,
-            t.want_out
+            t.want_out,
+            stderr,
         );
 
         match result {
