@@ -6,6 +6,12 @@ on:
       - Cargo.lock
       - .github/workflows/make-cross.yml
       - Makefile
+  pull_request:
+    paths:
+      - '**.rs'
+      - Cargo.toml
+      - Cargo.lock
+      - .github/workflows/cargo-build.yml
 name: make cross
 jobs:
   cross:
