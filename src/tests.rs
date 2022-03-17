@@ -295,7 +295,7 @@ maze-war  The Maze War game organization"#
                 "list".to_string(),
                 "maze-war".to_string(),
             ],
-            want_out: r#"NAME      DESCRTIPTION                    UPDATED
+            want_out: r#"NAME                  DESCRTIPTION             UPDATED
 maze-war/development  The development project"#
                 .to_string(),
             want_err: "".to_string(),
