@@ -62,7 +62,10 @@ use slog::Drain;
 
 /// Work seamlessly with Oxide from the command line.
 ///
-/// Environment variables that can be used with oxide.
+/// Environment variables that can be used with oxide. Additionally to those
+/// listed below, some flags have a corresponding environment variable. For example,
+/// most of the time, the `--organization,-o` flag is mapped to the `OXIDE_ORG` environment
+/// variable.
 ///
 /// OXIDE_TOKEN: an authentication token for Oxide API requests. Setting this
 /// avoids being prompted to authenticate and takes precedence over previously
