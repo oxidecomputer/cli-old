@@ -70,24 +70,24 @@ impl crate::cmd::Command for CmdVpcCreate {
 
         let mut dns_name = self.dns_name.to_string();
 
-        if project_name.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("--project,-p required in non-interactive mode"));
+        if vpc_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("[vpc_name] required in non-interactive mode"));
         }
 
         if organization.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow!("--organization,-o required in non-interactive mode"));
         }
 
-        if vpc_name.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("[vpc_name] required in non-interactive mode"));
-        }
-
-        if dns_name.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("--dns-name required in non-interactive mode"));
+        if project_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--project,-p required in non-interactive mode"));
         }
 
         if description.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow!("--description,-D required in non-interactive mode"));
+        }
+
+        if dns_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--dns-name required in non-interactive mode"));
         }
 
         // If they didn't specify an organization, prompt for it.
@@ -249,7 +249,7 @@ impl crate::cmd::Command for CmdVpcDelete {
         // Delete the project.
         client
             .vpcs()
-            .delete(&self.vpc, &self.organization, &self.project)
+            .delete(&self.organization, &self.project, &self.vpc)
             .await?;
 
         let cs = ctx.io.color_scheme();
@@ -332,13 +332,24 @@ impl crate::cmd::Command for CmdVpcEdit {
             .await?;
 
         let cs = ctx.io.color_scheme();
-        writeln!(
-            ctx.io.out,
-            "{} Successfully edited VPC {} in {}",
-            cs.success_icon(),
-            name,
-            full_name
-        )?;
+        if let Some(n) = &self.new_name {
+            writeln!(
+                ctx.io.out,
+                "{} Successfully edited VPC {} -> {} in {}",
+                cs.success_icon(),
+                self.vpc,
+                n,
+                full_name
+            )?;
+        } else {
+            writeln!(
+                ctx.io.out,
+                "{} Successfully edited VPC {} in {}",
+                cs.success_icon(),
+                name,
+                full_name
+            )?;
+        }
 
         Ok(())
     }
@@ -515,5 +526,163 @@ impl crate::cmd::Command for CmdVpcView {
         writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use pretty_assertions::assert_eq;
+
+    use crate::cmd::Command;
+
+    pub struct TestItem {
+        name: String,
+        cmd: crate::cmd_vpc::SubCommand,
+        stdin: String,
+        want_out: String,
+        want_err: String,
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_cmd_vpc() {
+        let tests: Vec<TestItem> = vec![
+            TestItem {
+                name: "create no name".to_string(),
+                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
+                    vpc: "".to_string(),
+                    organization: "".to_string(),
+                    project: "".to_string(),
+                    description: "".to_string(),
+                    dns_name: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "[vpc_name] required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no organization".to_string(),
+                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
+                    vpc: "things".to_string(),
+                    organization: "".to_string(),
+                    project: "".to_string(),
+                    description: "".to_string(),
+                    dns_name: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--organization,-o required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no project".to_string(),
+                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
+                    vpc: "things".to_string(),
+                    organization: "foo".to_string(),
+                    project: "".to_string(),
+                    description: "".to_string(),
+                    dns_name: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--project,-p required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no description".to_string(),
+                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
+                    vpc: "things".to_string(),
+                    organization: "foo".to_string(),
+                    project: "bar".to_string(),
+                    description: "".to_string(),
+                    dns_name: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--description,-D required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no dns_name".to_string(),
+                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
+                    vpc: "things".to_string(),
+                    organization: "foo".to_string(),
+                    project: "bar".to_string(),
+                    description: "blah blah".to_string(),
+                    dns_name: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--dns-name required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "delete no --confirm non-interactive".to_string(),
+                cmd: crate::cmd_vpc::SubCommand::Delete(crate::cmd_vpc::CmdVpcDelete {
+                    vpc: "things".to_string(),
+                    organization: "".to_string(),
+                    project: "".to_string(),
+                    confirm: false,
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--confirm required when not running interactively".to_string(),
+            },
+            TestItem {
+                name: "list zero limit".to_string(),
+                cmd: crate::cmd_vpc::SubCommand::List(crate::cmd_vpc::CmdVpcList {
+                    limit: 0,
+                    organization: "".to_string(),
+                    project: "".to_string(),
+                    paginate: false,
+                    json: false,
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--limit must be greater than 0".to_string(),
+            },
+        ];
+
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        for t in tests {
+            let (mut io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
+            if !t.stdin.is_empty() {
+                io.stdin = Box::new(std::io::Cursor::new(t.stdin));
+            }
+            // We need to also turn off the fancy terminal colors.
+            // This ensures it also works in GitHub actions/any CI.
+            io.set_color_enabled(false);
+            io.set_never_prompt(true);
+            let mut ctx = crate::context::Context {
+                config: &mut c,
+                io,
+                debug: false,
+            };
+
+            let cmd_vpc = crate::cmd_vpc::CmdVpc { subcmd: t.cmd };
+            match cmd_vpc.run(&mut ctx).await {
+                Ok(()) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert!(stderr.is_empty(), "test {}: {}", t.name, stderr);
+                    if !stdout.contains(&t.want_out) {
+                        assert_eq!(stdout, t.want_out, "test {}: stdout mismatch", t.name);
+                    }
+                }
+                Err(err) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert_eq!(stdout, t.want_out, "test {}", t.name);
+                    if !err.to_string().contains(&t.want_err) {
+                        assert_eq!(err.to_string(), t.want_err, "test {}: err mismatch", t.name);
+                    }
+                    assert!(stderr.is_empty(), "test {}: {}", t.name, stderr);
+                }
+            }
+        }
     }
 }
