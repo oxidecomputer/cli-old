@@ -1,0 +1,23 @@
+[package]
+name = "cli-macros"
+description = "Macros for our CLI generation"
+version = "0.1.0"
+authors = ["Jess Frazelle <jess@oxide.computer>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+anyhow = "1"
+Inflector = "^0.11.4"
+openapiv3 = "1"
+proc-macro2 = "1"
+quote = "1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
+serde_tokenstream = "0.1.0"
+syn = { version = "1.0", features = [ "derive", "parsing", "printing" ] }
+
+[dev-dependencies]
+pretty_assertions = "1"

@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use cli_macros::crud_gen;
 
 /// Create, list, edit, view, and delete disks.
 ///
@@ -14,6 +15,9 @@ pub struct CmdDisk {
 }
 
 #[derive(Parser, Debug, Clone)]
+#[crud_gen {
+    tag = "disks",
+}]
 enum SubCommand {
     Attach(CmdDiskAttach),
     Create(CmdDiskCreate),
