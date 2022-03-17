@@ -97,8 +97,7 @@ start-cockroachdb: ## Start CockroachDB.
 		--restart=always \
 		--name=cockroachdb \
 		--hostname=cockroachdb \
-		-p 0.0.0.0:26257:26257 \
-		-p 0.0.0.0:1234:8080  \
+		--net host \
 		cockroachdb/cockroach start-single-node \
 			--insecure
 	@echo "Waiting for CockroachDB to start..."
@@ -122,8 +121,7 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--restart=always \
 		--name=nexus \
 		--hostname=nexus \
-		-p 0.0.0.0:8888:8888 \
-		-p 0.0.0.0:12221:12221 \
+		--net host \
 		-v "$(CURDIR)/tests/omicron.toml:/etc/omicron/config.toml:ro"  \
 		--entrypoint=nexus \
 		ghcr.io/oxidecomputer/omicron:main \
@@ -133,7 +131,7 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--restart=always \
 		--name=sled-agent \
 		--hostname=sled-agent \
-		-p 0.0.0.0:12345:12345 \
+		--net host \
 		--entrypoint=sled-agent-sim \
 		ghcr.io/oxidecomputer/omicron:main \
 			B100B75C-D2EF-415F-A07E-D3915470913D 0.0.0.0:12345 0.0.0.0:12221
