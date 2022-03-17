@@ -6,7 +6,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use serde::Deserialize;
 use serde_tokenstream::from_tokenstream;
-use syn::{Field, ItemEnum};
+use syn::ItemEnum;
 
 /// The parameters passed to our macro.
 #[derive(Deserialize, Debug)]
@@ -45,6 +45,7 @@ fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
                 #delete_cmd
             };
 
+            // TODO: How can we alphabetize the variants? Does it even matter in the cli output.
             variants.push(delete_enum_item);
         }
     }
