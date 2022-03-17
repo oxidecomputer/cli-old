@@ -167,8 +167,8 @@ impl Operation {
                     writeln!(
                         ctx.io.out,
                         "{} Deleted {} {} from {}",
-                        #singular_tag_str,
                         cs.success_icon_with_color(ansi_term::Color::Red),
+                        #singular_tag_str,
                         self.#singular_tag_lc,
                         full_name
                     )?;
@@ -314,8 +314,8 @@ mod tests {
                     writeln!(
                         ctx.io.out,
                         "{} Deleted {} {} from {}",
-                        "disk",
                         cs.success_icon_with_color(ansi_term::Color::Red),
+                        "disk",
                         self.disk,
                         full_name
                     )?;
