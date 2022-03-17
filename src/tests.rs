@@ -500,15 +500,19 @@ maze-war  The Maze War game organization"#
             ..Default::default()
         },
         TestItem {
-            name: "list projects".to_string(),
+            name: "list projects --json --paginate".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "project".to_string(),
                 "list".to_string(),
                 "maze-war".to_string(),
+                "--json".to_string(),
+                "--paginate".to_string(),
             ],
-            want_out: r#"NAME                  DESCRTIPTION             UPDATED
-maze-war/development  The development project"#
+            want_out: r#"[
+  {
+    "description": "The development project",
+    "id": ""#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -649,8 +653,6 @@ organization:"#
                 "1".to_string(),
                 "--memory".to_string(),
                 "1024".to_string(),
-                "--hostname".to_string(),
-                "my-db".to_string(),
                 "--description".to_string(),
                 "My database".to_string(),
             ],
@@ -727,7 +729,7 @@ state:"#
             ..Default::default()
         },
         TestItem {
-            name: "list instances".to_string(),
+            name: "list instances --paginate --json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "instance".to_string(),
@@ -736,9 +738,14 @@ state:"#
                 "maze-war".to_string(),
                 "--project".to_string(),
                 "development".to_string(),
+                "--json".to_string(),
+                "--paginate".to_string(),
             ],
-            want_out: r#"NAME    DESCRTIPTION    STATE     UPDATED
-my-app  My application  starting"#
+            want_out: r#"[
+  {
+    "description": "My application",
+    "hostname": "my-app",
+    "id": ""#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -878,7 +885,7 @@ my-app  My application  starting"#
             ..Default::default()
         },
         TestItem {
-            name: "list disks".to_string(),
+            name: "list disks --paginate --json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "disk".to_string(),
@@ -887,6 +894,8 @@ my-app  My application  starting"#
                 "maze-war".to_string(),
                 "--project".to_string(),
                 "development".to_string(),
+                "--json".to_string(),
+                "--paginate".to_string(),
             ],
             want_out: r#"NAME         DESCRTIPTION        STATE     DEVICE PATH       UPDATED
 new-disk     My new disk         detached  /mnt/new-disk"#
@@ -1054,7 +1063,7 @@ default  Default VPC   default"#
             ..Default::default()
         },
         TestItem {
-            name: "list vpcs".to_string(),
+            name: "list vpcs --paginate --json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "vpc".to_string(),
@@ -1063,6 +1072,8 @@ default  Default VPC   default"#
                 "maze-war".to_string(),
                 "--project".to_string(),
                 "development".to_string(),
+                "--json".to_string(),
+                "--paginate".to_string(),
             ],
             want_out: "new-network  My new network  new-network".to_string(),
             want_err: "".to_string(),

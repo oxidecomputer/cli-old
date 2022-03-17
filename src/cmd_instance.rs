@@ -46,6 +46,7 @@ impl crate::cmd::Command for CmdInstance {
 /// Create a new instance.
 ///
 /// To create an instance interactively, use `oxide instance create` with no arguments.
+/// The instance name will be used as the hostname if you do not explicitly specify one.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdInstanceCreate {
@@ -92,16 +93,20 @@ impl crate::cmd::Command for CmdInstanceCreate {
         let mut memory = self.memory;
         let mut hostname = self.hostname.to_string();
 
-        if project_name.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("--project,-p required in non-interactive mode"));
+        if instance_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("[instance_name] required in non-interactive mode"));
         }
 
         if organization.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow!("--organization,-o required in non-interactive mode"));
         }
 
-        if instance_name.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("[instance_name] required in non-interactive mode"));
+        if project_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--project,-p required in non-interactive mode"));
+        }
+
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--description,-D required in non-interactive mode"));
         }
 
         if ncpus == 0 && !ctx.io.can_prompt() {
@@ -110,14 +115,6 @@ impl crate::cmd::Command for CmdInstanceCreate {
 
         if memory == 0 && !ctx.io.can_prompt() {
             return Err(anyhow!("--memory,m required in non-interactive mode"));
-        }
-
-        if hostname.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("--hostname,-H required in non-interactive mode"));
-        }
-
-        if description.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("--description,-D required in non-interactive mode"));
         }
 
         // If they didn't specify an organization, prompt for it.
@@ -223,6 +220,11 @@ impl crate::cmd::Command for CmdInstanceCreate {
         }
 
         let full_name = format!("{}/{}", organization, project_name);
+
+        if hostname.is_empty() {
+            // Set it to the instance name.
+            hostname = instance_name.to_string();
+        }
 
         // Create the disk.
         client
@@ -775,5 +777,189 @@ impl crate::cmd::Command for CmdInstanceView {
         writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use pretty_assertions::assert_eq;
+
+    use crate::cmd::Command;
+
+    pub struct TestItem {
+        name: String,
+        cmd: crate::cmd_instance::SubCommand,
+        stdin: String,
+        want_out: String,
+        want_err: String,
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_cmd_instance() {
+        let tests: Vec<TestItem> = vec![
+            TestItem {
+                name: "create no name".to_string(),
+                cmd: crate::cmd_instance::SubCommand::Create(crate::cmd_instance::CmdInstanceCreate {
+                    instance: "".to_string(),
+                    organization: "".to_string(),
+                    project: "".to_string(),
+                    description: "".to_string(),
+                    memory: 0,
+                    cpus: 0,
+                    hostname: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "[instance_name] required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no organization".to_string(),
+                cmd: crate::cmd_instance::SubCommand::Create(crate::cmd_instance::CmdInstanceCreate {
+                    instance: "things".to_string(),
+                    organization: "".to_string(),
+                    project: "".to_string(),
+                    description: "".to_string(),
+                    memory: 0,
+                    cpus: 0,
+                    hostname: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--organization,-o required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no project".to_string(),
+                cmd: crate::cmd_instance::SubCommand::Create(crate::cmd_instance::CmdInstanceCreate {
+                    instance: "things".to_string(),
+                    organization: "foo".to_string(),
+                    project: "".to_string(),
+                    description: "".to_string(),
+                    memory: 0,
+                    cpus: 0,
+                    hostname: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--project,-p required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no description".to_string(),
+                cmd: crate::cmd_instance::SubCommand::Create(crate::cmd_instance::CmdInstanceCreate {
+                    instance: "things".to_string(),
+                    organization: "foo".to_string(),
+                    project: "bar".to_string(),
+                    description: "".to_string(),
+                    memory: 0,
+                    cpus: 0,
+                    hostname: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--description,-D required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no cpus".to_string(),
+                cmd: crate::cmd_instance::SubCommand::Create(crate::cmd_instance::CmdInstanceCreate {
+                    instance: "things".to_string(),
+                    organization: "foo".to_string(),
+                    project: "bar".to_string(),
+                    description: "blah blah".to_string(),
+                    memory: 0,
+                    cpus: 0,
+                    hostname: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--cpus,-c required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no memory".to_string(),
+                cmd: crate::cmd_instance::SubCommand::Create(crate::cmd_instance::CmdInstanceCreate {
+                    instance: "things".to_string(),
+                    organization: "foo".to_string(),
+                    project: "bar".to_string(),
+                    description: "blah blah".to_string(),
+                    memory: 0,
+                    cpus: 2,
+                    hostname: "".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--memory,m required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "delete no --confirm non-interactive".to_string(),
+                cmd: crate::cmd_instance::SubCommand::Delete(crate::cmd_instance::CmdInstanceDelete {
+                    instance: "things".to_string(),
+                    organization: "".to_string(),
+                    project: "".to_string(),
+                    confirm: false,
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--confirm required when not running interactively".to_string(),
+            },
+            TestItem {
+                name: "list zero limit".to_string(),
+                cmd: crate::cmd_instance::SubCommand::List(crate::cmd_instance::CmdInstanceList {
+                    limit: 0,
+                    organization: "".to_string(),
+                    project: "".to_string(),
+                    paginate: false,
+                    json: false,
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--limit must be greater than 0".to_string(),
+            },
+        ];
+
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        for t in tests {
+            let (mut io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
+            if !t.stdin.is_empty() {
+                io.stdin = Box::new(std::io::Cursor::new(t.stdin));
+            }
+            // We need to also turn off the fancy terminal colors.
+            // This ensures it also works in GitHub actions/any CI.
+            io.set_color_enabled(false);
+            io.set_never_prompt(true);
+            let mut ctx = crate::context::Context {
+                config: &mut c,
+                io,
+                debug: false,
+            };
+
+            let cmd_instance = crate::cmd_instance::CmdInstance { subcmd: t.cmd };
+            match cmd_instance.run(&mut ctx).await {
+                Ok(()) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert!(stderr.is_empty(), "test {}: {}", t.name, stderr);
+                    if !stdout.contains(&t.want_out) {
+                        assert_eq!(stdout, t.want_out, "test {}: stdout mismatch", t.name);
+                    }
+                }
+                Err(err) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert_eq!(stdout, t.want_out, "test {}", t.name);
+                    if !err.to_string().contains(&t.want_err) {
+                        assert_eq!(err.to_string(), t.want_err, "test {}: err mismatch", t.name);
+                    }
+                    assert!(stderr.is_empty(), "test {}: {}", t.name, stderr);
+                }
+            }
+        }
     }
 }
