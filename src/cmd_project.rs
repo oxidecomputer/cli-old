@@ -440,7 +440,6 @@ impl crate::cmd::Command for CmdProjectView {
 #[cfg(test)]
 mod test {
     use pretty_assertions::assert_eq;
-    use test_context::{test_context, AsyncTestContext};
 
     use crate::cmd::Command;
 
@@ -452,45 +451,6 @@ mod test {
         want_err: String,
     }
 
-    struct TContext {
-        orig_oxide_host: Result<String, std::env::VarError>,
-        orig_oxide_token: Result<String, std::env::VarError>,
-    }
-
-    #[async_trait::async_trait]
-    impl AsyncTestContext for TContext {
-        async fn setup() -> TContext {
-            let orig = TContext {
-                orig_oxide_host: std::env::var("OXIDE_HOST"),
-                orig_oxide_token: std::env::var("OXIDE_TOKEN"),
-            };
-
-            // Set our test values.
-            let test_host = std::env::var("OXIDE_TEST_HOST").unwrap_or_default().to_string();
-            let test_token = std::env::var("OXIDE_TEST_TOKEN").unwrap_or_default().to_string();
-            std::env::set_var("OXIDE_HOST", test_host);
-            std::env::set_var("OXIDE_TOKEN", test_token);
-
-            orig
-        }
-
-        async fn teardown(self) {
-            // Put the original env var back.
-            if let Ok(ref val) = self.orig_oxide_host {
-                std::env::set_var("OXIDE_HOST", val);
-            } else {
-                std::env::remove_var("OXIDE_HOST");
-            }
-
-            if let Ok(ref val) = self.orig_oxide_token {
-                std::env::set_var("OXIDE_TOKEN", val);
-            } else {
-                std::env::remove_var("OXIDE_TOKEN");
-            }
-        }
-    }
-
-    #[test_context(TContext)]
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_cmd_project() {
         let tests: Vec<TestItem> = vec![
