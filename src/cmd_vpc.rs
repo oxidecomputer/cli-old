@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use cli_macros::crud_gen;
 
 /// Create, list, edit, view, and delete VPCs.
 #[derive(Parser, Debug, Clone)]
@@ -11,10 +12,12 @@ pub struct CmdVpc {
     subcmd: SubCommand,
 }
 
+#[crud_gen {
+    tag = "vpcs",
+}]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     Create(CmdVpcCreate),
-    Delete(CmdVpcDelete),
     Edit(CmdVpcEdit),
     List(CmdVpcList),
     View(CmdVpcView),
@@ -190,74 +193,6 @@ impl crate::cmd::Command for CmdVpcCreate {
             "{} Successfully created VPC {} in {}",
             cs.success_icon(),
             vpc_name,
-            full_name
-        )?;
-
-        Ok(())
-    }
-}
-
-/// Delete a VPC.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdVpcDelete {
-    /// The VPC to delete. Can be an ID or name.
-    #[clap(name = "vpc", required = true)]
-    vpc: String,
-
-    /// The project to delete the VPC from.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization that holds the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Confirm deletion without prompting.
-    #[clap(long)]
-    pub confirm: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdVpcDelete {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if !ctx.io.can_prompt() && !self.confirm {
-            return Err(anyhow!("--confirm required when not running interactively"));
-        }
-
-        let client = ctx.api_client("")?;
-
-        let full_name = format!("{}/{}", self.organization, self.project);
-
-        // Confirm deletion.
-        if !self.confirm {
-            if let Err(err) = dialoguer::Input::<String>::new()
-                .with_prompt(format!("Type {} to confirm deletion:", self.vpc))
-                .validate_with(|input: &String| -> Result<(), &str> {
-                    if input.trim() == full_name {
-                        Ok(())
-                    } else {
-                        Err("mismatched confirmation")
-                    }
-                })
-                .interact_text()
-            {
-                return Err(anyhow!("prompt failed: {}", err));
-            }
-        }
-
-        // Delete the project.
-        client
-            .vpcs()
-            .delete(&self.organization, &self.project, &self.vpc)
-            .await?;
-
-        let cs = ctx.io.color_scheme();
-        writeln!(
-            ctx.io.out,
-            "{} Deleted VPC {} from {}",
-            cs.success_icon_with_color(ansi_term::Color::Red),
-            self.vpc,
             full_name
         )?;
 

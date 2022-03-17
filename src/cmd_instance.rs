@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use cli_macros::crud_gen;
 
 /// Create, list, edit, view, and delete instances.
 ///
@@ -13,10 +14,12 @@ pub struct CmdInstance {
     subcmd: SubCommand,
 }
 
+#[crud_gen {
+    tag = "instances",
+}]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     Create(CmdInstanceCreate),
-    Delete(CmdInstanceDelete),
     Disks(CmdInstanceDisks),
     Edit(CmdInstanceEdit),
     List(CmdInstanceList),
@@ -249,74 +252,6 @@ impl crate::cmd::Command for CmdInstanceCreate {
             "{} Successfully created instance {} in {}",
             cs.success_icon(),
             instance_name,
-            full_name
-        )?;
-
-        Ok(())
-    }
-}
-
-/// Delete an instance.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdInstanceDelete {
-    /// The instance to delete. Can be an ID or name.
-    #[clap(name = "instance", required = true)]
-    instance: String,
-
-    /// The project to delete the instance from.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization that holds the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Confirm deletion without prompting.
-    #[clap(long)]
-    pub confirm: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdInstanceDelete {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if !ctx.io.can_prompt() && !self.confirm {
-            return Err(anyhow!("--confirm required when not running interactively"));
-        }
-
-        let client = ctx.api_client("")?;
-
-        let full_name = format!("{}/{}", self.organization, self.project);
-
-        // Confirm deletion.
-        if !self.confirm {
-            if let Err(err) = dialoguer::Input::<String>::new()
-                .with_prompt(format!("Type {} to confirm deletion:", self.instance))
-                .validate_with(|input: &String| -> Result<(), &str> {
-                    if input.trim() == full_name {
-                        Ok(())
-                    } else {
-                        Err("mismatched confirmation")
-                    }
-                })
-                .interact_text()
-            {
-                return Err(anyhow!("prompt failed: {}", err));
-            }
-        }
-
-        // Delete the instance.
-        client
-            .instances()
-            .delete(&self.instance, &self.organization, &self.project)
-            .await?;
-
-        let cs = ctx.io.color_scheme();
-        writeln!(
-            ctx.io.out,
-            "{} Deleted instance {} from {}",
-            cs.success_icon_with_color(ansi_term::Color::Red),
-            self.instance,
             full_name
         )?;
 
