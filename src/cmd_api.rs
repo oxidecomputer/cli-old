@@ -315,3 +315,27 @@ fn add_query_string(endpoint: &str, query_string: &str) -> String {
         format!("{}?{}", endpoint, query_string)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn test_add_query_string() {
+        let mut endpoint = "https://api.github.com/users/octocat/repos";
+        let mut query_string = "page=2&per_page=100";
+
+        let mut result = add_query_string(&endpoint, &query_string);
+        let mut expected = "https://api.github.com/users/octocat/repos?page=2&per_page=100";
+        assert_eq!(result, expected);
+
+        endpoint = "https://api.github.com/users/octocat/repos?page=2&per_page=100";
+        query_string = "foo=bar";
+
+        result = add_query_string(&endpoint, &query_string);
+        expected = "https://api.github.com/users/octocat/repos?page=2&per_page=100&foo=bar";
+        assert_eq!(result, expected);
+    }
+}

@@ -591,6 +591,28 @@ snapshot:"#
             ..Default::default()
         },
         TestItem {
+            name: "view a disk --json".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "disk".to_string(),
+                "view".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "new-disk".to_string(),
+                "--json".to_string(),
+            ],
+            want_out: r#"{
+  "description": "My new disk",
+  "device_path": "/mnt/new-disk",
+  "id": ""#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "detach a disk from an instance".to_string(),
             args: vec![
                 "oxide".to_string(),
