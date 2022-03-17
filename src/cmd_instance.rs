@@ -351,7 +351,7 @@ impl crate::cmd::Command for CmdInstanceDisks {
         // TODO: add more columns, maybe make customizable.
         // TODO: for state the api lib should implement display
         let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tSTATE\tDEVICE PATH\tLAST UPDATED")?;
+        writeln!(tw, "NAME\tDESCRTIPTION\tSTATE\tDEVICE PATH\tUPDATED")?;
         for disk in disks {
             let last_updated = chrono::Utc::now() - disk.time_modified.unwrap_or_else(|| disk.time_created.unwrap());
             writeln!(
