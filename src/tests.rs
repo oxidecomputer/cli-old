@@ -261,6 +261,18 @@ date:"#
             ..Default::default()
         },
         TestItem {
+            name: "api does not exist".to_string(),
+            args: vec!["oxide".to_string(), "api".to_string(), "foo/bar".to_string()],
+            want_out: r#"HTTP/1.1 200 OK
+content-length:  "45"
+content-type:    "application/json"
+date:"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "try to paginate over a post".to_string(),
             args: vec![
                 "oxide".to_string(),
