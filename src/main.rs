@@ -110,21 +110,31 @@ struct Opts {
 
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
+    #[clap(alias = "aliases")]
     Alias(cmd_alias::CmdAlias),
     Api(cmd_api::CmdApi),
     Auth(cmd_auth::CmdAuth),
     Completion(cmd_completion::CmdCompletion),
     Config(cmd_config::CmdConfig),
+    #[clap(alias = "disks")]
     Disk(cmd_disk::CmdDisk),
     Generate(cmd_generate::CmdGenerate),
+    #[clap(alias = "instances")]
     Instance(cmd_instance::CmdInstance),
+    #[clap(alias = "orgs")]
     Org(cmd_org::CmdOrganization),
+    #[clap(alias = "projects")]
     Project(cmd_project::CmdProject),
+    #[clap(alias = "routes")]
     Route(cmd_route::CmdRoute),
+    #[clap(alias = "routers")]
     Router(cmd_router::CmdRouter),
+    #[clap(alias = "ssh-keys")]
     SshKey(cmd_ssh_key::CmdSSHKey),
+    #[clap(alias = "subnets")]
     Subnet(cmd_subnet::CmdSubnet),
     Version(cmd_version::CmdVersion),
+    #[clap(alias = "vpcs")]
     Vpc(cmd_vpc::CmdVpc),
 }
 
