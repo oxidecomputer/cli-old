@@ -105,11 +105,15 @@ impl Operation {
     /// Generate the delete command.
     fn generate_delete_command(&self, tag: &str) -> Result<(TokenStream, syn::Variant)> {
         let tag_ident = format_ident!("{}", tag);
-        let singular_tag_str = singular(tag);
-        let singular_tag_lc = format_ident!("{}", singular_tag_str);
-        let struct_name = format_ident!("Cmd{}Delete", to_title_case(&singular_tag_str));
+        let singular_tag_str = if tag == "vpcs" {
+            singular(tag).to_uppercase()
+        } else {
+            singular(tag)
+        };
+        let singular_tag_lc = format_ident!("{}", singular(tag));
+        let struct_name = format_ident!("Cmd{}Delete", to_title_case(&singular(tag)));
 
-        let struct_doc = format!("Delete a {}.", singular(tag));
+        let struct_doc = format!("Delete a {}.", singular_tag_str);
         let struct_inner_name_doc = format!("The {} to delete. Can be an ID or name.", singular_tag_str);
         let struct_inner_project_doc = format!("The project to delete the {} from.", singular_tag_str);
 
