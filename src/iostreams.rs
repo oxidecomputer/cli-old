@@ -18,7 +18,6 @@ pub struct IoStreams {
     terminal_theme: String,
 
     progress_indicator_enabled: bool,
-    progress_indicator: Option<terminal_spinners::SpinnerHandle>,
 
     stdin_tty_override: bool,
     stdin_is_tty: bool,
@@ -221,46 +220,23 @@ impl IoStreams {
     }
 
     #[allow(dead_code)]
-    pub fn start_process_indicator(&mut self) {
+    /// This returns a handle to a spinner. To stop the spinner, call `.stop()` on it.
+    pub fn start_process_indicator(&mut self) -> Option<terminal_spinners::SpinnerHandle> {
         self.start_process_indicator_with_label("")
     }
 
-    // TODO: do we need a mutex here?
     #[allow(dead_code)]
-    pub fn start_process_indicator_with_label(&mut self, label: &str) {
+    /// This returns a handle to a spinner. To stop the spinner, call `.stop()` on it.
+    pub fn start_process_indicator_with_label(&mut self, label: &str) -> Option<terminal_spinners::SpinnerHandle> {
         if !self.progress_indicator_enabled {
-            return;
+            return None;
         }
 
-        /*if let Some(ref mut progress_indicator) = self.progress_indicator {
-            if !label.is_empty() {
-                progress_indicator.text(label);
-            } else {
-                progress_indicator.text("");
-            }
+        let pi = terminal_spinners::SpinnerBuilder::new()
+            .spinner(&terminal_spinners::DOTS11)
+            .text(label.to_string());
 
-            return;
-        }*/
-
-        let mut pi = terminal_spinners::SpinnerBuilder::new().spinner(&terminal_spinners::DOTS11);
-        if !label.is_empty() {
-            pi = pi.prefix(format!("{} ", label));
-        }
-
-        self.progress_indicator = Some(pi.start());
-    }
-
-    // TODO: do we need a mutex here?
-    #[allow(dead_code)]
-    pub fn stop_progress_indicator(&mut self) {
-        if self.progress_indicator.is_none() {
-            return;
-        }
-
-        let _pi = self.progress_indicator.as_ref().unwrap();
-        // TODO: fix this.
-        //pi.done();
-        self.progress_indicator = None;
+        Some(pi.start())
     }
 
     #[allow(dead_code)]
@@ -347,7 +323,6 @@ impl IoStreams {
             terminal_theme: "".to_string(),
 
             progress_indicator_enabled: false,
-            progress_indicator: None,
 
             stdin_tty_override: false,
             stdin_is_tty: atty::is(atty::Stream::Stdin),
