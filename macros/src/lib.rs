@@ -6,6 +6,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use serde::Deserialize;
 use serde_tokenstream::from_tokenstream;
+use syn::{Field, ItemEnum};
 
 /// The parameters passed to our macro.
 #[derive(Deserialize, Debug)]
@@ -29,23 +30,39 @@ fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let ops = get_operations_with_tag(&api, &params.tag)?;
 
     let mut commands = quote!();
+    let mut new_subcommands = quote!();
 
     // Let's iterate over the paths and generate the code.
     for op in ops {
         // Let's generate the delete command if it exists.
         if op.is_root_level_operation(&params.tag) && op.method == "DELETE" {
-            let delete_cmd = op.generate_delete_command(&params.tag)?;
+            let (delete_cmd, delete_enum_item) = op.generate_delete_command(&params.tag)?;
 
             commands = quote! {
                 #commands
 
                 #delete_cmd
             };
+
+            new_subcommands = quote! {
+                #new_subcommands
+                #delete_enum_item
+            };
         }
     }
 
+    let og_enum: ItemEnum = syn::parse2(item.clone()).unwrap();
+    let variants = og_enum.variants.clone();
+    /*let mut fields: Vec<&Field> = Default::default();
+    for field in og_enum.variants.iter() {
+        fields.push(field);
+    }*/
+
     let code = quote!(
-        #item
+        enum SubCommand {
+            #variants
+            #new_subcommands
+        }
 
         #commands
     );
@@ -92,7 +109,7 @@ impl Operation {
     }
 
     /// Generate the delete command.
-    fn generate_delete_command(&self, tag: &str) -> Result<TokenStream> {
+    fn generate_delete_command(&self, tag: &str) -> Result<(TokenStream, TokenStream)> {
         let tag_ident = format_ident!("{}", tag);
         let singular_tag_str = singular(tag);
         let singular_tag_lc = format_ident!("{}", singular_tag_str);
@@ -173,7 +190,11 @@ impl Operation {
             }
         );
 
-        Ok(cmd)
+        let enum_item = quote!(
+            Delete(#struct_name),
+        );
+
+        Ok((cmd, enum_item))
     }
 }
 
@@ -242,11 +263,26 @@ mod tests {
                 tag = "disks",
             },
             quote! {
-                enum SubCommand {}
+                enum SubCommand {
+                    Attach(CmdDiskAttach),
+                    Create(CmdDiskCreate),
+                    Detach(CmdDiskDetach),
+                    Edit(CmdDiskEdit),
+                    List(CmdDiskList),
+                    View(CmdDiskView),
+                }
             },
         );
         let expected = quote! {
-            enum SubCommand {}
+            enum SubCommand {
+                Attach(CmdDiskAttach),
+                Create(CmdDiskCreate),
+                Detach(CmdDiskDetach),
+                Edit(CmdDiskEdit),
+                List(CmdDiskList),
+                View(CmdDiskView),
+                Delete(CmdDiskDelete),
+            }
 
             #[doc = "Delete a disk."]
             #[derive(clap::Parser, Debug, Clone)]
