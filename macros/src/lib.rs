@@ -1,5 +1,3 @@
-
-
 extern crate proc_macro;
 
 use anyhow::Result;
@@ -8,7 +6,6 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use serde::Deserialize;
 use serde_tokenstream::from_tokenstream;
-
 
 /// The parameters passed to our macro.
 #[derive(Deserialize, Debug)]
@@ -225,8 +222,8 @@ fn get_operations_with_tag(api: &openapiv3::OpenAPI, tag: &str) -> Result<Vec<Op
 
 /// Return the singular version of a string (if it plural).
 fn singular(s: &str) -> String {
-    if s.ends_with('s') {
-        s[..s.len() - 1].to_string()
+    if let Some(b) = s.strip_suffix('s') {
+        b.to_string()
     } else {
         s.to_string()
     }
