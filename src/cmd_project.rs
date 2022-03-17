@@ -250,12 +250,23 @@ impl crate::cmd::Command for CmdProjectEdit {
         client.projects().put(&self.organization, &self.project, &body).await?;
 
         let cs = ctx.io.color_scheme();
-        writeln!(
-            ctx.io.out,
-            "{} Successfully edited project {}",
-            cs.success_icon(),
-            full_name
-        )?;
+        if self.new_name.is_some() {
+            writeln!(
+                ctx.io.out,
+                "{} Successfully edited project {}/{} -> {}",
+                cs.success_icon(),
+                self.organization,
+                self.project,
+                full_name
+            )?;
+        } else {
+            writeln!(
+                ctx.io.out,
+                "{} Successfully edited project {}",
+                cs.success_icon(),
+                full_name
+            )?;
+        }
 
         Ok(())
     }

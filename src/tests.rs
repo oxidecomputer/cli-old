@@ -483,6 +483,23 @@ maze-war  The Maze War game organization"#
             ..Default::default()
         },
         TestItem {
+            name: "create another project".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "project".to_string(),
+                "create".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "production".to_string(),
+                "-D".to_string(),
+                "The production project".to_string(),
+            ],
+            want_out: "✔ Successfully created project maze-war/production".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "list projects".to_string(),
             args: vec![
                 "oxide".to_string(),
@@ -493,6 +510,110 @@ maze-war  The Maze War game organization"#
             want_out: r#"NAME                  DESCRTIPTION             UPDATED
 maze-war/development  The development project"#
                 .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "view a project".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "project".to_string(),
+                "view".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "development".to_string(),
+            ],
+            want_out: r#"name:          development
+description:   The development project
+organization:"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "edit project empty".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "project".to_string(),
+                "edit".to_string(),
+                "production".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+            ],
+            want_out: "".to_string(),
+            want_err: "nothing to edit".to_string(),
+            want_code: 1,
+            ..Default::default()
+        },
+        TestItem {
+            name: "edit a project".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "project".to_string(),
+                "edit".to_string(),
+                "production".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "-D".to_string(),
+                "The real deal prod env".to_string(),
+                "--name".to_string(),
+                "prod-for-reals".to_string(),
+            ],
+            want_out: r#"✔ Successfully edited project maze-war/production -> maze-war/prod-for-reals"#.to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "view a project --json".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "project".to_string(),
+                "view".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "prod-for-reals".to_string(),
+                "--json".to_string(),
+            ],
+            want_out: r#"{
+  "description": "The real deal prod env",
+  "id": ""#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "edit a project".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "project".to_string(),
+                "edit".to_string(),
+                "prod-for-reals".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "-D".to_string(),
+                "The realest of deals prod env".to_string(),
+            ],
+            want_out: r#"✔ Successfully edited project maze-war/prod-for-reals"#.to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "delete a project".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "project".to_string(),
+                "delete".to_string(),
+                "prod-for-reals".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--confirm".to_string(),
+            ],
+            want_out: "✔ Deleted project maze-war/prod-for-reals".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
