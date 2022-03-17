@@ -21,7 +21,6 @@ pub struct CmdDisk {
 enum SubCommand {
     Attach(CmdDiskAttach),
     Create(CmdDiskCreate),
-    Delete(CmdDiskDelete),
     Detach(CmdDiskDetach),
     Edit(CmdDiskEdit),
     List(CmdDiskList),
