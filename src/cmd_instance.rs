@@ -92,10 +92,32 @@ impl crate::cmd::Command for CmdInstanceCreate {
         let mut memory = self.memory;
         let mut hostname = self.hostname.to_string();
 
-        if (project_name.is_empty() || organization.is_empty() || instance_name.is_empty() || ncpus == 0 || memory == 0)
-            && !ctx.io.can_prompt()
-        {
-            return Err(anyhow!("at least one argument required in non-interactive mode"));
+        if project_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--project,-p required in non-interactive mode"));
+        }
+
+        if organization.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--organization,-o required in non-interactive mode"));
+        }
+
+        if instance_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("[instance_name] required in non-interactive mode"));
+        }
+
+        if ncpus == 0 && !ctx.io.can_prompt() {
+            return Err(anyhow!("--cpus,-c required in non-interactive mode"));
+        }
+
+        if memory == 0 && !ctx.io.can_prompt() {
+            return Err(anyhow!("--memory,m required in non-interactive mode"));
+        }
+
+        if hostname.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--hostname,-H required in non-interactive mode"));
+        }
+
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--description,-D required in non-interactive mode"));
         }
 
         // If they didn't specify an organization, prompt for it.

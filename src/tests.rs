@@ -318,6 +318,49 @@ maze-war/development  The development project"#
             want_code: 0,
             ..Default::default()
         },
+        TestItem {
+            name: "create instance".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "create".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "my-db".to_string(),
+                "--cpus".to_string(),
+                "1".to_string(),
+                "--memory".to_string(),
+                "1024".to_string(),
+                "--hostname".to_string(),
+                "my-db".to_string(),
+                "--description".to_string(),
+                "My database".to_string(),
+            ],
+            want_out: "✔ Successfully created instance my-db in maze-war/development\n".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "list instances".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "instance".to_string(),
+                "list".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+            ],
+            want_out: r#"NAME   DESCRTIPTION  STATE     UPDATED
+my-db  My database   starting"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
     ];
 
     let mut config = crate::config::new_blank_config().unwrap();
