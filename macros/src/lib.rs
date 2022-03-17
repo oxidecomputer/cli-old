@@ -45,7 +45,8 @@ fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
                 #delete_cmd
             };
 
-            // TODO: How can we alphabetize the variants? Does it even matter in the cli output.
+            // Clap with alphabetize the help text subcommands so it is fine to just shove
+            // the variants on the end.
             variants.push(delete_enum_item);
         }
     }
