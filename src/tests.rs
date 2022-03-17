@@ -261,15 +261,11 @@ date:"#
             ..Default::default()
         },
         TestItem {
-            name: "api does not exist".to_string(),
+            name: "api endpoint does not exist".to_string(),
             args: vec!["oxide".to_string(), "api".to_string(), "foo/bar".to_string()],
-            want_out: r#"HTTP/1.1 200 OK
-content-length:  "45"
-content-type:    "application/json"
-date:"#
-                .to_string(),
-            want_err: "".to_string(),
-            want_code: 0,
+            want_out: "".to_string(),
+            want_err: "404 Not Found Not Found".to_string(),
+            want_code: 1,
             ..Default::default()
         },
         TestItem {
@@ -306,6 +302,25 @@ date:"#
                 "The Maze War game organization".to_string(),
             ],
             want_out: "✔ Successfully created organization maze-war\n".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "api create an org".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "api".to_string(),
+                "organizations".to_string(),
+                "-F".to_string(),
+                "name=zoo".to_string(),
+                "-f".to_string(),
+                "description=The zoo game organization".to_string(),
+            ],
+            want_out: r#"{
+  "description": "The zoo game organization",
+  "id": ""#
+                .to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()

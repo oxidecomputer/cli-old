@@ -41,8 +41,8 @@ pub struct CmdApi {
     pub endpoint: String,
 
     /// The HTTP method for the request.
-    #[clap(short = 'X', long, default_value = "GET")]
-    pub method: http::method::Method,
+    #[clap(short = 'X', long)]
+    pub method: Option<http::method::Method>,
 
     /// Make additional HTTP requests to fetch all pages of results.
     #[clap(long, conflicts_with = "input")]
@@ -84,10 +84,6 @@ impl crate::cmd::Command for CmdApi {
         // Let's get the api client.
         let client = ctx.api_client("")?;
 
-        if self.paginate && self.method != http::method::Method::GET {
-            return Err(anyhow!("the `--paginate` option is not supported for non-GET requests",));
-        }
-
         // Make sure the endpoint starts with a slash.
         let mut endpoint = self.endpoint.to_string();
         if !self.endpoint.starts_with('/') {
@@ -105,8 +101,19 @@ impl crate::cmd::Command for CmdApi {
 
         let mut bytes = b.as_bytes().to_vec();
 
-        // TODO: If they didn't specify the method and we have parameters, we'll
+        // If they didn't specify the method and we have parameters, we'l
         // assume they want to use POST.
+        let method = if let Some(m) = &self.method {
+            m.clone()
+        } else if !params.is_empty() {
+            http::method::Method::POST
+        } else {
+            http::method::Method::GET
+        };
+
+        if self.paginate && method != http::method::Method::GET {
+            return Err(anyhow!("the `--paginate` option is not supported for non-GET requests",));
+        }
 
         // Parse the input file.
         if !self.input.is_empty() {
@@ -143,7 +150,7 @@ impl crate::cmd::Command for CmdApi {
                 Some(reqwest::Body::from(bytes.clone()))
             };
 
-            let mut req = client.request_raw(self.method.clone(), &endpoint, body).await?;
+            let mut req = client.request_raw(method.clone(), &endpoint, body).await?;
 
             // Let's add our headers.
             let headers = self.parse_headers()?;
