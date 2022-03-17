@@ -139,14 +139,29 @@ impl crate::cmd::Command for CmdDiskCreate {
         let mut size = self.size;
         let mut snapshot = self.snapshot.to_string();
 
-        if (project_name.is_empty()
-            || organization.is_empty()
-            || disk_name.is_empty()
-            || snapshot.is_empty()
-            || size == 0)
-            && !ctx.io.can_prompt()
-        {
-            return Err(anyhow!("at least one argument required in non-interactive mode"));
+        if project_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--project,-p required in non-interactive mode"));
+        }
+
+        if organization.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--organization,-o required in non-interactive mode"));
+        }
+
+        if disk_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("[disk_name] required in non-interactive mode"));
+        }
+
+        // TODO: Add this back when snapshots are supported.
+        /*if snapshot.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--snapshot required in non-interactive mode"));
+        }*/
+
+        if size == 0 && !ctx.io.can_prompt() {
+            return Err(anyhow!("--size,-s required in non-interactive mode"));
+        }
+
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--description,-D required in non-interactive mode"));
         }
 
         // If they didn't specify an organization, prompt for it.
@@ -468,7 +483,7 @@ impl crate::cmd::Command for CmdDiskList {
 
         // TODO: add more columns, maybe make customizable.
         let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tSTATE\tDEVICE PATH\tLAST UPDATED")?;
+        writeln!(tw, "NAME\tDESCRTIPTION\tSTATE\tDEVICE PATH\tUPDATED")?;
         for disk in disks {
             let last_updated = chrono::Utc::now() - disk.time_modified.unwrap_or_else(|| disk.time_created.unwrap());
             writeln!(

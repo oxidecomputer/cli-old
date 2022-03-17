@@ -361,6 +361,63 @@ my-db  My database   starting"#
             want_code: 0,
             ..Default::default()
         },
+        TestItem {
+            name: "list disks empty".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "disk".to_string(),
+                "list".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+            ],
+            want_out: "NAME  DESCRTIPTION  STATE  DEVICE PATH  UPDATED\n".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "create disk".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "disk".to_string(),
+                "create".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "new-disk".to_string(),
+                /*"--snapshot".to_string(),
+                "42583766-9318-4339-A2A2-EE286F0F5B26".to_string(),*/
+                "--size".to_string(),
+                "1024".to_string(),
+                "-D".to_string(),
+                "My new disk".to_string(),
+            ],
+            want_out: "✔ Successfully created disk new-disk in maze-war/development\n".to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "list disks".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "disk".to_string(),
+                "list".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+            ],
+            want_out: r#"NAME      DESCRTIPTION  STATE     DEVICE PATH    UPDATED
+new-disk  My new disk   detached  /mnt/new-disk"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
     ];
 
     let mut config = crate::config::new_blank_config().unwrap();

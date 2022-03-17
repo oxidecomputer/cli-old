@@ -50,7 +50,7 @@ pub struct CmdProjectCreate {
     pub organization: String,
 
     /// The description for the project.
-    #[clap(long = "description", short = 'D', required = true)]
+    #[clap(long = "description", short = 'D', default_value = "")]
     pub description: String,
 }
 
@@ -62,8 +62,16 @@ impl crate::cmd::Command for CmdProjectCreate {
         let mut description = self.description.to_string();
         let mut organization = self.organization.to_string();
 
-        if (project_name.is_empty() || organization.is_empty()) && !ctx.io.can_prompt() {
-            return Err(anyhow!("at least one argument required in non-interactive mode"));
+        if project_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("[project_name] required in non-interactive mode"));
+        }
+
+        if organization.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--organization,-o required in non-interactive mode"));
+        }
+
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--description,-D required in non-interactive mode"));
         }
 
         // If they didn't specify an organization, prompt for it.

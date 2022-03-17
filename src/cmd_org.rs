@@ -44,7 +44,7 @@ pub struct CmdOrganizationCreate {
     pub organization: String,
 
     /// The description for the organization.
-    #[clap(long = "description", short = 'D', required = true)]
+    #[clap(long = "description", short = 'D', default_value = "")]
     pub description: String,
 }
 
@@ -56,7 +56,11 @@ impl crate::cmd::Command for CmdOrganizationCreate {
         let mut description = self.description.to_string();
 
         if organization_name.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("at least one argument required in non-interactive mode"));
+            return Err(anyhow!("[organization_name] required in non-interactive mode"));
+        }
+
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--description,-D required in non-interactive mode"));
         }
 
         if organization_name.is_empty() {
