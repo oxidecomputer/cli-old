@@ -302,118 +302,191 @@ maze-war/development  The development project"#
             want_code: 0,
             ..Default::default()
         },
+        /* TestItem {
+                    name: "list instances empty".to_string(),
+                    args: vec![
+                        "oxide".to_string(),
+                        "instance".to_string(),
+                        "list".to_string(),
+                        "--organization".to_string(),
+                        "maze-war".to_string(),
+                        "--project".to_string(),
+                        "development".to_string(),
+                    ],
+                    want_out: "NAME  DESCRTIPTION  STATE  UPDATED\n".to_string(),
+                    want_err: "".to_string(),
+                    want_code: 0,
+                    ..Default::default()
+                },
+                TestItem {
+                    name: "create instance".to_string(),
+                    args: vec![
+                        "oxide".to_string(),
+                        "instance".to_string(),
+                        "create".to_string(),
+                        "--organization".to_string(),
+                        "maze-war".to_string(),
+                        "--project".to_string(),
+                        "development".to_string(),
+                        "my-db".to_string(),
+                        "--cpus".to_string(),
+                        "1".to_string(),
+                        "--memory".to_string(),
+                        "1024".to_string(),
+                        "--hostname".to_string(),
+                        "my-db".to_string(),
+                        "--description".to_string(),
+                        "My database".to_string(),
+                    ],
+                    want_out: "✔ Successfully created instance my-db in maze-war/development\n".to_string(),
+                    want_err: "".to_string(),
+                    want_code: 0,
+                    ..Default::default()
+                },
+                TestItem {
+                    name: "list instances".to_string(),
+                    args: vec![
+                        "oxide".to_string(),
+                        "instance".to_string(),
+                        "list".to_string(),
+                        "--organization".to_string(),
+                        "maze-war".to_string(),
+                        "--project".to_string(),
+                        "development".to_string(),
+                    ],
+                    want_out: r#"NAME   DESCRTIPTION  STATE     UPDATED
+        my-db  My database   starting"#
+                        .to_string(),
+                    want_err: "".to_string(),
+                    want_code: 0,
+                    ..Default::default()
+                },
+                TestItem {
+                    name: "list disks empty".to_string(),
+                    args: vec![
+                        "oxide".to_string(),
+                        "disk".to_string(),
+                        "list".to_string(),
+                        "--organization".to_string(),
+                        "maze-war".to_string(),
+                        "--project".to_string(),
+                        "development".to_string(),
+                    ],
+                    want_out: "NAME  DESCRTIPTION  STATE  DEVICE PATH  UPDATED\n".to_string(),
+                    want_err: "".to_string(),
+                    want_code: 0,
+                    ..Default::default()
+                },
+                TestItem {
+                    name: "create disk".to_string(),
+                    args: vec![
+                        "oxide".to_string(),
+                        "disk".to_string(),
+                        "create".to_string(),
+                        "--organization".to_string(),
+                        "maze-war".to_string(),
+                        "--project".to_string(),
+                        "development".to_string(),
+                        "new-disk".to_string(),
+                        /*"--snapshot".to_string(),
+                        "42583766-9318-4339-A2A2-EE286F0F5B26".to_string(),*/
+                        "--size".to_string(),
+                        "1024".to_string(),
+                        "-D".to_string(),
+                        "My new disk".to_string(),
+                    ],
+                    want_out: "✔ Successfully created disk new-disk in maze-war/development\n".to_string(),
+                    want_err: "".to_string(),
+                    want_code: 0,
+                    ..Default::default()
+                },
+                TestItem {
+                    name: "list disks".to_string(),
+                    args: vec![
+                        "oxide".to_string(),
+                        "disk".to_string(),
+                        "list".to_string(),
+                        "--organization".to_string(),
+                        "maze-war".to_string(),
+                        "--project".to_string(),
+                        "development".to_string(),
+                    ],
+                    want_out: r#"NAME      DESCRTIPTION  STATE     DEVICE PATH    UPDATED
+        new-disk  My new disk   detached  /mnt/new-disk"#
+                        .to_string(),
+                    want_err: "".to_string(),
+                    want_code: 0,
+                    ..Default::default()
+                },
+                TestItem {
+                    name: "attach a disk to an instance".to_string(),
+                    args: vec![
+                        "oxide".to_string(),
+                        "disk".to_string(),
+                        "attach".to_string(),
+                        "--organization".to_string(),
+                        "maze-war".to_string(),
+                        "--project".to_string(),
+                        "development".to_string(),
+                        "new-disk".to_string(),
+                        "my-db".to_string(),
+                    ],
+                    want_out: "✔ Attached disk new-disk to instance my-db in project maze-war/development".to_string(),
+                    want_err: "".to_string(),
+                    want_code: 0,
+                    ..Default::default()
+                },*/
         TestItem {
-            name: "list instances empty".to_string(),
+            name: "list vpcs default".to_string(),
             args: vec![
                 "oxide".to_string(),
-                "instance".to_string(),
+                "vpc".to_string(),
                 "list".to_string(),
                 "--organization".to_string(),
                 "maze-war".to_string(),
                 "--project".to_string(),
                 "development".to_string(),
             ],
-            want_out: "NAME  DESCRTIPTION  STATE  UPDATED\n".to_string(),
+            want_out: r#"NAME     DESCRTIPTION  DNS      SYSTEM ROUTER                         UPDATED
+default  Default VPC   default"#
+                .to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
         },
         TestItem {
-            name: "create instance".to_string(),
+            name: "create vpc".to_string(),
             args: vec![
                 "oxide".to_string(),
-                "instance".to_string(),
+                "vpc".to_string(),
                 "create".to_string(),
                 "--organization".to_string(),
                 "maze-war".to_string(),
                 "--project".to_string(),
                 "development".to_string(),
-                "my-db".to_string(),
-                "--cpus".to_string(),
-                "1".to_string(),
-                "--memory".to_string(),
-                "1024".to_string(),
-                "--hostname".to_string(),
-                "my-db".to_string(),
+                "new-network".to_string(),
+                "--dns-name".to_string(),
+                "new-network".to_string(),
                 "--description".to_string(),
-                "My database".to_string(),
+                "My new network".to_string(),
             ],
-            want_out: "✔ Successfully created instance my-db in maze-war/development\n".to_string(),
+            want_out: "✔ Successfully created VPC new-network in maze-war/development\n".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
         },
         TestItem {
-            name: "list instances".to_string(),
+            name: "list vpcs".to_string(),
             args: vec![
                 "oxide".to_string(),
-                "instance".to_string(),
+                "vpc".to_string(),
                 "list".to_string(),
                 "--organization".to_string(),
                 "maze-war".to_string(),
                 "--project".to_string(),
                 "development".to_string(),
             ],
-            want_out: r#"NAME   DESCRTIPTION  STATE     UPDATED
-my-db  My database   starting"#
-                .to_string(),
-            want_err: "".to_string(),
-            want_code: 0,
-            ..Default::default()
-        },
-        TestItem {
-            name: "list disks empty".to_string(),
-            args: vec![
-                "oxide".to_string(),
-                "disk".to_string(),
-                "list".to_string(),
-                "--organization".to_string(),
-                "maze-war".to_string(),
-                "--project".to_string(),
-                "development".to_string(),
-            ],
-            want_out: "NAME  DESCRTIPTION  STATE  DEVICE PATH  UPDATED\n".to_string(),
-            want_err: "".to_string(),
-            want_code: 0,
-            ..Default::default()
-        },
-        TestItem {
-            name: "create disk".to_string(),
-            args: vec![
-                "oxide".to_string(),
-                "disk".to_string(),
-                "create".to_string(),
-                "--organization".to_string(),
-                "maze-war".to_string(),
-                "--project".to_string(),
-                "development".to_string(),
-                "new-disk".to_string(),
-                /*"--snapshot".to_string(),
-                "42583766-9318-4339-A2A2-EE286F0F5B26".to_string(),*/
-                "--size".to_string(),
-                "1024".to_string(),
-                "-D".to_string(),
-                "My new disk".to_string(),
-            ],
-            want_out: "✔ Successfully created disk new-disk in maze-war/development\n".to_string(),
-            want_err: "".to_string(),
-            want_code: 0,
-            ..Default::default()
-        },
-        TestItem {
-            name: "list disks".to_string(),
-            args: vec![
-                "oxide".to_string(),
-                "disk".to_string(),
-                "list".to_string(),
-                "--organization".to_string(),
-                "maze-war".to_string(),
-                "--project".to_string(),
-                "development".to_string(),
-            ],
-            want_out: r#"NAME      DESCRTIPTION  STATE     DEVICE PATH    UPDATED
-new-disk  My new disk   detached  /mnt/new-disk"#
-                .to_string(),
+            want_out: "new-network  My new network  new-network".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()

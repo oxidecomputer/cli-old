@@ -56,7 +56,7 @@ pub struct CmdVpcCreate {
     pub description: String,
 
     /// The dns_name for the VPC.
-    #[clap(long = "dns_name", default_value = "")]
+    #[clap(long = "dns-name", default_value = "")]
     pub dns_name: String,
 }
 
@@ -70,8 +70,24 @@ impl crate::cmd::Command for CmdVpcCreate {
 
         let mut dns_name = self.dns_name.to_string();
 
-        if (project_name.is_empty() || organization.is_empty() || vpc_name.is_empty()) && !ctx.io.can_prompt() {
-            return Err(anyhow!("at least one argument required in non-interactive mode"));
+        if project_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--project,-p required in non-interactive mode"));
+        }
+
+        if organization.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--organization,-o required in non-interactive mode"));
+        }
+
+        if vpc_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("[vpc_name] required in non-interactive mode"));
+        }
+
+        if dns_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--dns-name required in non-interactive mode"));
+        }
+
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("--description,-D required in non-interactive mode"));
         }
 
         // If they didn't specify an organization, prompt for it.
@@ -153,7 +169,7 @@ impl crate::cmd::Command for CmdVpcCreate {
 
         let full_name = format!("{}/{}", organization, project_name);
 
-        // Create the disk.
+        // Create the VPC.
         client
             .vpcs()
             .post(
@@ -394,7 +410,7 @@ impl crate::cmd::Command for CmdVpcList {
 
         // TODO: add more columns, maybe make customizable.
         let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tDNS NAME\tSYSTEM ROUTER\tLAST UPDATED")?;
+        writeln!(tw, "NAME\tDESCRTIPTION\tDNS\tSYSTEM ROUTER\tUPDATED")?;
         for vpc in vpcs {
             let last_updated = chrono::Utc::now() - vpc.time_modified.unwrap_or_else(|| vpc.time_created.unwrap());
             writeln!(
