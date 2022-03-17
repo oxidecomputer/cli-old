@@ -29,7 +29,7 @@ fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
 
     let ops = get_operations_with_tag(&api, &params.tag)?;
 
-    let og_enum: ItemEnum = syn::parse2(item.clone()).unwrap();
+    let og_enum: ItemEnum = syn::parse2(item).unwrap();
     let mut variants = og_enum.variants.clone();
     let mut commands = quote!();
 
@@ -49,7 +49,7 @@ fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         }
     }
 
-    let attrs = og_enum.attrs.clone();
+    let attrs = og_enum.attrs;
     let code = quote!(
         #(#attrs);*
         enum SubCommand {
