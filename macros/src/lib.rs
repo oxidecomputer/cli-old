@@ -196,10 +196,7 @@ impl Operation {
         .item()?;
 
         let obj = match &schema.schema_kind {
-            openapiv3::SchemaKind::Type(t) => match t {
-                openapiv3::Type::Object(o) => o,
-                _ => return Ok(properties),
-            },
+            openapiv3::SchemaKind::Type(openapiv3::Type::Object(o)) => o,
             _ => return Ok(properties),
         };
 
@@ -237,10 +234,7 @@ impl Operation {
         };
 
         let obj = match &schema.schema_kind {
-            openapiv3::SchemaKind::Type(t) => match t {
-                openapiv3::Type::Object(o) => o,
-                _ => return false,
-            },
+            openapiv3::SchemaKind::Type(openapiv3::Type::Object(o)) => o,
             _ => return false,
         };
 
