@@ -355,7 +355,7 @@ maze-war/development  The development project"#
                 "development".to_string(),
             ],
             want_out: r#"NAME   DESCRTIPTION  STATE     UPDATED
-        my-db  My database   starting"#
+my-db  My database   starting"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -412,7 +412,7 @@ maze-war/development  The development project"#
                 "development".to_string(),
             ],
             want_out: r#"NAME      DESCRTIPTION  STATE     DEVICE PATH    UPDATED
-        new-disk  My new disk   detached  /mnt/new-disk"#
+new-disk  My new disk   detached  /mnt/new-disk"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
