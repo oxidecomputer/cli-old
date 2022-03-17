@@ -307,6 +307,52 @@ date:"#
             ..Default::default()
         },
         TestItem {
+            name: "view an org".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "org".to_string(),
+                "view".to_string(),
+                "maze-war".to_string(),
+            ],
+            want_out: r#"name:         maze-war
+description:  The Maze War game organization
+created:"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "edit an org empty".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "org".to_string(),
+                "edit".to_string(),
+                "maze-war".to_string(),
+            ],
+            want_out: "".to_string(),
+            want_err: "nothing to edit".to_string(),
+            want_code: 1,
+            ..Default::default()
+        },
+        TestItem {
+            name: "view an org --json".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "org".to_string(),
+                "view".to_string(),
+                "maze-war".to_string(),
+                "--json".to_string(),
+            ],
+            want_out: r#"{
+  "description": "The Maze War game organization",
+  "id": ""#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "api create an org".to_string(),
             args: vec![
                 "oxide".to_string(),
@@ -321,6 +367,23 @@ date:"#
   "description": "The zoo game organization",
   "id": ""#
                 .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "edit an org".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "org".to_string(),
+                "edit".to_string(),
+                "zoo".to_string(),
+                "-D".to_string(),
+                "The zoo 2 game organization".to_string(),
+                "--name".to_string(),
+                "zoo-2".to_string(),
+            ],
+            want_out: r#"✔ Successfully edited organization zoo -> zoo-2"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -341,10 +404,25 @@ date:"#
             ..Default::default()
         },
         TestItem {
+            name: "edit an org".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "org".to_string(),
+                "edit".to_string(),
+                "dune".to_string(),
+                "-D".to_string(),
+                "The dune game organization that is in the desert".to_string(),
+            ],
+            want_out: r#"✔ Successfully edited organization dune"#.to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "list orgs".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
-            want_out: r#"NAME      DESCRTIPTION                    UPDATED
-dune      A sandy desert game             "#
+            want_out: r#"NAME      DESCRTIPTION                                      UPDATED
+dune      The dune game organization that is in the desert"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,

@@ -211,12 +211,22 @@ impl crate::cmd::Command for CmdOrganizationEdit {
         client.organizations().put(&self.organization, &body).await?;
 
         let cs = ctx.io.color_scheme();
-        writeln!(
-            ctx.io.out,
-            "{} Successfully edited organization {}",
-            cs.success_icon(),
-            name
-        )?;
+        if let Some(n) = &self.new_name {
+            writeln!(
+                ctx.io.out,
+                "{} Successfully edited organization {} -> {}",
+                cs.success_icon(),
+                self.organization,
+                n
+            )?;
+        } else {
+            writeln!(
+                ctx.io.out,
+                "{} Successfully edited organization {}",
+                cs.success_icon(),
+                name
+            )?;
+        }
 
         Ok(())
     }
