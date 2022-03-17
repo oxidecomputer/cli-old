@@ -500,6 +500,29 @@ new-disk     My new disk         detached  /mnt/new-disk"#
             ..Default::default()
         },
         TestItem {
+            name: "view a disk".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "disk".to_string(),
+                "view".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--project".to_string(),
+                "development".to_string(),
+                "new-disk".to_string(),
+            ],
+            want_out: r#"name:         new-disk
+description:  My new disk
+state:        attaching
+size:         1024
+device path:  /mnt/new-disk
+snapshot:"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "detach a disk from an instance".to_string(),
             args: vec![
                 "oxide".to_string(),
