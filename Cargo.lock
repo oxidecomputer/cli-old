@@ -1114,6 +1114,7 @@ dependencies = [
  "colored_json",
  "dialoguer",
  "dirs",
+ "futures",
  "heck 0.4.0",
  "http",
  "isatty",
