@@ -27,7 +27,6 @@ fn test_crud_gen() {
                 Create(CmdDiskCreate),
                 Detach(CmdDiskDetach),
                 Edit(CmdDiskEdit),
-                View(CmdDiskView),
             }
         },
     )

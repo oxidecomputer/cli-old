@@ -1,6 +1,7 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     List(CmdSubnetList),
+    View(CmdSubnetView),
     Delete(CmdSubnetDelete),
 }
 
@@ -68,6 +69,55 @@ impl crate::cmd::Command for CmdSubnetList {
         }
 
         let table = tabled::Table::new(results)
+            .with(tabled::Style::psql())
+            .to_string();
+        writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "View subnet."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdSubnetView {
+    #[doc = "The project that holds the subnet."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "The VPC that holds the subnet."]
+    #[clap(long, short, required = true)]
+    pub vpc: String,
+    #[doc = "Open the subnet in the browser."]
+    #[clap(short, long)]
+    pub web: bool,
+    #[doc = r" Output JSON."]
+    #[clap(long)]
+    pub json: bool,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdSubnetView {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if self.web {
+            let url = format!("https://{}/{}", ctx.config.default_host()?, self.subnet);
+            ctx.browser("", &url)?;
+            return Ok(());
+        }
+
+        let client = ctx.api_client("")?;
+        let result = client
+            .subnets()
+            .get(&self.organization, &self.project, &self.subnet, &self.vpc)
+            .await?;
+        if self.json {
+            ctx.io.write_json(&serde_json::json!(result))?;
+            return Ok(());
+        }
+
+        let table = tabled::Table::new(results)
+            .with(Rotate::Left)
             .with(tabled::Style::psql())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;

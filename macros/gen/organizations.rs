@@ -1,6 +1,7 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     List(CmdOrganizationList),
+    View(CmdOrganizationView),
     Delete(CmdOrganizationDelete),
 }
 
@@ -44,6 +45,47 @@ impl crate::cmd::Command for CmdOrganizationList {
         }
 
         let table = tabled::Table::new(results)
+            .with(tabled::Style::psql())
+            .to_string();
+        writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "View organization."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdOrganizationView {
+    #[doc = "Open the organization in the browser."]
+    #[clap(short, long)]
+    pub web: bool,
+    #[doc = r" Output JSON."]
+    #[clap(long)]
+    pub json: bool,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdOrganizationView {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if self.web {
+            let url = format!(
+                "https://{}/{}",
+                ctx.config.default_host()?,
+                self.organization
+            );
+            ctx.browser("", &url)?;
+            return Ok(());
+        }
+
+        let client = ctx.api_client("")?;
+        let result = client.organizations().get(&self.organization).await?;
+        if self.json {
+            ctx.io.write_json(&serde_json::json!(result))?;
+            return Ok(());
+        }
+
+        let table = tabled::Table::new(results)
+            .with(Rotate::Left)
             .with(tabled::Style::psql())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;

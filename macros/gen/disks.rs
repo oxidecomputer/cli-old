@@ -4,8 +4,8 @@ enum SubCommand {
     Create(CmdDiskCreate),
     Detach(CmdDiskDetach),
     Edit(CmdDiskEdit),
-    View(CmdDiskView),
     List(CmdDiskList),
+    View(CmdDiskView),
     Delete(CmdDiskDelete),
 }
 
@@ -64,6 +64,52 @@ impl crate::cmd::Command for CmdDiskList {
         }
 
         let table = tabled::Table::new(results)
+            .with(tabled::Style::psql())
+            .to_string();
+        writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "View disk."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdDiskView {
+    #[doc = "The project that holds the disk."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "Open the disk in the browser."]
+    #[clap(short, long)]
+    pub web: bool,
+    #[doc = r" Output JSON."]
+    #[clap(long)]
+    pub json: bool,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdDiskView {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if self.web {
+            let url = format!("https://{}/{}", ctx.config.default_host()?, self.disk);
+            ctx.browser("", &url)?;
+            return Ok(());
+        }
+
+        let client = ctx.api_client("")?;
+        let result = client
+            .disks()
+            .get(&self.disk, &self.organization, &self.project)
+            .await?;
+        if self.json {
+            ctx.io.write_json(&serde_json::json!(result))?;
+            return Ok(());
+        }
+
+        let table = tabled::Table::new(results)
+            .with(Rotate::Left)
             .with(tabled::Style::psql())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
