@@ -1,8 +1,8 @@
 # Our target directory.
-/target
+target
 # Where our cross compiled binaries will go.
-/cross
+cross
 # For the ci when we cross compile.
-/osxcross
+osxcross
 # Where our generated docs will go.
-/generated_docs
+generated_docs

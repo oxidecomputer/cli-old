@@ -359,14 +359,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "cli-macros"
+name = "cli-macro"
 version = "0.1.0"
 dependencies = [
- "cli-macros-impl",
+ "cli-macro-impl",
 ]
 
 [[package]]
-name = "cli-macros-impl"
+name = "cli-macro-impl"
 version = "0.1.0"
 dependencies = [
  "Inflector",
@@ -1273,7 +1273,7 @@ dependencies = [
  "chrono-humanize",
  "clap",
  "clap_complete",
- "cli-macros",
+ "cli-macro",
  "colored_json",
  "dialoguer",
  "dirs",

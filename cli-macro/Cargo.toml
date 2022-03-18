@@ -1,6 +1,6 @@
 [package]
-name = "cli-macros"
-description = "Macros for our CLI generation"
+name = "cli-macro"
+description = "Macro for our CLI generation"
 version = "0.1.0"
 authors = ["Jess Frazelle <jess@oxide.computer>"]
 edition = "2018"
@@ -9,5 +9,5 @@ edition = "2018"
 proc-macro = true
 
 [dependencies]
-cli-macros-impl = { path = "impl" }
+cli-macro-impl = { path = "../cli-macro-impl" }
 

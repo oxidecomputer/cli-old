@@ -97,7 +97,7 @@ pub fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
 
 /// Get the OpenAPI spec from the file.
 fn load_api_spec() -> Result<openapiv3::OpenAPI> {
-    let s = include_str!("../../../spec.json");
+    let s = include_str!("../../spec.json");
     Ok(serde_json::from_str(s)?)
 }
 

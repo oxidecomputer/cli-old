@@ -14,7 +14,7 @@ chrono = { version = "^0.4", features = ["serde"] }
 chrono-humanize = "^0.2.1"
 clap = { version = "^3.1.6", features = ["cargo", "derive", "env", "unicode"] }
 clap_complete = { version = "^3.0.6" }
-cli-macros = { path = "macros" }
+cli-macro = { path = "cli-macro" }
 colored_json = "^2.1.0"
 dialoguer = "^0.10.0"
 dirs = "4"
@@ -58,6 +58,6 @@ test-context = "^0.1.3"
 
 [workspace]
 members = [
-  "macros",
-  "macros/impl",
+  "cli-macro",
+  "cli-macro-impl",
 ]
