@@ -334,6 +334,7 @@ impl Operation {
                 || param == "organization_name"
                 || param == singular(tag)
                 || param == format!("{}_name", singular(tag))
+                || param == format!("{}_id", singular(tag))
                 || param == "limit"
                 || param == "page_token"
             {
@@ -406,7 +407,7 @@ impl Operation {
 
         let mut api_call_params: Vec<TokenStream> = Vec::new();
         for p in self.get_all_param_names()? {
-            let p = format_ident!("{}", p.trim_end_matches("_name"));
+            let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
 
             api_call_params.push(quote!(&self.#p));
         }

@@ -1,0 +1,97 @@
+#[derive(Parser, Debug, Clone)]
+enum SubCommand {
+    List(CmdSledList),
+    View(CmdSledView),
+}
+
+#[doc = "List sleds."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdSledList {
+    #[doc = "The order in which to sort the results."]
+    #[clap(long, short, default_value_t)]
+    pub sort_by: oxide_api::types::IdSortMode,
+    #[doc = r" Maximum number of items to list."]
+    #[clap(long, short, default_value = "30")]
+    pub limit: u32,
+    #[doc = r" Make additional HTTP requests to fetch all pages."]
+    #[clap(long)]
+    pub paginate: bool,
+    #[doc = r" Output JSON."]
+    #[clap(long)]
+    pub json: bool,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdSledList {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if self.limit < 1 {
+            return Err(anyhow::anyhow!("--limit must be greater than 0"));
+        }
+
+        let client = ctx.api_client("")?;
+        let results = if self.paginate {
+            client.sleds().get_all(self.sort_by.clone()).await?
+        } else {
+            client
+                .sleds()
+                .get_page(self.limit, "", self.sort_by.clone())
+                .await?
+        };
+        if self.json {
+            ctx.io.write_json(&serde_json::json!(results))?;
+            return Ok(());
+        }
+
+        let table = tabled::Table::new(results)
+            .with(tabled::Style::psql())
+            .to_string();
+        writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "View sled."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdSledView {
+    #[doc = "The sled to view. Can be an ID or name."]
+    #[clap(name = "sled", required = true)]
+    pub sled: String,
+    #[doc = "Open the sled in the browser.\n\nDisplay information about an Oxide sled.\n\nWith '--web', open the sled in a web browser instead.\n            "]
+    #[clap(short, long)]
+    pub web: bool,
+    #[doc = r" Output JSON."]
+    #[clap(long)]
+    pub json: bool,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdSledView {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if self.web {
+            let url = format!("https://{}/{}", ctx.config.default_host()?, self.sled);
+            ctx.browser("", &url)?;
+            return Ok(());
+        }
+
+        let client = ctx.api_client("")?;
+        let result = client.sleds().get(&self.sled).await?;
+        if self.json {
+            ctx.io.write_json(&serde_json::json!(result))?;
+            return Ok(());
+        }
+
+        let table = tabled::Table::new(vec![result])
+            .with(tabled::Rotate::Left)
+            .with(
+                tabled::Modify::new(tabled::Full)
+                    .with(tabled::Alignment::left())
+                    .with(tabled::Alignment::top()),
+            )
+            .with(tabled::Style::psql())
+            .to_string();
+        writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}

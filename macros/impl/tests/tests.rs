@@ -80,4 +80,19 @@ fn test_do_gen() {
     .unwrap();
 
     expectorate::assert_contents("tests/gen/routes.rs.gen", &get_text(&actual).unwrap());
+
+    actual = do_gen(
+        quote! {
+            tag = "sleds",
+        }
+        .into(),
+        quote! {
+            #[derive(Parser, Debug, Clone)]
+            enum SubCommand {}
+        }
+        .into(),
+    )
+    .unwrap();
+
+    expectorate::assert_contents("tests/gen/sleds.rs.gen", &get_text(&actual).unwrap());
 }
