@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use cli_macros::crud_gen;
+use cli_macro::crud_gen;
 
 /// Manage built-in roles.
 #[derive(Parser, Debug, Clone)]

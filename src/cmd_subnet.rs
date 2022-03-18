@@ -2,7 +2,7 @@ use std::io::Write;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
-use cli_macros::crud_gen;
+use cli_macro::crud_gen;
 
 /// Create, list, edit, view, and delete subnets.
 #[derive(Parser, Debug, Clone)]

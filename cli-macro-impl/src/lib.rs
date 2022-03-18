@@ -311,7 +311,7 @@ impl SchemaExt for openapiv3::Schema {
                     }
                 })
             }
-            openapiv3::SchemaKind::OneOf { one_of } => {
+            openapiv3::SchemaKind::OneOf { one_of: _ } => {
                 // TODO: Turn this on.
                 Ok(quote!(String))
                 //anyhow::bail!("oneOf not supported here yet: {:?}", one_of)

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-//use cli_macros::crud_gen;
+//use cli_macro::crud_gen;
 
 /// Create, list, view, and delete snapshots.
 #[derive(Parser, Debug, Clone)]
