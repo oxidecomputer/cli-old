@@ -530,6 +530,110 @@ impl Operation {
             quote!()
         };
 
+        // We need to check if project is part of this call for the prompt.
+        let project_prompt = if self.is_parameter("project") && tag != "projects" {
+            quote! {
+                // If they didn't specify a project, prompt for it.
+                if project.is_empty() {
+                    let mut org_projects: Vec<String> = Vec::new();
+                    let projects = client
+                        .projects()
+                        .get_all(&organization, oxide_api::types::NameOrIdSortMode::NameAscending)
+                        .await?;
+                    for project in projects {
+                        org_projects.push(project.name.to_string());
+                    }
+
+                    // Select the project from the selected organization.
+                    match dialoguer::Select::new()
+                        .with_prompt("Select project:")
+                        .items(&org_projects)
+                        .interact()
+                    {
+                        Ok(index) => project = org_projects[index].to_string(),
+                        Err(err) => {
+                            return Err(anyhow!("prompt failed: {}", err));
+                        }
+                    }
+                }
+            }
+        } else {
+            quote!()
+        };
+
+        // We need to check if organization is part of this call for the prompt.
+        let org_prompt = if self.is_parameter("project") && tag != "projects" {
+            quote! {
+                // If they didn't specify an organization, prompt for it.
+                if organization.is_empty() {
+                    let mut orgs: Vec<String> = Vec::new();
+                    let resp = client
+                        .orgs()
+                        .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
+                        .await?;
+                    for org in orgs {
+                        orgs.push(org.name.to_string());
+                    }
+
+                    match dialoguer::Select::new()
+                        .with_prompt("Project organization:")
+                        .items(&orgs)
+                        .interact()
+                    {
+                        Ok(index) => organization = orgs[index].to_string(),
+                        Err(err) => {
+                            return Err(anyhow!("prompt failed: {}", err));
+                        }
+                    }
+                }
+            }
+        } else {
+            quote!()
+        };
+
+        let name_prompt = quote!(
+            // Prompt for the resource name.
+            if #singular_tag_lc.is_empty() {
+                match dialoguer::Input::<String>::new()
+                    .with_prompt(&format!("{} name:", &singular_tag_str))
+                    .interact_text()
+                {
+                    Ok(name) => #singular_tag_lc = name,
+                    Err(err) => {
+                        return Err(anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+        );
+
+        let mut additional_prompts: Vec<TokenStream> = Vec::new();
+        for p in self.get_all_required_param_names()? {
+            let n = p.trim_end_matches("_name").trim_end_matches("_id");
+            if n == singular(tag) || n == "project" || n == "organization" {
+                // Skip the prompt.
+                continue;
+            }
+
+            let p = format_ident!("{}", n);
+
+            let title = format!("{} {}:", singular_tag_str, n);
+
+            additional_prompts.push(quote! {
+                // Propmt if they didn't provide the value.
+                if #p.is_empty() {
+                    match dialoguer::Input::<String>::new()
+                        .with_prompt(#title)
+                        .interact_text()
+                    {
+                        Ok(desc) => #p = desc,
+                        Err(err) => {
+                            return Err(anyhow!("prompt failed: {}", err));
+                        }
+                    }
+                }
+            });
+        }
+
         let additional_struct_params = self.get_additional_struct_params(tag, true)?;
 
         let cmd = quote!(
@@ -558,6 +662,14 @@ impl Operation {
                     let client = ctx.api_client("")?;
 
                     // Prompt for various parameters if we can, and the user passed them as empty.
+                    #org_prompt
+
+                    #project_prompt
+
+                    #name_prompt
+
+                    #(#additional_prompts)*
+
 
                     Ok(())
                 }
