@@ -106,9 +106,10 @@ trait ReferenceOrExt<T> {
     fn reference(&self) -> Result<String>;
     fn reference_render_type(&self) -> Result<TokenStream>;
     fn get_schema_from_reference(&self) -> Result<openapiv3::Schema>;
+    fn render_type(&self) -> Result<TokenStream>;
 }
 
-impl<T> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
+impl<T: SchemaExt> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
     fn item(&self) -> Result<&T> {
         match self {
             openapiv3::ReferenceOr::Item(i) => Ok(i),
@@ -163,6 +164,14 @@ impl<T> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
             .ok_or_else(|| anyhow::anyhow!("could not find schema with name {}", name))?;
 
         Ok(schema.item()?.clone())
+    }
+
+    fn render_type(&self) -> Result<TokenStream> {
+        if let Ok(t) = self.reference_render_type() {
+            Ok(t)
+        } else {
+            self.item()?.render_type()
+        }
     }
 }
 
@@ -383,6 +392,30 @@ impl SchemaExt for openapiv3::Schema {
             }
             x => anyhow::bail!("unexpected type {:#?}", x),
         }
+    }
+}
+
+impl SchemaExt for Box<openapiv3::Schema> {
+    fn render_type(&self) -> Result<TokenStream> {
+        (*self).render_type()
+    }
+}
+
+impl SchemaExt for openapiv3::PathItem {
+    fn render_type(&self) -> Result<TokenStream> {
+        anyhow::bail!("`render_type` not implemented for `PathItem`")
+    }
+}
+
+impl SchemaExt for openapiv3::RequestBody {
+    fn render_type(&self) -> Result<TokenStream> {
+        anyhow::bail!("`render_type` not implemented for `RequestBody`")
+    }
+}
+
+impl SchemaExt for openapiv3::Parameter {
+    fn render_type(&self) -> Result<TokenStream> {
+        anyhow::bail!("`render_type` not implemented for `Parameter`")
     }
 }
 
@@ -608,25 +641,33 @@ impl Operation {
         }
 
         let req_body_properties = self.get_request_body_properties()?;
-        let req_body_properties = req_body_properties.keys();
         if req_body_properties.len() > 0 {
-            let req_body_properties = req_body_properties
-                .map(|p| {
-                    let p_og = format_ident!("{}", p);
+            let mut req_body_rendered = Vec::new();
+            for (p, v) in req_body_properties {
+                let p_og = format_ident!("{}", p);
 
-                    let new = if p == "name" { singular(tag) } else { p.to_string() };
-                    let p_short = format_ident!("{}", new.trim_end_matches("_name").trim_end_matches("_id"));
+                let new = if p == "name" { singular(tag) } else { p.to_string() };
+                let p_short = format_ident!("{}", new.trim_end_matches("_name").trim_end_matches("_id"));
 
-                    quote!(#p_og: #p_short.clone())
-                })
-                .collect::<Vec<_>>();
+                let rendered = v.schema.render_type()?;
+                let rendered = get_text(&rendered)?;
+
+                // If the rendered property is an option, we want to unwrap it before
+                // sending the request since we were only doing that for the oneOf types.
+                // And we should only unwrap it if it is a required property.
+                if rendered.starts_with("Option<") && v.required {
+                    req_body_rendered.push(quote!(#p_og: #p_short.unwrap()));
+                } else {
+                    req_body_rendered.push(quote!(#p_og: #p_short.clone()));
+                }
+            }
 
             let type_name = self.get_request_body_name()?;
             let type_name = format_ident!("{}", type_name);
 
             api_call_params.push(quote! {
                 &oxide_api::types::#type_name {
-                    #(#req_body_properties),*
+                    #(#req_body_rendered),*
                 }
             });
         }
@@ -636,22 +677,29 @@ impl Operation {
 
     /// Gets a list of all the required string parameters for the operation.
     /// This includes the path parameters, query parameters, and request_body parameters.
-    fn get_all_required_param_names(&self) -> Result<Vec<String>> {
+    fn get_all_required_param_names_and_types(
+        &self,
+    ) -> Result<Vec<(String, openapiv3::ReferenceOr<openapiv3::Schema>)>> {
         let mut param_names = Vec::new();
 
         for (param, p) in self.get_parameters()? {
             if p.data().unwrap().required {
-                param_names.push(param.to_string());
+                let data = if let Some(data) = p.data() {
+                    data
+                } else {
+                    continue;
+                };
+                param_names.push((param.to_string(), data.format.schema()?));
             }
         }
 
         for (param, p) in self.get_request_body_properties()? {
             if p.required {
-                param_names.push(param.to_string());
+                param_names.push((param.to_string(), p.schema));
             }
         }
 
-        param_names.sort();
+        param_names.sort_by(|a, b| a.0.cmp(&b.0));
 
         Ok(param_names)
     }
@@ -772,7 +820,7 @@ impl Operation {
         let struct_inner_name_doc = format!("The name of the {} to create.", singular_tag_str);
 
         let mut mutable_variables: Vec<TokenStream> = Vec::new();
-        for p in self.get_all_param_names()? {
+        for (p, _) in self.get_all_required_param_names_and_types()? {
             let p = if p == "name" { singular(tag) } else { p };
             let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
 
@@ -784,7 +832,7 @@ impl Operation {
         let api_call_params = self.get_api_call_params(tag)?;
 
         let mut required_checks: Vec<TokenStream> = Vec::new();
-        for p in self.get_all_required_param_names()? {
+        for (p, t) in self.get_all_required_param_names_and_types()? {
             let p = if p == "name" { singular(tag) } else { p };
             let n = p.trim_end_matches("_name").trim_end_matches("_id");
             let p = format_ident!("{}", n);
@@ -799,7 +847,16 @@ impl Operation {
 
             let error_msg = format!("{} required in non-interactive mode", formatted);
 
-            required_checks.push(quote!(if #p.is_empty() && !ctx.io.can_prompt() {
+            let rendered = t.render_type()?;
+            let rendered = get_text(&rendered)?;
+
+            let is_check = if rendered.starts_with("Option<") {
+                format_ident!("{}", "is_none")
+            } else {
+                format_ident!("{}", "is_empty")
+            };
+
+            required_checks.push(quote!(if #p.#is_check() && !ctx.io.can_prompt() {
                 return Err(anyhow::anyhow!(#error_msg));
             }));
         }
@@ -903,10 +960,16 @@ impl Operation {
         );
 
         let mut additional_prompts: Vec<TokenStream> = Vec::new();
-        for p in self.get_all_required_param_names()? {
+        for (p, _) in self.get_all_required_param_names_and_types()? {
             let n = p.trim_end_matches("_name").trim_end_matches("_id");
             if skip_defaults(n, tag) {
                 // Skip the prompt.
+                continue;
+            }
+
+            // TODO: for now skip any weird things and don't prompt for them
+            // WE NEED TO FIX THIS
+            if n == "target" || n == "destination" {
                 continue;
             }
 
@@ -1491,4 +1554,28 @@ fn skip_defaults(n: &str, tag: &str) -> bool {
         || n == "name"
         || n == "project_name"
         || n == "organization_name"
+}
+
+fn clean_text(s: &str) -> String {
+    // Add newlines after end-braces at <= two levels of indentation.
+    if cfg!(not(windows)) {
+        let regex = regex::Regex::new(r#"(})(\n\s{0,8}[^} ])"#).unwrap();
+        regex.replace_all(&s, "$1\n$2").to_string()
+    } else {
+        let regex = regex::Regex::new(r#"(})(\r\n\s{0,8}[^} ])"#).unwrap();
+        regex.replace_all(&s, "$1\r\n$2").to_string()
+    }
+}
+
+pub fn get_text(output: &proc_macro2::TokenStream) -> Result<String> {
+    let content = output.to_string();
+
+    Ok(clean_text(&content).replace(" ", ""))
+}
+
+pub fn get_text_fmt(output: &proc_macro2::TokenStream) -> Result<String> {
+    // Format the file with rustfmt.
+    let content = rustfmt_wrapper::rustfmt(output).unwrap();
+
+    Ok(clean_text(&content))
 }

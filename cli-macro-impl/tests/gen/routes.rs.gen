@@ -22,7 +22,7 @@ pub struct CmdRouteList {
     pub router: oxide_api::types::Name,
     #[doc = "The order in which to sort the results."]
     #[clap(long, short, default_value_t)]
-    pub sort_by: Option<oxide_api::types::NameSortMode>,
+    pub sort_by: oxide_api::types::NameSortMode,
     #[doc = "The VPC_NAME that holds the routes."]
     #[clap(long, short, required = true)]
     pub vpc: oxide_api::types::Name,
@@ -107,10 +107,10 @@ pub struct CmdRouteCreate {
     pub description: String,
     #[doc = "A `RouteDestination` is used to match traffic with a routing rule, on the destination of that traffic.\n\nWhen traffic is to be sent to a destination that is within a given `RouteDestination`, the corresponding [`RouterRoute`] applies, and traffic will be forward to the [`RouteTarget`] for that rule."]
     #[clap(long, short, default_value_t)]
-    pub destination: String,
+    pub destination: Option<oxide_api::types::RouteDestination>,
     #[doc = "A `RouteTarget` describes the possible locations that traffic matching a route destination can be sent."]
     #[clap(long, short, default_value_t)]
-    pub target: String,
+    pub target: Option<oxide_api::types::RouteTarget>,
 }
 
 #[async_trait::async_trait]
@@ -130,7 +130,7 @@ impl crate::cmd::Command for CmdRouteCreate {
             ));
         }
 
-        if destination.is_empty() && !ctx.io.can_prompt() {
+        if destination.is_none() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
                 "destination required in non-interactive mode"
             ));
@@ -154,7 +154,7 @@ impl crate::cmd::Command for CmdRouteCreate {
             return Err(anyhow::anyhow!("router required in non-interactive mode"));
         }
 
-        if target.is_empty() && !ctx.io.can_prompt() {
+        if target.is_none() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!("target required in non-interactive mode"));
         }
 
@@ -232,36 +232,12 @@ impl crate::cmd::Command for CmdRouteCreate {
             }
         }
 
-        if destination.is_empty() {
-            match dialoguer::Input::<_>::new()
-                .with_prompt("route destination:")
-                .interact_text()
-            {
-                Ok(desc) => destination = desc,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
-                }
-            }
-        }
-
         if router.is_empty() {
             match dialoguer::Input::<_>::new()
                 .with_prompt("route router:")
                 .interact_text()
             {
                 Ok(desc) => router = desc,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
-                }
-            }
-        }
-
-        if target.is_empty() {
-            match dialoguer::Input::<_>::new()
-                .with_prompt("route target:")
-                .interact_text()
-            {
-                Ok(desc) => target = desc,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
@@ -289,9 +265,9 @@ impl crate::cmd::Command for CmdRouteCreate {
                 &self.vpc,
                 &oxide_api::types::RouterRouteCreateParams {
                     description: description.clone(),
-                    destination: destination.clone(),
+                    destination: destination.unwrap(),
                     name: route.clone(),
-                    target: target.clone(),
+                    target: target.unwrap(),
                 },
             )
             .await?;

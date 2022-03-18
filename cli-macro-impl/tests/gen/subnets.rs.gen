@@ -19,7 +19,7 @@ pub struct CmdSubnetList {
     pub organization: String,
     #[doc = "The order in which to sort the results."]
     #[clap(long, short, default_value_t)]
-    pub sort_by: Option<oxide_api::types::NameSortMode>,
+    pub sort_by: oxide_api::types::NameSortMode,
     #[doc = "The VPC_NAME that holds the subnets."]
     #[clap(long, short, required = true)]
     pub vpc: oxide_api::types::Name,
@@ -102,7 +102,7 @@ pub struct CmdSubnetCreate {
     pub ipv4_block: oxide_api::types::Ipv4Net,
     #[doc = "The IPv6 address range for this subnet.\n\nIt must be allocated from the RFC 4193 Unique Local Address range, with the prefix equal to the parent VPC's prefix. A random `/64` block will be assigned if one is not provided. It must not overlap with any existing subnet in the VPC."]
     #[clap(long, short, default_value_t)]
-    pub ipv6_block: Option<oxide_api::types::Ipv6Net>,
+    pub ipv6_block: oxide_api::types::Ipv6Net,
 }
 
 #[async_trait::async_trait]
@@ -110,7 +110,6 @@ impl crate::cmd::Command for CmdSubnetCreate {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
         let mut description = self.description.clone();
         let mut ipv4_block = self.ipv4_block.clone();
-        let mut ipv6_block = self.ipv6_block.clone();
         let mut subnet = self.subnet.clone();
         let mut organization = self.organization.clone();
         let mut project = self.project.clone();

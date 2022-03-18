@@ -19,7 +19,7 @@ pub struct CmdInstanceList {
     pub organization: String,
     #[doc = "The order in which to sort the results."]
     #[clap(long, short, default_value_t)]
-    pub sort_by: Option<oxide_api::types::NameSortMode>,
+    pub sort_by: oxide_api::types::NameSortMode,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
     pub limit: u32,
@@ -90,10 +90,10 @@ pub struct CmdInstanceCreate {
     pub hostname: String,
     #[doc = "A count of bytes, typically used either for memory or storage capacity\n\nThe maximum supported byte count is [`i64::MAX`].  This makes it somewhat inconvenient to define constructors: a u32 constructor can be infallible, but an i64 constructor can fail (if the value is negative) and a u64 constructor can fail (if the value is larger than i64::MAX).  We provide all of these for consumers' convenience."]
     #[clap(long, short, default_value_t)]
-    pub memory: u64,
+    pub memory: oxide_api::types::ByteCount,
     #[doc = "The number of CPUs in an Instance"]
     #[clap(long, short, default_value_t)]
-    pub ncpus: u16,
+    pub ncpus: oxide_api::types::InstanceCpuCount,
     #[doc = "The network interfaces to be created for this instance."]
     #[clap(long, short, default_value_t)]
     pub network_interfaces: Option<oxide_api::types::InstanceNetworkInterfaceAttachment>,
@@ -107,7 +107,6 @@ impl crate::cmd::Command for CmdInstanceCreate {
         let mut memory = self.memory.clone();
         let mut instance = self.instance.clone();
         let mut ncpus = self.ncpus.clone();
-        let mut network_interfaces = self.network_interfaces.clone();
         let mut organization = self.organization.clone();
         let mut project = self.project.clone();
         if description.is_empty() && !ctx.io.can_prompt() {

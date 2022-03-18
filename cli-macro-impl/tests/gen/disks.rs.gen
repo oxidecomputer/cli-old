@@ -23,7 +23,7 @@ pub struct CmdDiskList {
     pub organization: String,
     #[doc = "The order in which to sort the results."]
     #[clap(long, short, default_value_t)]
-    pub sort_by: Option<oxide_api::types::NameSortMode>,
+    pub sort_by: oxide_api::types::NameSortMode,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
     pub limit: u32,
@@ -94,7 +94,7 @@ pub struct CmdDiskCreate {
     pub size: oxide_api::types::ByteCount,
     #[doc = "id for snapshot from which the Disk should be created, if any"]
     #[clap(long, short, default_value_t)]
-    pub snapshot: Option<uuid::Uuid>,
+    pub snapshot: uuid::Uuid,
 }
 
 #[async_trait::async_trait]
@@ -105,7 +105,6 @@ impl crate::cmd::Command for CmdDiskCreate {
         let mut organization = self.organization.clone();
         let mut project = self.project.clone();
         let mut size = self.size.clone();
-        let mut snapshot = self.snapshot.clone();
         if description.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
                 "description required in non-interactive mode"
