@@ -309,7 +309,7 @@ impl crate::cmd::Command for CmdRouteCreate {
     }
 }
 
-#[doc = "View route.\n\nDisplay information about an Oxide route.\n\nWith '--web', open the route in a web browser instead."]
+#[doc = "View route.\n\nDisplay information about an Oxide route.\n\nWith `--web`, open the route in a web browser instead."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdRouteView {

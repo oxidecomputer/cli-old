@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cli_macros_impl::do_gen;
+use cli_macro_impl::do_gen;
 use quote::quote;
 
 fn get_text(output: &proc_macro2::TokenStream) -> Result<String> {

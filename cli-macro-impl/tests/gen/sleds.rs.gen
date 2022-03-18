@@ -52,7 +52,7 @@ impl crate::cmd::Command for CmdSledList {
     }
 }
 
-#[doc = "View sled.\n\nDisplay information about an Oxide sled.\n\nWith '--web', open the sled in a web browser instead."]
+#[doc = "View sled.\n\nDisplay information about an Oxide sled.\n\nWith `--web`, open the sled in a web browser instead."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSledView {

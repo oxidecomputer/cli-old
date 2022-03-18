@@ -267,7 +267,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
     }
 }
 
-#[doc = "View subnet.\n\nDisplay information about an Oxide subnet.\n\nWith '--web', open the subnet in a web browser instead."]
+#[doc = "View subnet.\n\nDisplay information about an Oxide subnet.\n\nWith `--web`, open the subnet in a web browser instead."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSubnetView {

@@ -239,7 +239,7 @@ impl crate::cmd::Command for CmdDiskCreate {
     }
 }
 
-#[doc = "View disk.\n\nDisplay information about an Oxide disk.\n\nWith '--web', open the disk in a web browser instead."]
+#[doc = "View disk.\n\nDisplay information about an Oxide disk.\n\nWith `--web`, open the disk in a web browser instead."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdDiskView {

@@ -127,7 +127,7 @@ impl crate::cmd::Command for CmdOrganizationCreate {
     }
 }
 
-#[doc = "View organization.\n\nDisplay information about an Oxide organization.\n\nWith '--web', open the organization in a web browser instead."]
+#[doc = "View organization.\n\nDisplay information about an Oxide organization.\n\nWith `--web`, open the organization in a web browser instead."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdOrganizationView {
