@@ -271,6 +271,26 @@ impl Operation {
         false
     }
 
+    fn get_request_body_name(&self) -> Result<String> {
+        let request_body = match self.op.request_body.as_ref() {
+            Some(r) => r,
+            None => anyhow::bail!("no request_body found"),
+        }
+        .item()?;
+
+        let content = match request_body.content.get("application/json") {
+            Some(c) => c,
+            None => anyhow::bail!("no `application/json` found"),
+        };
+
+        let schema = match content.schema.as_ref() {
+            Some(s) => s,
+            None => anyhow::bail!("no content schema found"),
+        };
+
+        schema.reference()
+    }
+
     fn get_request_body_properties(&self) -> Result<BTreeMap<String, Property>> {
         let mut properties = BTreeMap::new();
 
@@ -329,22 +349,6 @@ impl Operation {
         Ok(properties)
     }
 
-    #[allow(dead_code)]
-    fn is_request_body_property(&self, property: &str) -> bool {
-        let properties = match self.get_request_body_properties() {
-            Ok(p) => p,
-            Err(_) => return false,
-        };
-
-        for key in properties.keys() {
-            if key == property {
-                return true;
-            }
-        }
-
-        false
-    }
-
     /// Gets a list of all the string parameters for the operation.
     /// This includes the path parameters, query parameters, and request_body parameters.
     fn get_all_param_names(&self) -> Result<Vec<String>> {
@@ -361,6 +365,43 @@ impl Operation {
         param_names.sort();
 
         Ok(param_names)
+    }
+
+    /// Gets all the api call params for the operation.
+    /// This includes the path parameters, query parameters, and request_body parameters.
+    fn get_api_call_params(&self) -> Result<Vec<TokenStream>> {
+        let mut api_call_params: Vec<TokenStream> = Vec::new();
+
+        let mut params = self.get_parameters()?.keys().collect::<Vec<_>>();
+        params.sort();
+
+        for p in params {
+            let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
+
+            api_call_params.push(quote!(&self.#p));
+        }
+
+        let req_body_properties = self.get_request_body_properties()?.keys();
+        if req_body_properties.len() > 0 {
+            let req_body_properties = req_body_properties
+                .map(|p| {
+                    let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
+
+                    quote!(#p: #p.clone())
+                })
+                .collect::<Vec<_>>();
+
+            let type_name = self.get_request_body_name()?;
+            let type_name = format_ident!("{}", type_name);
+
+            api_call_params.push(quote! {
+                &oxide_api::types::#type_name {
+                    #(#req_body_properties),*
+                }
+            });
+        }
+
+        Ok(api_call_params)
     }
 
     /// Gets a list of all the required string parameters for the operation.
