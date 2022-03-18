@@ -84,6 +84,8 @@ pub fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
 
     let attrs = og_enum.attrs;
     let code = quote!(
+        use num_traits::identities::Zero;
+
         #(#attrs);*
         enum SubCommand {
             #variants
@@ -354,8 +356,6 @@ impl SchemaExt for openapiv3::Schema {
                 })
             }
             openapiv3::SchemaKind::OneOf { one_of: _ } => {
-                // TODO: Turn this on.
-                //Ok(quote!(String))
                 anyhow::bail!("oneOf not supported here yet: {:?}", self)
             }
             openapiv3::SchemaKind::Any(any) => {
@@ -840,17 +840,32 @@ impl Operation {
 
             let error_msg = format!("{} required in non-interactive mode", formatted);
 
-            let rendered = get_text(&t.render_type()?)?;
+            let mut rendered = get_text(&t.render_type()?)?;
 
             let is_check = if rendered.starts_with("Option<") {
                 format_ident!("{}", "is_none")
             } else {
-                format_ident!("{}", "is_empty")
+                rendered = if let Ok(s) = t.get_schema_from_reference() {
+                    let r = get_text(&s.render_type()?)?;
+                    println!("REFERENCE: {} -> {}", rendered, r);
+                    r
+                } else {
+                    rendered.to_string()
+                };
+
+                if rendered.starts_with('u') || rendered.starts_with('i') || rendered.starts_with('f') {
+                    // Handle numbers.
+                    format_ident!("{}", "is_zero")
+                } else {
+                    format_ident!("{}", "is_empty")
+                }
             };
 
-            required_checks.push(quote!(if #p.#is_check() && !ctx.io.can_prompt() {
-                return Err(anyhow::anyhow!(#error_msg));
-            }));
+            required_checks.push(quote!(
+                if #p.#is_check() && !ctx.io.can_prompt() {
+                    return Err(anyhow::anyhow!(#error_msg));
+                }
+            ));
         }
 
         // We need to check if project is a parameter to this call.
@@ -961,7 +976,7 @@ impl Operation {
 
             // TODO: for now skip any weird things and don't prompt for them
             // WE NEED TO FIX THIS
-            if n == "target" || n == "destination" {
+            if n == "target" || n == "destination" || n == "memory" || n == "ncpus" || "size" == n {
                 continue;
             }
 

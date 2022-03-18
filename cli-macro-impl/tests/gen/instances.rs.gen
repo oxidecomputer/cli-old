@@ -1,3 +1,4 @@
+use num_traits::identities::Zero;
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     List(CmdInstanceList),
@@ -119,7 +120,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
             return Err(anyhow::anyhow!("hostname required in non-interactive mode"));
         }
 
-        if memory.is_empty() && !ctx.io.can_prompt() {
+        if memory.is_zero() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!("memory required in non-interactive mode"));
         }
 
@@ -129,7 +130,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
             ));
         }
 
-        if ncpus.is_empty() && !ctx.io.can_prompt() {
+        if ncpus.is_zero() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!("ncpus required in non-interactive mode"));
         }
 
@@ -219,30 +220,6 @@ impl crate::cmd::Command for CmdInstanceCreate {
                 .interact_text()
             {
                 Ok(desc) => hostname = desc,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
-                }
-            }
-        }
-
-        if memory.is_empty() {
-            match dialoguer::Input::<_>::new()
-                .with_prompt("instance memory:")
-                .interact_text()
-            {
-                Ok(desc) => memory = desc,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
-                }
-            }
-        }
-
-        if ncpus.is_empty() {
-            match dialoguer::Input::<_>::new()
-                .with_prompt("instance ncpus:")
-                .interact_text()
-            {
-                Ok(desc) => ncpus = desc,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }

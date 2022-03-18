@@ -1281,6 +1281,7 @@ dependencies = [
  "heck 0.4.0",
  "http",
  "log",
+ "num-traits",
  "open",
  "oxide-api",
  "pretty_assertions",
@@ -1314,7 +1315,7 @@ dependencies = [
 
 [[package]]
 name = "oxide-api"
-version = "0.1.0-rc.23"
+version = "0.1.0-rc.24"
 dependencies = [
  "anyhow",
  "bytes",

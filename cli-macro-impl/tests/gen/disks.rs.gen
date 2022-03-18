@@ -1,3 +1,4 @@
+use num_traits::identities::Zero;
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     Attach(CmdDiskAttach),
@@ -193,18 +194,6 @@ impl crate::cmd::Command for CmdDiskCreate {
                 .interact_text()
             {
                 Ok(desc) => description = desc,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
-                }
-            }
-        }
-
-        if size.is_empty() {
-            match dialoguer::Input::<_>::new()
-                .with_prompt("disk size:")
-                .interact_text()
-            {
-                Ok(desc) => size = desc,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }

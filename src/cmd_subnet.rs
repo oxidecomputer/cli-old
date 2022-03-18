@@ -87,7 +87,7 @@ impl crate::cmd::Command for CmdSubnetEdit {
 
         let client = ctx.api_client("")?;
 
-        let mut body = oxide_api::types::SubnetUpdate {
+        let mut body = oxide_api::types::VpcSubnetUpdate {
             name: "".to_string(),
             description: "".to_string(),
             ipv4_block: "".to_string(),

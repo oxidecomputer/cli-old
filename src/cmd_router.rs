@@ -75,7 +75,7 @@ impl crate::cmd::Command for CmdRouterEdit {
 
         let client = ctx.api_client("")?;
 
-        let mut body = oxide_api::types::RouterUpdate {
+        let mut body = oxide_api::types::VpcRouterUpdate {
             name: "".to_string(),
             description: "".to_string(),
         };
