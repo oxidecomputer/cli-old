@@ -113,6 +113,11 @@ impl crate::cmd::Command for CmdDiskView {
 
         let table = tabled::Table::new(vec![result])
             .with(tabled::Rotate::Left)
+            .with(
+                tabled::Modify::new(tabled::Full)
+                    .with(tabled::Alignment::left())
+                    .with(tabled::Alignment::top()),
+            )
             .with(tabled::Style::psql())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;

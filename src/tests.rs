@@ -317,7 +317,7 @@ date:"#
                 "view".to_string(),
                 "maze-war".to_string(),
             ],
-            want_out: r#"description  |    The Maze War game organization"#.to_string(),
+            want_out: r#"description   | The Maze War game organization"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -526,7 +526,7 @@ date:"#
                 "maze-war".to_string(),
                 "development".to_string(),
             ],
-            want_out: r#"description   |       The development project"#.to_string(),
+            want_out: r#"description     | The development project"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -695,7 +695,7 @@ date:"#
                 "development".to_string(),
                 "my-app".to_string(),
             ],
-            want_out: r#"hostname        |                my-app"#
+            want_out: r#"memory                 | 1024"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -953,8 +953,7 @@ date:"#
                 "my-db".to_string(),
             ],
             want_out:
-                "NAME      DESCRTIPTION  STATE                                              DEVICE PATH    UPDATED
-new-disk  My new disk"
+                "new-disk | My new disk"
                     .to_string(),
             want_err: "".to_string(),
             want_code: 0,
