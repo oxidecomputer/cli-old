@@ -169,6 +169,7 @@ impl ParameterExt for openapiv3::Parameter {
 struct Operation {
     op: openapiv3::Operation,
     method: String,
+    #[allow(dead_code)]
     path: String,
     id: String,
 }
@@ -261,6 +262,7 @@ impl Operation {
         Ok(properties)
     }
 
+    #[allow(dead_code)]
     fn is_request_body_property(&self, property: &str) -> bool {
         let request_body = match self.op.request_body.as_ref() {
             Some(r) => r,
