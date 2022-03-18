@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use cli_macros::crud_gen;
 
 /// Create, list, edit, view, and delete organizations.
 #[derive(Parser, Debug, Clone)]
@@ -11,10 +12,12 @@ pub struct CmdOrganization {
     subcmd: SubCommand,
 }
 
+#[crud_gen {
+    tag = "organizations",
+}]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     Create(CmdOrganizationCreate),
-    Delete(CmdOrganizationDelete),
     Edit(CmdOrganizationEdit),
     List(CmdOrganizationList),
     View(CmdOrganizationView),

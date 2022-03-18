@@ -267,6 +267,50 @@ impl Operation {
         Ok(param_names)
     }
 
+    /// Get additional struct parameters.
+    fn get_additional_struct_params(&self, tag: &str) -> Result<Vec<TokenStream>> {
+        let mut params = Vec::new();
+
+        for (param, p) in self.get_parameters()? {
+            if param == "project"
+                || param == "organization"
+                || param == "project_name"
+                || param == "organization_name"
+                || param == singular(tag)
+                || param == format!("{}_name", singular(tag))
+            {
+                continue;
+            }
+
+            let data = if let Some(data) = p.data() {
+                data
+            } else {
+                continue;
+            };
+
+            let name = param.trim_end_matches("_name");
+            let p_ident = format_ident!("{}", name);
+            let param_doc = if let Some(desc) = &data.description {
+                desc.to_string()
+            } else {
+                let n = if name == "vpc" {
+                    name.to_uppercase()
+                } else {
+                    name.to_string()
+                };
+                format!("The {} that holds the {}.", n, singular(tag))
+            };
+
+            params.push(quote! {
+                #[doc = #param_doc]
+                #[clap(long, short, required = true)]
+                pub #p_ident: String,
+            });
+        }
+
+        Ok(params)
+    }
+
     /// Generate the delete command.
     fn generate_delete_command(&self, tag: &str) -> Result<(TokenStream, syn::Variant)> {
         let tag_ident = format_ident!("{}", tag);
@@ -309,6 +353,8 @@ impl Operation {
         } else {
             quote!()
         };
+
+        let additional_struct_params = self.get_additional_struct_params(tag)?;
 
         // We need to form the output back to the client.
         let output = if self.is_parameter("organization") && self.is_parameter("project") {
@@ -363,6 +409,8 @@ impl Operation {
                 #project_param
 
                 #organization_param
+
+                #(#additional_struct_params);*
 
                 /// Confirm deletion without prompting.
                 #[clap(long)]
@@ -640,6 +688,98 @@ mod tests {
                         cs.success_icon_with_color(ansi_term::Color::Red),
                         "organization",
                         self.organization
+                    )?;
+
+                    Ok(())
+                }
+            }
+        };
+
+        assert_eq!(expected.to_string(), ret.unwrap().to_string());
+
+        ret = do_gen(
+            quote! {
+                tag = "subnets",
+            },
+            quote! {
+                #[derive(Parser, Debug, Clone)]
+                enum SubCommand {}
+            },
+        );
+
+        expected = quote! {
+            #[derive(Parser, Debug, Clone)]
+            enum SubCommand {
+                Delete(CmdSubnetDelete)
+            }
+
+            #[doc = "Delete a subnet."]
+            #[derive(clap::Parser, Debug, Clone)]
+            #[clap(verbatim_doc_comment)]
+            pub struct CmdSubnetDelete {
+                #[doc = "The subnet to delete. Can be an ID or name."]
+                #[clap(name = "subnet", required = true)]
+                pub subnet: String,
+
+                #[doc = "The project to delete the subnet from."]
+                #[clap(long, short, required = true)]
+                pub project: String,
+
+                /// The organization that holds the project.
+                #[clap(long, short, required = true, env = "OXIDE_ORG")]
+                pub organization: String,
+
+                #[doc = "The VPC that holds the subnet."]
+                #[clap(long, short, required = true)]
+                pub vpc: String,
+
+                /// Confirm deletion without prompting.
+                #[clap(long)]
+                pub confirm: bool,
+            }
+
+            #[async_trait::async_trait]
+            impl crate::cmd::Command for CmdSubnetDelete {
+                async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+                    if !ctx.io.can_prompt() && !self.confirm {
+                        return Err(anyhow::anyhow!("--confirm required when not running interactively"));
+                    }
+
+                    let client = ctx.api_client("")?;
+
+                    // Confirm deletion.
+                    if !self.confirm {
+                        if let Err(err) = dialoguer::Input::<String>::new()
+                            .with_prompt(format!("Type {} to confirm deletion:", self.subnet))
+                            .validate_with(|input: &String| -> Result<(), &str> {
+                                if input.trim() == self.subnet {
+                                    Ok(())
+                                } else {
+                                    Err("mismatched confirmation")
+                                }
+                            })
+                            .interact_text()
+                        {
+                            return Err(anyhow::anyhow!("prompt failed: {}", err));
+                        }
+                    }
+
+                    // Delete the project.
+                    client
+                        .subnets()
+                        .delete(&self.organization, &self.project, &self.subnet, &self.vpc,)
+                        .await?;
+
+                    let cs = ctx.io.color_scheme();
+
+                    let full_name = format!("{}/{}", self.organization, self.project);
+                    writeln!(
+                        ctx.io.out,
+                        "{} Deleted {} {} from {}",
+                        cs.success_icon_with_color(ansi_term::Color::Red),
+                        "subnet",
+                        self.subnet,
+                        full_name
                     )?;
 
                     Ok(())

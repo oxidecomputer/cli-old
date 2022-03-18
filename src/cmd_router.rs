@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use cli_macros::crud_gen;
 
 /// Create, list, edit, view, and delete routers.
 #[derive(Parser, Debug, Clone)]
@@ -11,10 +12,12 @@ pub struct CmdRouter {
     subcmd: SubCommand,
 }
 
+#[crud_gen {
+    tag = "routers",
+}]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     Create(CmdRouterCreate),
-    Delete(CmdRouterDelete),
     Edit(CmdRouterEdit),
     List(CmdRouterList),
     View(CmdRouterView),
@@ -192,79 +195,6 @@ impl crate::cmd::Command for CmdRouterCreate {
             router_name,
             full_name,
             vpc_name
-        )?;
-
-        Ok(())
-    }
-}
-
-/// Delete a router.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdRouterDelete {
-    /// The router to delete. Can be an ID or name.
-    #[clap(name = "router", required = true)]
-    router: String,
-
-    /// The VPC that holds the router.
-    #[clap(long, short, required = true)]
-    pub vpc: String,
-
-    /// The project to delete the router from.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization that holds the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Confirm deletion without prompting.
-    #[clap(long)]
-    pub confirm: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdRouterDelete {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if !ctx.io.can_prompt() && !self.confirm {
-            return Err(anyhow!("--confirm required when not running interactively"));
-        }
-
-        let client = ctx.api_client("")?;
-
-        let full_name = format!("{}/{}", self.organization, self.project);
-
-        // Confirm deletion.
-        if !self.confirm {
-            if let Err(err) = dialoguer::Input::<String>::new()
-                .with_prompt(format!("Type {} to confirm deletion:", self.router))
-                .validate_with(|input: &String| -> Result<(), &str> {
-                    if input.trim() == full_name {
-                        Ok(())
-                    } else {
-                        Err("mismatched confirmation")
-                    }
-                })
-                .interact_text()
-            {
-                return Err(anyhow!("prompt failed: {}", err));
-            }
-        }
-
-        // Delete the project.
-        client
-            .routers()
-            .delete(&self.router, &self.organization, &self.project, &self.vpc)
-            .await?;
-
-        let cs = ctx.io.color_scheme();
-        writeln!(
-            ctx.io.out,
-            "{} Deleted router {} from {} in VPC {}",
-            cs.success_icon_with_color(ansi_term::Color::Red),
-            self.router,
-            full_name,
-            self.vpc
         )?;
 
         Ok(())

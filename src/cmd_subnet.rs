@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use cli_macros::crud_gen;
 
 /// Create, list, edit, view, and delete subnets.
 #[derive(Parser, Debug, Clone)]
@@ -11,10 +12,12 @@ pub struct CmdSubnet {
     subcmd: SubCommand,
 }
 
+#[crud_gen {
+    tag = "subnets",
+}]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     Create(CmdSubnetCreate),
-    Delete(CmdSubnetDelete),
     Edit(CmdSubnetEdit),
     List(CmdSubnetList),
     View(CmdSubnetView),
@@ -230,79 +233,6 @@ impl crate::cmd::Command for CmdSubnetCreate {
             subnet_name,
             full_name,
             vpc_name
-        )?;
-
-        Ok(())
-    }
-}
-
-/// Delete a subnet.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdSubnetDelete {
-    /// The subnet to delete. Can be an ID or name.
-    #[clap(name = "subnet", required = true)]
-    subnet: String,
-
-    /// The VPC that holds the subnet.
-    #[clap(long, short, required = true)]
-    pub vpc: String,
-
-    /// The project to delete the subnet from.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization that holds the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Confirm deletion without prompting.
-    #[clap(long)]
-    pub confirm: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdSubnetDelete {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if !ctx.io.can_prompt() && !self.confirm {
-            return Err(anyhow!("--confirm required when not running interactively"));
-        }
-
-        let client = ctx.api_client("")?;
-
-        let full_name = format!("{}/{}", self.organization, self.project,);
-
-        // Confirm deletion.
-        if !self.confirm {
-            if let Err(err) = dialoguer::Input::<String>::new()
-                .with_prompt(format!("Type {} to confirm deletion:", self.subnet))
-                .validate_with(|input: &String| -> Result<(), &str> {
-                    if input.trim() == full_name {
-                        Ok(())
-                    } else {
-                        Err("mismatched confirmation")
-                    }
-                })
-                .interact_text()
-            {
-                return Err(anyhow!("prompt failed: {}", err));
-            }
-        }
-
-        // Delete the project.
-        client
-            .subnets()
-            .delete(&self.subnet, &self.organization, &self.project, &self.vpc)
-            .await?;
-
-        let cs = ctx.io.color_scheme();
-        writeln!(
-            ctx.io.out,
-            "{} Deleted subnet {} from {} in VPC {}",
-            cs.success_icon_with_color(ansi_term::Color::Red),
-            self.subnet,
-            full_name,
-            self.vpc,
         )?;
 
         Ok(())
