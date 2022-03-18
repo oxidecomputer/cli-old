@@ -364,8 +364,8 @@ version = "0.1.0"
 dependencies = [
  "Inflector",
  "anyhow",
+ "expectorate",
  "openapiv3",
- "pretty_assertions",
  "proc-macro2",
  "quote",
  "serde",
@@ -519,6 +519,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e25ea47919b1560c4e3b7fe0aaab9becf5b84a10325ddf7db0f0ba5e1026499"
 
 [[package]]
+name = "difference"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "524cbf6897b527295dff137cec09ecf3a05f4fddffd7dfcd1585403449e74198"
+
+[[package]]
 name = "dirs"
 version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -591,6 +597,16 @@ name = "event-listener"
 version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77f3309417938f28bf8228fcff79a4a37103981e3e186d2ccd19c74b38f4eb71"
+
+[[package]]
+name = "expectorate"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "804d601ea8a13ddbecf5ab4b6cf75b5d6d0539479c6fb2aea1596e352a5ee27e"
+dependencies = [
+ "difference",
+ "newline-converter",
+]
 
 [[package]]
 name = "fastrand"
@@ -1120,6 +1136,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "newline-converter"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6f81c2b19eebbc4249b3ca6aff70ae05bf18d6a99b7cc63cf0248774e640565"
+
+[[package]]
 name = "nom"
 version = "4.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1273,13 +1295,14 @@ dependencies = [
 
 [[package]]
 name = "oxide-api"
-version = "0.1.0-rc.20"
+version = "0.1.0-rc.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ce7a136a8682a52df185abb0b6044b752d5bf3430e7d05ec44132297f1b880b"
+checksum = "1470309431d9fefb62703d0d0e6f1f65b0157e8df3396337c1bd6ae5ae2f6b2d"
 dependencies = [
  "anyhow",
  "bytes",
  "chrono",
+ "chrono-humanize",
  "http",
  "hyperx",
  "log",
