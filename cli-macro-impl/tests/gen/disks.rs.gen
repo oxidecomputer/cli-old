@@ -23,7 +23,7 @@ pub struct CmdDiskList {
     pub organization: String,
     #[doc = "The order in which to sort the results."]
     #[clap(long, short, default_value_t)]
-    pub sort_by: oxide_api::types::NameSortMode,
+    pub sort_by: Option<oxide_api::types::NameSortMode>,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
     pub limit: u32,
@@ -94,7 +94,7 @@ pub struct CmdDiskCreate {
     pub size: oxide_api::types::ByteCount,
     #[doc = "id for snapshot from which the Disk should be created, if any"]
     #[clap(long, short, default_value_t)]
-    pub snapshot: uuid::Uuid,
+    pub snapshot: Option<uuid::Uuid>,
 }
 
 #[async_trait::async_trait]
@@ -137,7 +137,7 @@ impl crate::cmd::Command for CmdDiskCreate {
                 .organizations()
                 .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
                 .await?;
-            for org in orgs {
+            for org in resp {
                 orgs.push(org.name.to_string());
             }
             match dialoguer::Select::new()
@@ -189,7 +189,7 @@ impl crate::cmd::Command for CmdDiskCreate {
         }
 
         if description.is_empty() {
-            match dialoguer::Input::<String>::new()
+            match dialoguer::Input::<_>::new()
                 .with_prompt("disk description:")
                 .interact_text()
             {
@@ -201,7 +201,7 @@ impl crate::cmd::Command for CmdDiskCreate {
         }
 
         if size.is_empty() {
-            match dialoguer::Input::<String>::new()
+            match dialoguer::Input::<_>::new()
                 .with_prompt("disk size:")
                 .interact_text()
             {

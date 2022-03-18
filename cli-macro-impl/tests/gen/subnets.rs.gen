@@ -19,7 +19,7 @@ pub struct CmdSubnetList {
     pub organization: String,
     #[doc = "The order in which to sort the results."]
     #[clap(long, short, default_value_t)]
-    pub sort_by: oxide_api::types::NameSortMode,
+    pub sort_by: Option<oxide_api::types::NameSortMode>,
     #[doc = "The VPC_NAME that holds the subnets."]
     #[clap(long, short, required = true)]
     pub vpc: oxide_api::types::Name,
@@ -102,7 +102,7 @@ pub struct CmdSubnetCreate {
     pub ipv4_block: oxide_api::types::Ipv4Net,
     #[doc = "The IPv6 address range for this subnet.\n\nIt must be allocated from the RFC 4193 Unique Local Address range, with the prefix equal to the parent VPC's prefix. A random `/64` block will be assigned if one is not provided. It must not overlap with any existing subnet in the VPC."]
     #[clap(long, short, default_value_t)]
-    pub ipv6_block: oxide_api::types::Ipv6Net,
+    pub ipv6_block: Option<oxide_api::types::Ipv6Net>,
 }
 
 #[async_trait::async_trait]
@@ -152,7 +152,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
                 .organizations()
                 .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
                 .await?;
-            for org in orgs {
+            for org in resp {
                 orgs.push(org.name.to_string());
             }
             match dialoguer::Select::new()
@@ -204,7 +204,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
         }
 
         if description.is_empty() {
-            match dialoguer::Input::<String>::new()
+            match dialoguer::Input::<_>::new()
                 .with_prompt("subnet description:")
                 .interact_text()
             {
@@ -216,7 +216,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
         }
 
         if ipv4_block.is_empty() {
-            match dialoguer::Input::<String>::new()
+            match dialoguer::Input::<_>::new()
                 .with_prompt("subnet ipv4_block:")
                 .interact_text()
             {
@@ -228,7 +228,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
         }
 
         if vpc.is_empty() {
-            match dialoguer::Input::<String>::new()
+            match dialoguer::Input::<_>::new()
                 .with_prompt("subnet vpc:")
                 .interact_text()
             {

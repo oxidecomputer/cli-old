@@ -134,7 +134,17 @@ impl<T> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
         let ident = format_ident!("{}", name);
 
         // We want the full path to the type.
-        Ok(quote!(oxide_api::types::#ident))
+        let rendered = quote!(oxide_api::types::#ident);
+
+        // If we have a oneOf, we will want to make it an option.
+        let schema = self.get_schema_from_reference()?;
+        if let openapiv3::SchemaKind::OneOf { one_of: _ } = schema.schema_kind {
+            return Ok(quote! {
+                Option<#rendered>
+            });
+        }
+
+        Ok(quote!(#rendered))
     }
 
     fn get_schema_from_reference(&self) -> Result<openapiv3::Schema> {
@@ -269,60 +279,83 @@ impl SchemaExt for openapiv3::Schema {
                     },
                 })
             }
-            openapiv3::SchemaKind::Type(openapiv3::Type::Number(_)) => Ok(quote!(f64)),
-            openapiv3::SchemaKind::Type(openapiv3::Type::Integer(it)) => {
-                let uint;
-                let width;
-
-                if let openapiv3::VariantOrUnknownOrEmpty::Unknown(f) = &it.format {
-                    match f.as_str() {
-                        "uint" | "uint32" => {
-                            uint = true;
-                            width = 32;
-                        }
-                        "uint8" => {
-                            uint = true;
-                            width = 8;
-                        }
-                        "uint16" => {
-                            uint = true;
-                            width = 16;
-                        }
-                        "uint64" => {
-                            uint = true;
-                            width = 64;
-                        }
-                        f => anyhow::bail!("unknown integer format {}", f),
-                    }
-                } else {
-                    // The format was empty, let's assume it's just a normal
-                    // i64.
-                    uint = false;
-                    width = 64;
+            openapiv3::SchemaKind::Type(openapiv3::Type::Number(nt)) => Ok(match &nt.format {
+                openapiv3::VariantOrUnknownOrEmpty::Item(openapiv3::NumberFormat::Float) => {
+                    quote!(f64)
                 }
-
-                Ok(if uint {
-                    match width {
-                        8 => quote!(u8),
-                        16 => quote!(u16),
-                        32 => quote!(u32),
-                        64 => quote!(u64),
-                        _ => anyhow::bail!("unknown uint width {}", width),
+                openapiv3::VariantOrUnknownOrEmpty::Item(openapiv3::NumberFormat::Double) => {
+                    quote!(f64)
+                }
+                openapiv3::VariantOrUnknownOrEmpty::Empty => quote!(f64),
+                openapiv3::VariantOrUnknownOrEmpty::Unknown(f) => {
+                    anyhow::bail!("XXX unknown number format {}", f)
+                }
+            }),
+            openapiv3::SchemaKind::Type(openapiv3::Type::Integer(it)) => {
+                Ok(match &it.format {
+                    openapiv3::VariantOrUnknownOrEmpty::Item(openapiv3::IntegerFormat::Int32) => {
+                        quote!(i32)
                     }
-                } else {
-                    match width {
-                        8 => quote!(i8),
-                        16 => quote!(i16),
-                        32 => quote!(i32),
-                        64 => quote!(i64),
-                        _ => anyhow::bail!("unknown int width {}", width),
+                    openapiv3::VariantOrUnknownOrEmpty::Item(openapiv3::IntegerFormat::Int64) => {
+                        quote!(i64)
+                    }
+                    openapiv3::VariantOrUnknownOrEmpty::Empty => quote!(i64),
+                    openapiv3::VariantOrUnknownOrEmpty::Unknown(f) => {
+                        let uint;
+                        let width;
+                        match f.as_str() {
+                            "uint" | "uint32" => {
+                                uint = true;
+                                width = 32;
+                            }
+                            "uint8" => {
+                                uint = true;
+                                width = 8;
+                            }
+                            "uint16" => {
+                                uint = true;
+                                width = 16;
+                            }
+                            "uint64" => {
+                                uint = true;
+                                width = 64;
+                            }
+                            "int8" => {
+                                uint = false;
+                                width = 8;
+                            }
+                            "int16" => {
+                                uint = false;
+                                width = 16;
+                            }
+                            /* int32 and int64 are build it and parse as the integer type */
+                            f => anyhow::bail!("unknown integer format {}", f),
+                        }
+
+                        if uint {
+                            match width {
+                                8 => quote!(u8),
+                                16 => quote!(u16),
+                                32 => quote!(u32),
+                                64 => quote!(u64),
+                                _ => anyhow::bail!("unknown uint width {}", width),
+                            }
+                        } else {
+                            match width {
+                                8 => quote!(i8),
+                                16 => quote!(i16),
+                                32 => quote!(i32),
+                                64 => quote!(i64),
+                                _ => anyhow::bail!("unknown int width {}", width),
+                            }
+                        }
                     }
                 })
             }
             openapiv3::SchemaKind::OneOf { one_of: _ } => {
                 // TODO: Turn this on.
-                Ok(quote!(String))
-                //anyhow::bail!("oneOf not supported here yet: {:?}", one_of)
+                //Ok(quote!(String))
+                anyhow::bail!("oneOf not supported here yet: {:?}", self)
             }
             openapiv3::SchemaKind::Any(any) => {
                 anyhow::bail!("any not supported here yet: {:?}", any)
@@ -362,8 +395,9 @@ struct Operation {
 }
 
 struct Property {
-    schema: openapiv3::Schema,
+    schema: openapiv3::ReferenceOr<openapiv3::Schema>,
     required: bool,
+    description: Option<String>,
 }
 
 struct Parameter {
@@ -510,11 +544,13 @@ impl Operation {
                     }
                 }
             };
+
             properties.insert(
                 key.clone(),
                 Property {
-                    schema: s,
+                    schema: prop.clone().unbox(),
                     required: obj.required.contains(key),
+                    description: s.schema_data.description,
                 },
             );
         }
@@ -628,12 +664,7 @@ impl Operation {
         description: Option<String>,
         required: bool,
     ) -> Result<TokenStream> {
-        if name == "project"
-            || name == "name"
-            || name == "organization"
-            || name == "project_name"
-            || name == "organization_name"
-            || name == singular(tag)
+        if skip_defaults(name, tag)
             || name == format!("{}_name", singular(tag))
             || name == format!("{}_id", singular(tag))
             || name == "limit"
@@ -713,13 +744,7 @@ impl Operation {
         }
 
         for (param, p) in self.get_request_body_properties()? {
-            params.push(self.render_struct_param(
-                &param,
-                tag,
-                openapiv3::ReferenceOr::Item(p.schema.clone()),
-                p.schema.schema_data.description,
-                p.required,
-            )?);
+            params.push(self.render_struct_param(&param, tag, p.schema, p.description, p.required)?);
         }
 
         Ok(params)
@@ -880,7 +905,7 @@ impl Operation {
         let mut additional_prompts: Vec<TokenStream> = Vec::new();
         for p in self.get_all_required_param_names()? {
             let n = p.trim_end_matches("_name").trim_end_matches("_id");
-            if n == singular(tag) || n == "project" || n == "organization" || n == "name" {
+            if skip_defaults(n, tag) {
                 // Skip the prompt.
                 continue;
             }
@@ -892,7 +917,7 @@ impl Operation {
             additional_prompts.push(quote! {
                 // Propmt if they didn't provide the value.
                 if #p.is_empty() {
-                    match dialoguer::Input::<String>::new()
+                    match dialoguer::Input::<_>::new()
                         .with_prompt(#title)
                         .interact_text()
                     {
@@ -1457,4 +1482,13 @@ fn singular(s: &str) -> String {
     }
 
     s.to_string()
+}
+
+fn skip_defaults(n: &str, tag: &str) -> bool {
+    n == singular(tag)
+        || n == "project"
+        || n == "organization"
+        || n == "name"
+        || n == "project_name"
+        || n == "organization_name"
 }

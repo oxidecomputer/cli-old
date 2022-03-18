@@ -95,4 +95,19 @@ fn test_do_gen() {
     .unwrap();
 
     expectorate::assert_contents("tests/gen/sleds.rs.gen", &get_text(&actual).unwrap());
+
+    actual = do_gen(
+        quote! {
+            tag = "instances",
+        }
+        .into(),
+        quote! {
+            #[derive(Parser, Debug, Clone)]
+            enum SubCommand {}
+        }
+        .into(),
+    )
+    .unwrap();
+
+    expectorate::assert_contents("tests/gen/instances.rs.gen", &get_text(&actual).unwrap());
 }

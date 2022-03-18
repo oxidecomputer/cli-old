@@ -13,7 +13,7 @@ enum SubCommand {
 pub struct CmdOrganizationList {
     #[doc = "The order in which to sort the results."]
     #[clap(long, short, default_value_t)]
-    pub sort_by: oxide_api::types::NameOrIdSortMode,
+    pub sort_by: Option<oxide_api::types::NameOrIdSortMode>,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
     pub limit: u32,
@@ -97,7 +97,7 @@ impl crate::cmd::Command for CmdOrganizationCreate {
         }
 
         if description.is_empty() {
-            match dialoguer::Input::<String>::new()
+            match dialoguer::Input::<_>::new()
                 .with_prompt("organization description:")
                 .interact_text()
             {

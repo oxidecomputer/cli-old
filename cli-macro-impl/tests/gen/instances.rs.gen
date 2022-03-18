@@ -1,31 +1,25 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
-    List(CmdRouteList),
-    Create(CmdRouteCreate),
+    List(CmdInstanceList),
+    Create(CmdInstanceCreate),
     #[clap(alias = "get")]
-    View(CmdRouteView),
-    Delete(CmdRouteDelete),
+    View(CmdInstanceView),
+    Delete(CmdInstanceDelete),
 }
 
-#[doc = "List routes."]
+#[doc = "List instances."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdRouteList {
-    #[doc = "The project that holds the routes."]
+pub struct CmdInstanceList {
+    #[doc = "The project that holds the instances."]
     #[clap(long, short, required = true)]
     pub project: String,
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The router_name that holds the routes."]
-    #[clap(long, short, required = true)]
-    pub router: oxide_api::types::Name,
     #[doc = "The order in which to sort the results."]
     #[clap(long, short, default_value_t)]
     pub sort_by: Option<oxide_api::types::NameSortMode>,
-    #[doc = "The VPC_NAME that holds the routes."]
-    #[clap(long, short, required = true)]
-    pub vpc: oxide_api::types::Name,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
     pub limit: u32,
@@ -38,7 +32,7 @@ pub struct CmdRouteList {
 }
 
 #[async_trait::async_trait]
-impl crate::cmd::Command for CmdRouteList {
+impl crate::cmd::Command for CmdInstanceList {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
         if self.limit < 1 {
             return Err(anyhow::anyhow!("--limit must be greater than 0"));
@@ -47,26 +41,18 @@ impl crate::cmd::Command for CmdRouteList {
         let client = ctx.api_client("")?;
         let results = if self.paginate {
             client
-                .routes()
-                .get_all(
-                    &self.organization,
-                    &self.project,
-                    &self.router,
-                    self.sort_by.clone(),
-                    &self.vpc,
-                )
+                .instances()
+                .get_all(&self.organization, &self.project, self.sort_by.clone())
                 .await?
         } else {
             client
-                .routes()
+                .instances()
                 .get_page(
                     self.limit,
                     &self.organization,
                     "",
                     &self.project,
-                    &self.router,
                     self.sort_by.clone(),
-                    &self.vpc,
                 )
                 .await?
         };
@@ -83,61 +69,69 @@ impl crate::cmd::Command for CmdRouteList {
     }
 }
 
-#[doc = "Create a new route.\n\nTo create a route interactively, use `oxide route create` with no arguments."]
+#[doc = "Create a new instance.\n\nTo create a instance interactively, use `oxide instance create` with no arguments."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdRouteCreate {
-    #[doc = "The name of the route to create."]
-    #[clap(name = "route", required = true)]
-    pub route: String,
-    #[doc = "The project that holds the route."]
+pub struct CmdInstanceCreate {
+    #[doc = "The name of the instance to create."]
+    #[clap(name = "instance", required = true)]
+    pub instance: String,
+    #[doc = "The project that holds the instance."]
     #[clap(long, short, required = true)]
     pub project: String,
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The router_name that holds the route."]
-    #[clap(long, short, default_value_t)]
-    pub router: oxide_api::types::Name,
-    #[doc = "The VPC_NAME that holds the route."]
-    #[clap(long, short, default_value_t)]
-    pub vpc: oxide_api::types::Name,
-    #[doc = "The description that holds the route."]
+    #[doc = "The description that holds the instance."]
     #[clap(long, short, default_value_t)]
     pub description: String,
-    #[doc = "A `RouteDestination` is used to match traffic with a routing rule, on the destination of that traffic.\n\nWhen traffic is to be sent to a destination that is within a given `RouteDestination`, the corresponding [`RouterRoute`] applies, and traffic will be forward to the [`RouteTarget`] for that rule."]
+    #[doc = "The hostname that holds the instance."]
     #[clap(long, short, default_value_t)]
-    pub destination: String,
-    #[doc = "A `RouteTarget` describes the possible locations that traffic matching a route destination can be sent."]
+    pub hostname: String,
+    #[doc = "A count of bytes, typically used either for memory or storage capacity\n\nThe maximum supported byte count is [`i64::MAX`].  This makes it somewhat inconvenient to define constructors: a u32 constructor can be infallible, but an i64 constructor can fail (if the value is negative) and a u64 constructor can fail (if the value is larger than i64::MAX).  We provide all of these for consumers' convenience."]
     #[clap(long, short, default_value_t)]
-    pub target: String,
+    pub memory: u64,
+    #[doc = "The number of CPUs in an Instance"]
+    #[clap(long, short, default_value_t)]
+    pub ncpus: u16,
+    #[doc = "The network interfaces to be created for this instance."]
+    #[clap(long, short, default_value_t)]
+    pub network_interfaces: Option<oxide_api::types::InstanceNetworkInterfaceAttachment>,
 }
 
 #[async_trait::async_trait]
-impl crate::cmd::Command for CmdRouteCreate {
+impl crate::cmd::Command for CmdInstanceCreate {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
         let mut description = self.description.clone();
-        let mut destination = self.destination.clone();
-        let mut route = self.route.clone();
+        let mut hostname = self.hostname.clone();
+        let mut memory = self.memory.clone();
+        let mut instance = self.instance.clone();
+        let mut ncpus = self.ncpus.clone();
+        let mut network_interfaces = self.network_interfaces.clone();
         let mut organization = self.organization.clone();
         let mut project = self.project.clone();
-        let mut router = self.router.clone();
-        let mut target = self.target.clone();
-        let mut vpc = self.vpc.clone();
         if description.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
                 "description required in non-interactive mode"
             ));
         }
 
-        if destination.is_empty() && !ctx.io.can_prompt() {
+        if hostname.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!("hostname required in non-interactive mode"));
+        }
+
+        if memory.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!("memory required in non-interactive mode"));
+        }
+
+        if instance.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "destination required in non-interactive mode"
+                "[instance] required in non-interactive mode"
             ));
         }
 
-        if route.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("[route] required in non-interactive mode"));
+        if ncpus.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!("ncpus required in non-interactive mode"));
         }
 
         if organization.is_empty() && !ctx.io.can_prompt() {
@@ -148,18 +142,6 @@ impl crate::cmd::Command for CmdRouteCreate {
 
         if project.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!("project required in non-interactive mode"));
-        }
-
-        if router.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("router required in non-interactive mode"));
-        }
-
-        if target.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("target required in non-interactive mode"));
-        }
-
-        if vpc.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("vpc required in non-interactive mode"));
         }
 
         let client = ctx.api_client("")?;
@@ -208,12 +190,12 @@ impl crate::cmd::Command for CmdRouteCreate {
             }
         }
 
-        if route.is_empty() {
+        if instance.is_empty() {
             match dialoguer::Input::<String>::new()
-                .with_prompt(&format!("{} name:", "route"))
+                .with_prompt(&format!("{} name:", "instance"))
                 .interact_text()
             {
-                Ok(name) => route = name,
+                Ok(name) => instance = name,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
@@ -222,7 +204,7 @@ impl crate::cmd::Command for CmdRouteCreate {
 
         if description.is_empty() {
             match dialoguer::Input::<_>::new()
-                .with_prompt("route description:")
+                .with_prompt("instance description:")
                 .interact_text()
             {
                 Ok(desc) => description = desc,
@@ -232,48 +214,36 @@ impl crate::cmd::Command for CmdRouteCreate {
             }
         }
 
-        if destination.is_empty() {
+        if hostname.is_empty() {
             match dialoguer::Input::<_>::new()
-                .with_prompt("route destination:")
+                .with_prompt("instance hostname:")
                 .interact_text()
             {
-                Ok(desc) => destination = desc,
+                Ok(desc) => hostname = desc,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
 
-        if router.is_empty() {
+        if memory.is_empty() {
             match dialoguer::Input::<_>::new()
-                .with_prompt("route router:")
+                .with_prompt("instance memory:")
                 .interact_text()
             {
-                Ok(desc) => router = desc,
+                Ok(desc) => memory = desc,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
 
-        if target.is_empty() {
+        if ncpus.is_empty() {
             match dialoguer::Input::<_>::new()
-                .with_prompt("route target:")
+                .with_prompt("instance ncpus:")
                 .interact_text()
             {
-                Ok(desc) => target = desc,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
-                }
-            }
-        }
-
-        if vpc.is_empty() {
-            match dialoguer::Input::<_>::new()
-                .with_prompt("route vpc:")
-                .interact_text()
-            {
-                Ok(desc) => vpc = desc,
+                Ok(desc) => ncpus = desc,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
@@ -281,17 +251,17 @@ impl crate::cmd::Command for CmdRouteCreate {
         }
 
         client
-            .routes()
+            .instances()
             .post(
                 &self.organization,
                 &self.project,
-                &self.router,
-                &self.vpc,
-                &oxide_api::types::RouterRouteCreateParams {
+                &oxide_api::types::InstanceCreate {
                     description: description.clone(),
-                    destination: destination.clone(),
-                    name: route.clone(),
-                    target: target.clone(),
+                    hostname: hostname.clone(),
+                    memory: memory.clone(),
+                    name: instance.clone(),
+                    ncpus: ncpus.clone(),
+                    network_interfaces: network_interfaces.clone(),
                 },
             )
             .await?;
@@ -301,34 +271,28 @@ impl crate::cmd::Command for CmdRouteCreate {
             ctx.io.out,
             "{} Created {} {} in {}",
             cs.success_icon(),
-            "route",
-            self.route,
+            "instance",
+            self.instance,
             full_name
         )?;
         Ok(())
     }
 }
 
-#[doc = "View route.\n\nDisplay information about an Oxide route.\n\nWith `--web`, open the route in a web browser instead."]
+#[doc = "View instance.\n\nDisplay information about an Oxide instance.\n\nWith `--web`, open the instance in a web browser instead."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdRouteView {
-    #[doc = "The route to view. Can be an ID or name."]
-    #[clap(name = "route", required = true)]
-    pub route: String,
-    #[doc = "The project that holds the route."]
+pub struct CmdInstanceView {
+    #[doc = "The instance to view. Can be an ID or name."]
+    #[clap(name = "instance", required = true)]
+    pub instance: String,
+    #[doc = "The project that holds the instance."]
     #[clap(long, short, required = true)]
     pub project: String,
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The router_name that holds the route."]
-    #[clap(long, short, required = true)]
-    pub router: oxide_api::types::Name,
-    #[doc = "The VPC_NAME that holds the route."]
-    #[clap(long, short, required = true)]
-    pub vpc: oxide_api::types::Name,
-    #[doc = "Open the route in the browser."]
+    #[doc = "Open the instance in the browser."]
     #[clap(short, long)]
     pub web: bool,
     #[doc = r" Output JSON."]
@@ -337,24 +301,18 @@ pub struct CmdRouteView {
 }
 
 #[async_trait::async_trait]
-impl crate::cmd::Command for CmdRouteView {
+impl crate::cmd::Command for CmdInstanceView {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
         if self.web {
-            let url = format!("https://{}/{}", ctx.config.default_host()?, self.route);
+            let url = format!("https://{}/{}", ctx.config.default_host()?, self.instance);
             ctx.browser("", &url)?;
             return Ok(());
         }
 
         let client = ctx.api_client("")?;
         let result = client
-            .routes()
-            .get(
-                &self.organization,
-                &self.project,
-                &self.route,
-                &self.router,
-                &self.vpc,
-            )
+            .instances()
+            .get(&self.instance, &self.organization, &self.project)
             .await?;
         if self.json {
             ctx.io.write_json(&serde_json::json!(result))?;
@@ -375,32 +333,26 @@ impl crate::cmd::Command for CmdRouteView {
     }
 }
 
-#[doc = "Delete route."]
+#[doc = "Delete instance."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdRouteDelete {
-    #[doc = "The route to delete. Can be an ID or name."]
-    #[clap(name = "route", required = true)]
-    pub route: String,
-    #[doc = "The project to delete the route from."]
+pub struct CmdInstanceDelete {
+    #[doc = "The instance to delete. Can be an ID or name."]
+    #[clap(name = "instance", required = true)]
+    pub instance: String,
+    #[doc = "The project to delete the instance from."]
     #[clap(long, short, required = true)]
     pub project: String,
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The router_name that holds the route."]
-    #[clap(long, short, required = true)]
-    pub router: oxide_api::types::Name,
-    #[doc = "The VPC_NAME that holds the route."]
-    #[clap(long, short, required = true)]
-    pub vpc: oxide_api::types::Name,
     #[doc = r" Confirm deletion without prompting."]
     #[clap(long)]
     pub confirm: bool,
 }
 
 #[async_trait::async_trait]
-impl crate::cmd::Command for CmdRouteDelete {
+impl crate::cmd::Command for CmdInstanceDelete {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
         if !ctx.io.can_prompt() && !self.confirm {
             return Err(anyhow::anyhow!(
@@ -411,9 +363,9 @@ impl crate::cmd::Command for CmdRouteDelete {
         let client = ctx.api_client("")?;
         if !self.confirm {
             if let Err(err) = dialoguer::Input::<String>::new()
-                .with_prompt(format!("Type {} to confirm deletion:", self.route))
+                .with_prompt(format!("Type {} to confirm deletion:", self.instance))
                 .validate_with(|input: &String| -> Result<(), &str> {
-                    if input.trim() == self.route {
+                    if input.trim() == self.instance {
                         Ok(())
                     } else {
                         Err("mismatched confirmation")
@@ -426,14 +378,8 @@ impl crate::cmd::Command for CmdRouteDelete {
         }
 
         client
-            .routes()
-            .delete(
-                &self.organization,
-                &self.project,
-                &self.route,
-                &self.router,
-                &self.vpc,
-            )
+            .instances()
+            .delete(&self.instance, &self.organization, &self.project)
             .await?;
         let cs = ctx.io.color_scheme();
         let full_name = format!("{}/{}", self.organization, self.project);
@@ -441,8 +387,8 @@ impl crate::cmd::Command for CmdRouteDelete {
             ctx.io.out,
             "{} Deleted {} {} from {}",
             cs.success_icon_with_color(ansi_term::Color::Red),
-            "route",
-            self.route,
+            "instance",
+            self.instance,
             full_name
         )?;
         Ok(())
