@@ -640,9 +640,18 @@ impl Operation {
                 // And we should only unwrap it if it is a required property.
                 if rendered.starts_with("Option<") && v.required {
                     req_body_rendered.push(quote!(#p_og: #p_short.unwrap()));
+                } else if rendered == "uuid::Uuid" {
+                    if v.required {
+                        req_body_rendered.push(quote!(#p_og: #p_short.to_string()));
+                    } else {
+                        req_body_rendered.push(quote!(#p_og: self.#p_short.to_string()));
+                    }
                 } else if v.required {
                     req_body_rendered.push(quote!(#p_og: #p_short.clone()));
                 } else {
+                    // We can use self here since we aren't chaing the value from
+                    // a prompt.
+                    // In the future should we prompt for everything we would change this.
                     req_body_rendered.push(quote!(#p_og: self.#p_short.clone()));
                 }
             }
