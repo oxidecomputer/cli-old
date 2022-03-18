@@ -247,7 +247,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
                 &oxide_api::types::VpcSubnetCreate {
                     description: description.clone(),
                     ipv4_block: ipv4_block.clone(),
-                    ipv6_block: ipv6_block.clone(),
+                    ipv6_block: self.ipv6_block.clone(),
                     name: subnet.clone(),
                 },
             )

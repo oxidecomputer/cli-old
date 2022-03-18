@@ -640,8 +640,10 @@ impl Operation {
                 // And we should only unwrap it if it is a required property.
                 if rendered.starts_with("Option<") && v.required {
                     req_body_rendered.push(quote!(#p_og: #p_short.unwrap()));
-                } else {
+                } else if v.required {
                     req_body_rendered.push(quote!(#p_og: #p_short.clone()));
+                } else {
+                    req_body_rendered.push(quote!(#p_og: self.#p_short.clone()));
                 }
             }
 

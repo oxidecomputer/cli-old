@@ -95,4 +95,19 @@ fn test_do_gen() {
     .unwrap();
 
     expectorate::assert_contents("tests/gen/instances.rs.gen", &get_text_fmt(&actual).unwrap());
+
+    actual = do_gen(
+        quote! {
+            tag = "vpcs",
+        }
+        .into(),
+        quote! {
+            #[derive(Parser, Debug, Clone)]
+            enum SubCommand {}
+        }
+        .into(),
+    )
+    .unwrap();
+
+    expectorate::assert_contents("tests/gen/vpcs.rs.gen", &get_text_fmt(&actual).unwrap());
 }

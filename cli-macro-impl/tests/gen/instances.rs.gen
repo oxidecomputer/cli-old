@@ -260,7 +260,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
                     memory: memory.clone(),
                     name: instance.clone(),
                     ncpus: ncpus.clone(),
-                    network_interfaces: network_interfaces.clone(),
+                    network_interfaces: self.network_interfaces.clone(),
                 },
             )
             .await?;
