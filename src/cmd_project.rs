@@ -17,7 +17,6 @@ pub struct CmdProject {
 }]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
-    Create(CmdProjectCreate),
     Edit(CmdProjectEdit),
 }
 
@@ -31,113 +30,6 @@ impl crate::cmd::Command for CmdProject {
             SubCommand::List(cmd) => cmd.run(ctx).await,
             SubCommand::View(cmd) => cmd.run(ctx).await,
         }
-    }
-}
-
-/// Create a new project.
-///
-/// To create a project interactively, use `oxide project create` with no arguments.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdProjectCreate {
-    /// The name of the project to create.
-    #[clap(name = "project", default_value = "")]
-    pub project: String,
-
-    // TODO: This should default to the user's org since they shouldn't be
-    // able to create projects in other orgs.
-    /// The organization that will hold the project.
-    #[clap(long, short, env = "OXIDE_ORG", default_value = "")]
-    pub organization: String,
-
-    /// The description for the project.
-    #[clap(long = "description", short = 'D', default_value = "")]
-    pub description: String,
-}
-
-// TODO: in interactive create it should default to the user's org.
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdProjectCreate {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let mut project_name = self.project.to_string();
-        let mut description = self.description.to_string();
-        let mut organization = self.organization.to_string();
-
-        if project_name.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("[project_name] required in non-interactive mode"));
-        }
-
-        if organization.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("--organization,-o required in non-interactive mode"));
-        }
-
-        if description.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("--description,-D required in non-interactive mode"));
-        }
-
-        // If they didn't specify an organization, prompt for it.
-        if organization.is_empty() {
-            match dialoguer::Input::<String>::new()
-                .with_prompt("Project organization:")
-                .interact_text()
-            {
-                Ok(org) => organization = org,
-                Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
-                }
-            }
-        }
-
-        if project_name.is_empty() {
-            match dialoguer::Input::<String>::new()
-                .with_prompt("Project name:")
-                .interact_text()
-            {
-                Ok(name) => project_name = name,
-                Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
-                }
-            }
-
-            // Propmt for a description if they didn't provide one.
-            if self.description.is_empty() {
-                match dialoguer::Input::<String>::new()
-                    .with_prompt("Project description:")
-                    .interact_text()
-                {
-                    Ok(desc) => description = desc,
-                    Err(err) => {
-                        return Err(anyhow!("prompt failed: {}", err));
-                    }
-                }
-            }
-        }
-
-        let full_name = format!("{}/{}", organization, project_name);
-
-        let client = ctx.api_client("")?;
-
-        // Create the project.
-        client
-            .projects()
-            .post(
-                &organization,
-                &oxide_api::types::RouterCreate {
-                    name: project_name.to_string(),
-                    description: description.to_string(),
-                },
-            )
-            .await?;
-
-        let cs = ctx.io.color_scheme();
-        writeln!(
-            ctx.io.out,
-            "{} Successfully created project {}",
-            cs.success_icon(),
-            full_name
-        )?;
-
-        Ok(())
     }
 }
 

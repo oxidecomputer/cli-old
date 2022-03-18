@@ -20,9 +20,9 @@ pub struct CmdSubnetList {
     #[doc = "The order in which to sort the results."]
     #[clap(long, short, default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
-    #[doc = "The VPC that holds the subnets."]
+    #[doc = "The VPC_NAME that holds the subnets."]
     #[clap(long, short, required = true)]
-    pub vpc: String,
+    pub vpc: oxide_api::types::Name,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
     pub limit: u32,
@@ -91,9 +91,18 @@ pub struct CmdSubnetCreate {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The VPC that holds the subnet."]
+    #[doc = "The VPC_NAME that holds the subnet."]
     #[clap(long, short, default_value_t)]
-    pub vpc: String,
+    pub vpc: oxide_api::types::Name,
+    #[doc = "The description that holds the subnet."]
+    #[clap(long, short, default_value_t)]
+    pub description: String,
+    #[doc = "The IPv4 address range for this subnet.\n\nIt must be allocated from an RFC 1918 private address range, and must not overlap with any other existing subnet in the VPC."]
+    #[clap(long, short, default_value_t)]
+    pub ipv4_block: oxide_api::types::Ipv4Net,
+    #[doc = "The IPv6 address range for this subnet.\n\nIt must be allocated from the RFC 4193 Unique Local Address range, with the prefix equal to the parent VPC's prefix. A random `/64` block will be assigned if one is not provided. It must not overlap with any existing subnet in the VPC."]
+    #[clap(long, short, default_value_t)]
+    pub ipv6_block: oxide_api::types::Ipv6Net,
 }
 
 #[async_trait::async_trait]
@@ -102,39 +111,45 @@ impl crate::cmd::Command for CmdSubnetCreate {
         let mut description = self.description.clone();
         let mut ipv4_block = self.ipv4_block.clone();
         let mut ipv6_block = self.ipv6_block.clone();
-        let mut name = self.name.clone();
+        let mut subnet = self.subnet.clone();
         let mut organization = self.organization.clone();
         let mut project = self.project.clone();
         let mut vpc = self.vpc.clone();
         if description.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("description required in non-interactive mode"));
+            return Err(anyhow::anyhow!(
+                "description required in non-interactive mode"
+            ));
         }
 
         if ipv4_block.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("ipv4_block required in non-interactive mode"));
+            return Err(anyhow::anyhow!(
+                "ipv4_block required in non-interactive mode"
+            ));
         }
 
-        if name.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("name required in non-interactive mode"));
+        if subnet.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!("[subnet] required in non-interactive mode"));
         }
 
         if organization.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("organization required in non-interactive mode"));
+            return Err(anyhow::anyhow!(
+                "organization required in non-interactive mode"
+            ));
         }
 
         if project.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("project required in non-interactive mode"));
+            return Err(anyhow::anyhow!("project required in non-interactive mode"));
         }
 
         if vpc.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("vpc required in non-interactive mode"));
+            return Err(anyhow::anyhow!("vpc required in non-interactive mode"));
         }
 
         let client = ctx.api_client("")?;
         if organization.is_empty() {
             let mut orgs: Vec<String> = Vec::new();
             let resp = client
-                .orgs()
+                .organizations()
                 .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
                 .await?;
             for org in orgs {
@@ -147,7 +162,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
             {
                 Ok(index) => organization = orgs[index].to_string(),
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
@@ -171,19 +186,19 @@ impl crate::cmd::Command for CmdSubnetCreate {
             {
                 Ok(index) => project = org_projects[index].to_string(),
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
 
         if subnet.is_empty() {
             match dialoguer::Input::<String>::new()
-                .with_prompt(&format!("{} name:", &singular_tag_str))
+                .with_prompt(&format!("{} name:", "subnet"))
                 .interact_text()
             {
                 Ok(name) => subnet = name,
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
@@ -195,7 +210,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
             {
                 Ok(desc) => description = desc,
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
@@ -207,19 +222,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
             {
                 Ok(desc) => ipv4_block = desc,
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
-                }
-            }
-        }
-
-        if name.is_empty() {
-            match dialoguer::Input::<String>::new()
-                .with_prompt("subnet name:")
-                .interact_text()
-            {
-                Ok(desc) => name = desc,
-                Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
@@ -231,7 +234,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
             {
                 Ok(desc) => vpc = desc,
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
@@ -246,7 +249,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
                     description: description.clone(),
                     ipv4_block: ipv4_block.clone(),
                     ipv6_block: ipv6_block.clone(),
-                    name: name.clone(),
+                    name: subnet.clone(),
                 },
             )
             .await?;
@@ -277,9 +280,9 @@ pub struct CmdSubnetView {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The VPC that holds the subnet."]
+    #[doc = "The VPC_NAME that holds the subnet."]
     #[clap(long, short, required = true)]
-    pub vpc: String,
+    pub vpc: oxide_api::types::Name,
     #[doc = "Open the subnet in the browser."]
     #[clap(short, long)]
     pub web: bool,
@@ -334,9 +337,9 @@ pub struct CmdSubnetDelete {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The VPC that holds the subnet."]
+    #[doc = "The VPC_NAME that holds the subnet."]
     #[clap(long, short, required = true)]
-    pub vpc: String,
+    pub vpc: oxide_api::types::Name,
     #[doc = r" Confirm deletion without prompting."]
     #[clap(long)]
     pub confirm: bool,

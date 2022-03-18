@@ -17,7 +17,6 @@ pub struct CmdRoute {
 }]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
-    Create(CmdRouteCreate),
     Edit(CmdRouteEdit),
 }
 
@@ -31,45 +30,6 @@ impl crate::cmd::Command for CmdRoute {
             SubCommand::List(cmd) => cmd.run(ctx).await,
             SubCommand::View(cmd) => cmd.run(ctx).await,
         }
-    }
-}
-
-/// Create a new route.
-///
-/// To create a route interactively, use `oxide route create` with no arguments.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdRouteCreate {
-    /// The name of the route to create.
-    #[clap(name = "route", default_value = "")]
-    pub route: String,
-
-    /// The router that will hold the route.
-    #[clap(long, short, default_value = "")]
-    pub router: String,
-
-    /// The VPC that holds the router.
-    #[clap(long, short, default_value = "")]
-    pub vpc: String,
-
-    /// The project that holds the VPC.
-    #[clap(long, short, default_value = "")]
-    pub project: String,
-
-    /// The organization that holds the project.
-    #[clap(long, short, env = "OXIDE_ORG", default_value = "")]
-    pub organization: String,
-
-    /// The description for the route.
-    #[clap(long = "description", short = 'D', default_value = "")]
-    pub description: String,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdRouteCreate {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
-        Ok(())
     }
 }
 

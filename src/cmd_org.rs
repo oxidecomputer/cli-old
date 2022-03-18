@@ -17,7 +17,6 @@ pub struct CmdOrganization {
 }]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
-    Create(CmdOrganizationCreate),
     Edit(CmdOrganizationEdit),
 }
 
@@ -31,84 +30,6 @@ impl crate::cmd::Command for CmdOrganization {
             SubCommand::List(cmd) => cmd.run(ctx).await,
             SubCommand::View(cmd) => cmd.run(ctx).await,
         }
-    }
-}
-
-/// Create a new organization.
-///
-/// To create a organization interactively, use `oxide organization create` with no arguments.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdOrganizationCreate {
-    /// The name of the organization to create.
-    #[clap(name = "organization", default_value = "")]
-    pub organization: String,
-
-    /// The description for the organization.
-    #[clap(long = "description", short = 'D', default_value = "")]
-    pub description: String,
-}
-
-// TODO: in interactive create it should default to the user's org.
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdOrganizationCreate {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let mut organization_name = self.organization.to_string();
-        let mut description = self.description.to_string();
-
-        if organization_name.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("[organization_name] required in non-interactive mode"));
-        }
-
-        if description.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("--description,-D required in non-interactive mode"));
-        }
-
-        if organization_name.is_empty() {
-            match dialoguer::Input::<String>::new()
-                .with_prompt("Organization name:")
-                .interact_text()
-            {
-                Ok(name) => organization_name = name,
-                Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
-                }
-            }
-
-            // Propmt for a description if they didn't provide one.
-            if self.description.is_empty() {
-                match dialoguer::Input::<String>::new()
-                    .with_prompt("Organization description:")
-                    .interact_text()
-                {
-                    Ok(desc) => description = desc,
-                    Err(err) => {
-                        return Err(anyhow!("prompt failed: {}", err));
-                    }
-                }
-            }
-        }
-
-        let client = ctx.api_client("")?;
-
-        // Create the organization.
-        client
-            .organizations()
-            .post(&oxide_api::types::RouterCreate {
-                name: organization_name.to_string(),
-                description: description.to_string(),
-            })
-            .await?;
-
-        let cs = ctx.io.color_scheme();
-        writeln!(
-            ctx.io.out,
-            "{} Successfully created organization {}",
-            cs.success_icon(),
-            organization_name
-        )?;
-
-        Ok(())
     }
 }
 

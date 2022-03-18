@@ -86,42 +86,55 @@ pub struct CmdDiskCreate {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
+    #[doc = "The description that holds the disk."]
+    #[clap(long, short, default_value_t)]
+    pub description: String,
+    #[doc = "size of the Disk"]
+    #[clap(long, short, default_value_t)]
+    pub size: oxide_api::types::ByteCount,
+    #[doc = "id for snapshot from which the Disk should be created, if any"]
+    #[clap(long, short, default_value_t)]
+    pub snapshot: uuid::Uuid,
 }
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskCreate {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
         let mut description = self.description.clone();
-        let mut name = self.name.clone();
+        let mut disk = self.disk.clone();
         let mut organization = self.organization.clone();
         let mut project = self.project.clone();
         let mut size = self.size.clone();
         let mut snapshot = self.snapshot.clone();
         if description.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("description required in non-interactive mode"));
+            return Err(anyhow::anyhow!(
+                "description required in non-interactive mode"
+            ));
         }
 
-        if name.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("name required in non-interactive mode"));
+        if disk.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!("[disk] required in non-interactive mode"));
         }
 
         if organization.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("organization required in non-interactive mode"));
+            return Err(anyhow::anyhow!(
+                "organization required in non-interactive mode"
+            ));
         }
 
         if project.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("project required in non-interactive mode"));
+            return Err(anyhow::anyhow!("project required in non-interactive mode"));
         }
 
         if size.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow!("size required in non-interactive mode"));
+            return Err(anyhow::anyhow!("size required in non-interactive mode"));
         }
 
         let client = ctx.api_client("")?;
         if organization.is_empty() {
             let mut orgs: Vec<String> = Vec::new();
             let resp = client
-                .orgs()
+                .organizations()
                 .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
                 .await?;
             for org in orgs {
@@ -134,7 +147,7 @@ impl crate::cmd::Command for CmdDiskCreate {
             {
                 Ok(index) => organization = orgs[index].to_string(),
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
@@ -158,19 +171,19 @@ impl crate::cmd::Command for CmdDiskCreate {
             {
                 Ok(index) => project = org_projects[index].to_string(),
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
 
         if disk.is_empty() {
             match dialoguer::Input::<String>::new()
-                .with_prompt(&format!("{} name:", &singular_tag_str))
+                .with_prompt(&format!("{} name:", "disk"))
                 .interact_text()
             {
                 Ok(name) => disk = name,
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
@@ -182,19 +195,7 @@ impl crate::cmd::Command for CmdDiskCreate {
             {
                 Ok(desc) => description = desc,
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
-                }
-            }
-        }
-
-        if name.is_empty() {
-            match dialoguer::Input::<String>::new()
-                .with_prompt("disk name:")
-                .interact_text()
-            {
-                Ok(desc) => name = desc,
-                Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
@@ -206,7 +207,7 @@ impl crate::cmd::Command for CmdDiskCreate {
             {
                 Ok(desc) => size = desc,
                 Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
             }
         }
@@ -218,9 +219,9 @@ impl crate::cmd::Command for CmdDiskCreate {
                 &self.project,
                 &oxide_api::types::DiskCreate {
                     description: description.clone(),
-                    name: name.clone(),
+                    name: disk.clone(),
                     size: size.clone(),
-                    snapshot: snapshot.clone(),
+                    snapshot_id: snapshot.clone(),
                 },
             )
             .await?;

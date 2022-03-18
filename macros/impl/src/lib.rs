@@ -104,6 +104,7 @@ fn load_api_spec() -> Result<openapiv3::OpenAPI> {
 trait ReferenceOrExt<T> {
     fn item(&self) -> Result<&T>;
     fn reference(&self) -> Result<String>;
+    fn reference_render_type(&self) -> Result<TokenStream>;
     fn get_schema_from_reference(&self) -> Result<openapiv3::Schema>;
 }
 
@@ -128,6 +129,14 @@ impl<T> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
         }
     }
 
+    fn reference_render_type(&self) -> Result<TokenStream> {
+        let name = self.reference()?;
+        let ident = format_ident!("{}", name);
+
+        // We want the full path to the type.
+        Ok(quote!(oxide_api::types::#ident))
+    }
+
     fn get_schema_from_reference(&self) -> Result<openapiv3::Schema> {
         let name = self.reference()?;
 
@@ -141,7 +150,7 @@ impl<T> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
         let schema = components
             .schemas
             .get(&name)
-            .ok_or_else(|| anyhow::anyhow!("Could not find schema with name {}", name))?;
+            .ok_or_else(|| anyhow::anyhow!("could not find schema with name {}", name))?;
 
         Ok(schema.item()?.clone())
     }
@@ -196,6 +205,146 @@ impl ParameterExt for openapiv3::Parameter {
     }
 }
 
+trait SchemaExt {
+    fn render_type(&self) -> Result<TokenStream>;
+}
+
+impl SchemaExt for openapiv3::Schema {
+    fn render_type(&self) -> Result<TokenStream> {
+        match &self.schema_kind {
+            openapiv3::SchemaKind::Type(openapiv3::Type::Boolean {}) => Ok(quote!(bool)),
+            openapiv3::SchemaKind::Type(openapiv3::Type::Array(a)) => {
+                let schema = a
+                    .items
+                    .as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("no items in array `{:#?}`", a))?;
+                match schema.item() {
+                    Ok(s) => s.render_type(),
+                    Err(e) => {
+                        if e.to_string().contains("reference") {
+                            schema.reference_render_type()
+                        } else {
+                            anyhow::bail!("could not get schema type from array `{:#?}`: {}", a, e);
+                        }
+                    }
+                }
+            }
+            openapiv3::SchemaKind::Type(openapiv3::Type::String(st)) => {
+                if !st.enumeration.is_empty() {
+                    anyhow::bail!("enumeration not supported here yet: {:?}", st);
+                }
+
+                Ok(match &st.format {
+                    openapiv3::VariantOrUnknownOrEmpty::Item(openapiv3::StringFormat::DateTime) => {
+                        quote!(chrono::DateTime<chrono::Utc>)
+                    }
+                    openapiv3::VariantOrUnknownOrEmpty::Item(openapiv3::StringFormat::Date) => {
+                        quote!(chrono::NaiveDate)
+                    }
+                    openapiv3::VariantOrUnknownOrEmpty::Item(openapiv3::StringFormat::Password) => quote!(String),
+                    // TODO: as per the spec this is base64 encoded chars.
+                    openapiv3::VariantOrUnknownOrEmpty::Item(openapiv3::StringFormat::Byte) => {
+                        quote!(bytes::Bytes)
+                    }
+                    openapiv3::VariantOrUnknownOrEmpty::Item(openapiv3::StringFormat::Binary) => {
+                        quote!(bytes::Bytes)
+                    }
+                    openapiv3::VariantOrUnknownOrEmpty::Empty => quote!(String),
+                    openapiv3::VariantOrUnknownOrEmpty::Unknown(f) => match f.as_str() {
+                        "float" => quote!(f64),
+                        "int64" => quote!(i64),
+                        "uint64" => quote!(u64),
+                        "ipv4" => quote!(std::net::Ipv4Addr),
+                        "ip" => quote!(std::net::Ipv4Addr),
+                        "uri" => quote!(url::Url),
+                        "uri-template" => quote!(String),
+                        "url" => quote!(url::Url),
+                        "email" => quote!(String),
+                        "uuid" => quote!(uuid::Uuid),
+                        "hostname" => quote!(String),
+                        "time" => quote!(chrono::NaiveTime),
+                        f => {
+                            anyhow::bail!("XXX unknown string format {}", f)
+                        }
+                    },
+                })
+            }
+            openapiv3::SchemaKind::Type(openapiv3::Type::Number(_)) => Ok(quote!(f64)),
+            openapiv3::SchemaKind::Type(openapiv3::Type::Integer(it)) => {
+                let uint;
+                let width;
+
+                if let openapiv3::VariantOrUnknownOrEmpty::Unknown(f) = &it.format {
+                    match f.as_str() {
+                        "uint" | "uint32" => {
+                            uint = true;
+                            width = 32;
+                        }
+                        "uint64" => {
+                            uint = true;
+                            width = 32;
+                        }
+                        f => anyhow::bail!("unknown integer format {}", f),
+                    }
+                } else {
+                    // The format was empty, let's assume it's just a normal
+                    // i64.
+                    uint = false;
+                    width = 64;
+                }
+
+                Ok(if uint {
+                    match width {
+                        8 => quote!(u8),
+                        16 => quote!(u16),
+                        32 => quote!(u32),
+                        64 => quote!(u64),
+                        _ => anyhow::bail!("unknown uint width {}", width),
+                    }
+                } else {
+                    match width {
+                        8 => quote!(i8),
+                        16 => quote!(i16),
+                        32 => quote!(i32),
+                        64 => quote!(i64),
+                        _ => anyhow::bail!("unknown int width {}", width),
+                    }
+                })
+            }
+            openapiv3::SchemaKind::OneOf { one_of } => {
+                // TODO: Turn this on.
+                Ok(quote!(String))
+                //anyhow::bail!("oneOf not supported here yet: {:?}", one_of)
+            }
+            openapiv3::SchemaKind::Any(any) => {
+                anyhow::bail!("any not supported here yet: {:?}", any)
+            }
+            openapiv3::SchemaKind::AllOf { all_of } => {
+                if all_of.len() != 1 {
+                    anyhow::bail!(
+                        "allOf length is `{}`, only len == 1 supported: {:#?}",
+                        all_of.len(),
+                        all_of
+                    )
+                }
+
+                let schema = all_of.get(0).unwrap();
+                match schema.item() {
+                    Ok(s) => s.render_type(),
+                    Err(e) => {
+                        if e.to_string().contains("reference") {
+                            schema.reference_render_type()
+                        } else {
+                            anyhow::bail!("could not get schema type from allOf `{:#?}`: {}", all_of, e);
+                        }
+                    }
+                }
+            }
+            x => anyhow::bail!("unexpected type {:#?}", x),
+        }
+    }
+}
+
 struct Operation {
     op: openapiv3::Operation,
     method: String,
@@ -205,9 +354,19 @@ struct Operation {
 }
 
 struct Property {
-    #[allow(dead_code)]
-    schema: Box<openapiv3::Schema>,
+    schema: openapiv3::Schema,
     required: bool,
+}
+
+struct Parameter {
+    parameter: openapiv3::Parameter,
+    required: bool,
+}
+
+impl Parameter {
+    fn data(&self) -> Option<openapiv3::ParameterData> {
+        self.parameter.data()
+    }
 }
 
 impl Operation {
@@ -234,7 +393,7 @@ impl Operation {
         self.id.ends_with(&format!("{}_{}", tag, self.method.to_lowercase())) && self.method == "POST"
     }
 
-    fn get_parameters(&self) -> Result<BTreeMap<String, openapiv3::Parameter>> {
+    fn get_parameters(&self) -> Result<BTreeMap<String, Parameter>> {
         let mut parameters = BTreeMap::new();
 
         for param in self.op.parameters.iter() {
@@ -245,7 +404,13 @@ impl Operation {
                 None => return Ok(parameters),
             };
 
-            parameters.insert(parameter_data.name.to_string(), param.clone());
+            parameters.insert(
+                parameter_data.name.to_string(),
+                Parameter {
+                    parameter: param.clone(),
+                    required: parameter_data.required,
+                },
+            );
         }
 
         Ok(parameters)
@@ -316,7 +481,7 @@ impl Operation {
                 if e.to_string().contains("reference") {
                     schema.get_schema_from_reference()?
                 } else {
-                    anyhow::bail!("Could not get schema from request body: {}", e);
+                    anyhow::bail!("could not get schema from request body: {}", e);
                 }
             }
         };
@@ -328,12 +493,12 @@ impl Operation {
 
         for (key, prop) in obj.properties.iter() {
             let s = match prop.item() {
-                Ok(s) => s.clone(),
+                Ok(s) => *s.clone(),
                 Err(e) => {
                     if e.to_string().contains("reference") {
-                        Box::new(prop.get_schema_from_reference()?)
+                        prop.get_schema_from_reference()?
                     } else {
-                        anyhow::bail!("Could not get schema from prop `{}`: {}", key, e);
+                        anyhow::bail!("could not get schema from prop `{}`: {}", key, e);
                     }
                 }
             };
@@ -369,7 +534,7 @@ impl Operation {
 
     /// Gets all the api call params for the operation.
     /// This includes the path parameters, query parameters, and request_body parameters.
-    fn get_api_call_params(&self) -> Result<Vec<TokenStream>> {
+    fn get_api_call_params(&self, tag: &str) -> Result<Vec<TokenStream>> {
         let mut api_call_params: Vec<TokenStream> = Vec::new();
 
         let params = self.get_parameters()?;
@@ -403,9 +568,12 @@ impl Operation {
         if req_body_properties.len() > 0 {
             let req_body_properties = req_body_properties
                 .map(|p| {
-                    let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
+                    let p_og = format_ident!("{}", p);
 
-                    quote!(#p: #p.clone())
+                    let new = if p == "name" { singular(tag) } else { p.to_string() };
+                    let p_short = format_ident!("{}", new.trim_end_matches("_name").trim_end_matches("_id"));
+
+                    quote!(#p_og: #p_short.clone())
                 })
                 .collect::<Vec<_>>();
 
@@ -444,72 +612,106 @@ impl Operation {
         Ok(param_names)
     }
 
+    fn render_struct_param<T: SchemaExt>(
+        &self,
+        name: &str,
+        tag: &str,
+        schema: openapiv3::ReferenceOr<T>,
+        description: Option<String>,
+        required: bool,
+    ) -> Result<TokenStream> {
+        if name == "project"
+            || name == "name"
+            || name == "organization"
+            || name == "project_name"
+            || name == "organization_name"
+            || name == singular(tag)
+            || name == format!("{}_name", singular(tag))
+            || name == format!("{}_id", singular(tag))
+            || name == "limit"
+            || name == "page_token"
+        {
+            // Return early and empty, we don't care about these.
+            return Ok(quote!());
+        }
+
+        let name_cleaned = name.trim_end_matches("_name").trim_end_matches("_id");
+        let name_ident = format_ident!("{}", name_cleaned);
+
+        let doc = if let Some(desc) = description {
+            desc.to_string()
+        } else if name == "sort_by" {
+            "The order in which to sort the results.".to_string()
+        } else {
+            let n = if name_cleaned == "vpc" {
+                name.to_uppercase()
+            } else {
+                name.to_string()
+            };
+
+            if self.is_root_list_operation(tag) {
+                format!("The {} that holds the {}.", n, plural(tag))
+            } else {
+                format!("The {} that holds the {}.", n, singular(tag))
+            }
+        };
+
+        let type_name = match schema.item() {
+            Ok(s) => s.render_type()?,
+            Err(e) => {
+                if e.to_string().contains("reference") {
+                    schema.reference_render_type()?
+                } else {
+                    anyhow::bail!("could not get schema type from param `{}`: {}", name, e);
+                }
+            }
+        };
+
+        let clap_line = if self.method == "POST" || name == "sort_by" {
+            // On create, we want to set default values for the parameters.
+            quote! {
+                #[clap(long, short, default_value_t)]
+            }
+        } else {
+            let required = if required { quote!(true) } else { quote!(false) };
+
+            quote! {
+                #[clap(long, short, required = #required)]
+            }
+        };
+
+        Ok(quote! {
+            #[doc = #doc]
+            #clap_line
+            pub #name_ident: #type_name,
+        })
+    }
+
     /// Get additional struct parameters.
-    fn get_additional_struct_params(&self, tag: &str, is_create: bool) -> Result<Vec<TokenStream>> {
+    fn get_additional_struct_params(&self, tag: &str) -> Result<Vec<TokenStream>> {
         let mut params = Vec::new();
 
         for (param, p) in self.get_parameters()? {
-            if param == "project"
-                || param == "organization"
-                || param == "project_name"
-                || param == "organization_name"
-                || param == singular(tag)
-                || param == format!("{}_name", singular(tag))
-                || param == format!("{}_id", singular(tag))
-                || param == "limit"
-                || param == "page_token"
-            {
-                continue;
-            }
-
             let data = if let Some(data) = p.data() {
                 data
             } else {
                 continue;
             };
 
-            let name = param.trim_end_matches("_name");
-            let p_ident = format_ident!("{}", name);
-            let param_doc = if let Some(desc) = &data.description {
-                desc.to_string()
-            } else if name == "sort_by" {
-                "The order in which to sort the results.".to_string()
-            } else {
-                let n = if name == "vpc" {
-                    name.to_uppercase()
-                } else {
-                    name.to_string()
-                };
+            // Let's get the type.
+            let schema = data.format.schema()?;
 
-                if self.is_root_list_operation(tag) {
-                    format!("The {} that holds the {}.", n, plural(tag))
-                } else {
-                    format!("The {} that holds the {}.", n, singular(tag))
-                }
-            };
+            params.push(self.render_struct_param(&param, tag, schema, data.description, p.required)?);
+        }
 
-            if name == "sort_by" {
-                let type_ident = format_ident!("{}", data.format.schema()?.reference()?);
-                // TODO: set the default sort mode.
-                params.push(quote! {
-                    #[doc = #param_doc]
-                    #[clap(long, short, default_value_t)]
-                    pub #p_ident: oxide_api::types::#type_ident,
-                });
-            } else if is_create {
-                params.push(quote! {
-                    #[doc = #param_doc]
-                    #[clap(long, short, default_value_t)]
-                    pub #p_ident: String,
-                });
-                // On create, we want to set default values for the parameters.
-            } else {
-                params.push(quote! {
-                    #[doc = #param_doc]
-                    #[clap(long, short, required = true)]
-                    pub #p_ident: String,
-                });
-            }
+        for (param, p) in self.get_request_body_properties()? {
+            params.push(self.render_struct_param(
+                &param,
+                tag,
+                openapiv3::ReferenceOr::Item(p.schema.clone()),
+                p.schema.schema_data.description,
+                p.required,
+            )?);
         }
 
         Ok(params)
@@ -538,6 +740,7 @@ impl Operation {
 
         let mut mutable_variables: Vec<TokenStream> = Vec::new();
         for p in self.get_all_param_names()? {
+            let p = if p == "name" { singular(tag) } else { p };
             let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
 
             mutable_variables.push(quote!(
@@ -545,10 +748,11 @@ impl Operation {
             ));
         }
 
-        let api_call_params = self.get_api_call_params()?;
+        let api_call_params = self.get_api_call_params(tag)?;
 
         let mut required_checks: Vec<TokenStream> = Vec::new();
         for p in self.get_all_required_param_names()? {
+            let p = if p == "name" { singular(tag) } else { p };
             let n = p.trim_end_matches("_name").trim_end_matches("_id");
             let p = format_ident!("{}", n);
 
@@ -563,7 +767,7 @@ impl Operation {
             let error_msg = format!("{} required in non-interactive mode", formatted);
 
             required_checks.push(quote!(if #p.is_empty() && !ctx.io.can_prompt() {
-                return Err(anyhow!(#error_msg));
+                return Err(anyhow::anyhow!(#error_msg));
             }));
         }
 
@@ -611,7 +815,7 @@ impl Operation {
                     {
                         Ok(index) => project = org_projects[index].to_string(),
                         Err(err) => {
-                            return Err(anyhow!("prompt failed: {}", err));
+                            return Err(anyhow::anyhow!("prompt failed: {}", err));
                         }
                     }
                 }
@@ -627,7 +831,7 @@ impl Operation {
                 if organization.is_empty() {
                     let mut orgs: Vec<String> = Vec::new();
                     let resp = client
-                        .orgs()
+                        .organizations()
                         .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
                         .await?;
                     for org in orgs {
@@ -641,7 +845,7 @@ impl Operation {
                     {
                         Ok(index) => organization = orgs[index].to_string(),
                         Err(err) => {
-                            return Err(anyhow!("prompt failed: {}", err));
+                            return Err(anyhow::anyhow!("prompt failed: {}", err));
                         }
                     }
                 }
@@ -654,12 +858,12 @@ impl Operation {
             // Prompt for the resource name.
             if #singular_tag_lc.is_empty() {
                 match dialoguer::Input::<String>::new()
-                    .with_prompt(&format!("{} name:", &singular_tag_str))
+                    .with_prompt(&format!("{} name:", #singular_tag_str))
                     .interact_text()
                 {
                     Ok(name) => #singular_tag_lc = name,
                     Err(err) => {
-                        return Err(anyhow!("prompt failed: {}", err));
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
                     }
                 }
             }
@@ -668,7 +872,7 @@ impl Operation {
         let mut additional_prompts: Vec<TokenStream> = Vec::new();
         for p in self.get_all_required_param_names()? {
             let n = p.trim_end_matches("_name").trim_end_matches("_id");
-            if n == singular(tag) || n == "project" || n == "organization" {
+            if n == singular(tag) || n == "project" || n == "organization" || n == "name" {
                 // Skip the prompt.
                 continue;
             }
@@ -686,7 +890,7 @@ impl Operation {
                     {
                         Ok(desc) => #p = desc,
                         Err(err) => {
-                            return Err(anyhow!("prompt failed: {}", err));
+                            return Err(anyhow::anyhow!("prompt failed: {}", err));
                         }
                     }
                 }
@@ -734,7 +938,7 @@ impl Operation {
             }
         };
 
-        let additional_struct_params = self.get_additional_struct_params(tag, true)?;
+        let additional_struct_params = self.get_additional_struct_params(tag)?;
 
         let cmd = quote!(
             #[doc = #struct_doc]
@@ -802,7 +1006,7 @@ impl Operation {
         let struct_name = format_ident!("Cmd{}View", to_title_case(&singular(tag)));
 
         let struct_doc = format!(
-            "View {}.\n\nDisplay information about an Oxide {}.\n\nWith '--web', open the {} in a web browser instead.",
+            "View {}.\n\nDisplay information about an Oxide {}.\n\nWith `--web`, open the {} in a web browser instead.",
             singular_tag_str, singular_tag_str, singular_tag_str
         );
         let struct_inner_project_doc = format!("The project that holds the {}.", singular_tag_str);
@@ -810,7 +1014,7 @@ impl Operation {
         let struct_inner_web_doc = format!("Open the {} in the browser.", singular_tag_str);
         let struct_inner_name_doc = format!("The {} to view. Can be an ID or name.", singular_tag_str);
 
-        let api_call_params = self.get_api_call_params()?;
+        let api_call_params = self.get_api_call_params(tag)?;
 
         // We need to check if project is a parameter to this call.
         let project_param = if self.is_parameter("project") && tag != "projects" {
@@ -834,7 +1038,7 @@ impl Operation {
             quote!()
         };
 
-        let additional_struct_params = self.get_additional_struct_params(tag, false)?;
+        let additional_struct_params = self.get_additional_struct_params(tag)?;
 
         let cmd = quote!(
             #[doc = #struct_doc]
@@ -922,7 +1126,7 @@ impl Operation {
         let struct_doc = format!("List {}.", plural(&singular_tag_str));
         let struct_inner_project_doc = format!("The project that holds the {}.", plural(&singular_tag_str));
 
-        let api_call_params = self.get_api_call_params()?;
+        let api_call_params = self.get_api_call_params(tag)?;
 
         let mut api_call_params_all: Vec<TokenStream> = Vec::new();
         for p in self.get_all_param_names()? {
@@ -961,7 +1165,7 @@ impl Operation {
             quote!()
         };
 
-        let additional_struct_params = self.get_additional_struct_params(tag, false)?;
+        let additional_struct_params = self.get_additional_struct_params(tag)?;
 
         let cmd = quote!(
             #[doc = #struct_doc]
@@ -1047,7 +1251,7 @@ impl Operation {
         let struct_inner_name_doc = format!("The {} to delete. Can be an ID or name.", singular_tag_str);
         let struct_inner_project_doc = format!("The project to delete the {} from.", singular_tag_str);
 
-        let api_call_params = self.get_api_call_params()?;
+        let api_call_params = self.get_api_call_params(tag)?;
 
         // We need to check if project is a parameter to this call.
         let project_param = if self.is_parameter("project") && tag != "projects" {
@@ -1071,7 +1275,7 @@ impl Operation {
             quote!()
         };
 
-        let additional_struct_params = self.get_additional_struct_params(tag, false)?;
+        let additional_struct_params = self.get_additional_struct_params(tag)?;
 
         // We need to form the output back to the client.
         let output = if self.is_parameter("organization") && self.is_parameter("project") {
