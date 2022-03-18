@@ -633,8 +633,7 @@ impl Operation {
                 let new = if p == "name" { singular(tag) } else { p.to_string() };
                 let p_short = format_ident!("{}", new.trim_end_matches("_name").trim_end_matches("_id"));
 
-                let rendered = v.schema.render_type()?;
-                let rendered = get_text(&rendered)?;
+                let rendered = get_text(&v.schema.render_type()?)?;
 
                 // If the rendered property is an option, we want to unwrap it before
                 // sending the request since we were only doing that for the oneOf types.
@@ -728,11 +727,19 @@ impl Operation {
         };
 
         let type_name = schema.render_type()?;
+        let rendered = get_text(&type_name)?;
 
         let clap_line = if self.method == "POST" || name == "sort_by" {
             // On create, we want to set default values for the parameters.
-            quote! {
-                #[clap(long, short, default_value_t)]
+            if rendered.starts_with("Option<") {
+                // A default value there is pretty much always going to be None.
+                quote! {
+                    #[clap(long, short)]
+                }
+            } else {
+                quote! {
+                    #[clap(long, short, default_value_t)]
+                }
             }
         } else {
             let required = if required { quote!(true) } else { quote!(false) };
@@ -822,8 +829,7 @@ impl Operation {
 
             let error_msg = format!("{} required in non-interactive mode", formatted);
 
-            let rendered = t.render_type()?;
-            let rendered = get_text(&rendered)?;
+            let rendered = get_text(&t.render_type()?)?;
 
             let is_check = if rendered.starts_with("Option<") {
                 format_ident!("{}", "is_none")

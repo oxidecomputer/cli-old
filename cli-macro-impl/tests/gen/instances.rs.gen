@@ -95,7 +95,7 @@ pub struct CmdInstanceCreate {
     #[clap(long, short, default_value_t)]
     pub ncpus: oxide_api::types::InstanceCpuCount,
     #[doc = "The network interfaces to be created for this instance."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short)]
     pub network_interfaces: Option<oxide_api::types::InstanceNetworkInterfaceAttachment>,
 }
 
