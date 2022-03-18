@@ -20,8 +20,9 @@ struct MainContext {
 impl AsyncTestContext for MainContext {
     async fn setup() -> Self {
         Self {
-            test_host: std::env::var("OXIDE_TEST_HOST").unwrap_or_default(),
-            test_token: std::env::var("OXIDE_TEST_TOKEN").unwrap_or_default(),
+            test_host: std::env::var("OXIDE_TEST_HOST")
+                .expect("you need to set OXIDE_TEST_HOST to where the api is running"),
+            test_token: std::env::var("OXIDE_TEST_TOKEN").expect("OXIDE_TEST_TOKEN is required"),
         }
     }
 
@@ -31,7 +32,7 @@ impl AsyncTestContext for MainContext {
         // Get all the orgs.
         let orgs = oxide
             .organizations()
-            .get_all(oxide_api::types::NameSortMode::IdAscending)
+            .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
             .await
             .unwrap();
 
@@ -40,7 +41,7 @@ impl AsyncTestContext for MainContext {
             // List all the projects.
             let projects = oxide
                 .projects()
-                .get_all(oxide_api::types::NameSortMode::IdAscending, &org.name)
+                .get_all(&org.name, oxide_api::types::NameOrIdSortMode::NameAscending)
                 .await
                 .unwrap_or_default();
 
@@ -286,7 +287,9 @@ date:"#
         TestItem {
             name: "list orgs empty".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
-            want_out: "NAME  DESCRTIPTION  UPDATED\n".to_string(),
+            want_out: "id | name | description |
+----+------+-------------"
+                .to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -421,9 +424,7 @@ created:"#
         TestItem {
             name: "list orgs".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
-            want_out: r#"NAME      DESCRTIPTION                                      UPDATED
-dune      The dune game organization that is in the desert"#
-                .to_string(),
+            want_out: r#"dune   | The dune game organization that is in the desert"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -445,9 +446,7 @@ dune      The dune game organization that is in the desert"#
         TestItem {
             name: "list orgs after delete".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
-            want_out: r#"NAME      DESCRTIPTION                    UPDATED
-maze-war  The Maze War game organization"#
-                .to_string(),
+            want_out: r#"maze-war | The Maze War game organization"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -505,6 +504,7 @@ maze-war  The Maze War game organization"#
                 "oxide".to_string(),
                 "project".to_string(),
                 "list".to_string(),
+                "--organization".to_string(),
                 "maze-war".to_string(),
                 "--json".to_string(),
                 "--paginate".to_string(),

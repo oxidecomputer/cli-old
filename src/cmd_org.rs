@@ -348,6 +348,7 @@ mod test {
             TestItem {
                 name: "list zero limit".to_string(),
                 cmd: crate::cmd_org::SubCommand::List(crate::cmd_org::CmdOrganizationList {
+                    sort_by: Default::default(),
                     limit: 0,
                     paginate: false,
                     json: false,
@@ -360,6 +361,7 @@ mod test {
             TestItem {
                 name: "list --json --paginate".to_string(),
                 cmd: crate::cmd_org::SubCommand::List(crate::cmd_org::CmdOrganizationList {
+                    sort_by: Default::default(),
                     limit: 30,
                     paginate: true,
                     json: true,

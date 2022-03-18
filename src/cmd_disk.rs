@@ -555,6 +555,7 @@ mod test {
                     project: "".to_string(),
                     paginate: false,
                     json: false,
+                    sort_by: Default::default(),
                 }),
 
                 stdin: "".to_string(),

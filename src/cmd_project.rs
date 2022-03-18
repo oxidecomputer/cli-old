@@ -362,6 +362,7 @@ mod test {
             TestItem {
                 name: "list zero limit".to_string(),
                 cmd: crate::cmd_project::SubCommand::List(crate::cmd_project::CmdProjectList {
+                    sort_by: Default::default(),
                     limit: 0,
                     organization: "".to_string(),
                     paginate: false,

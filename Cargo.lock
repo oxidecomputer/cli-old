@@ -1273,7 +1273,7 @@ dependencies = [
 
 [[package]]
 name = "oxide-api"
-version = "0.1.0-rc.17"
+version = "0.1.0-rc.20"
 dependencies = [
  "anyhow",
  "bytes",

@@ -44,7 +44,7 @@ fn test_crud_gen() {
             pub organization: String,
 
             #[doc = "The order in which to sort the results."]
-            #[clap(long, short, default = oxide_api::types::NameSortMode::default())]
+            #[clap(long, short, default_value_t)]
             pub sort_by: oxide_api::types::NameSortMode,
 
             /// Maximum number of items to list.
@@ -75,7 +75,7 @@ fn test_crud_gen() {
                         .get_all(
                             &self.organization,
                             &self.project,
-                            &self.sort_by
+                            self.sort_by.clone()
                         )
                         .await?
                 } else {
@@ -83,10 +83,10 @@ fn test_crud_gen() {
                         .disks()
                         .get_page(
                             self.limit,
-                            "",
                             &self.organization,
+                            "",
                             &self.project,
-                            &self.sort_by
+                            self.sort_by.clone()
                         )
                         .await?
                 };
@@ -97,8 +97,8 @@ fn test_crud_gen() {
                     return Ok(());
                 }
 
-                let table = tabled::Table::new(results).to_string();
-                write!(ctx.io.out, "{}", table)?;
+                let table = tabled::Table::new(results).with(tabled::Style::psql()).to_string();
+                writeln!(ctx.io.out, "{}", table)?;
 
                 Ok(())
             }
@@ -197,7 +197,7 @@ fn test_crud_gen() {
         #[clap(verbatim_doc_comment)]
         pub struct CmdOrganizationList {
             #[doc = "The order in which to sort the results."]
-            #[clap(long, short, default = oxide_api::types::NameOrIdSortMode::default())]
+            #[clap(long, short, default_value_t)]
             pub sort_by: oxide_api::types::NameOrIdSortMode,
 
             /// Maximum number of items to list.
@@ -225,7 +225,7 @@ fn test_crud_gen() {
                 let results = if self.paginate {
                     client
                         .organizations()
-                        .get_all(&self.sort_by)
+                        .get_all(self.sort_by.clone())
                         .await?
                 } else {
                     client
@@ -233,7 +233,7 @@ fn test_crud_gen() {
                         .get_page(
                             self.limit,
                             "",
-                            &self.sort_by
+                            self.sort_by.clone()
                         )
                         .await?
                 };
@@ -244,8 +244,8 @@ fn test_crud_gen() {
                     return Ok(());
                 }
 
-                let table = tabled::Table::new(results).to_string();
-                write!(ctx.io.out, "{}", table)?;
+                let table = tabled::Table::new(results).with(tabled::Style::psql()).to_string();
+                writeln!(ctx.io.out, "{}", table)?;
 
                 Ok(())
             }
@@ -338,7 +338,7 @@ fn test_crud_gen() {
             pub organization: String,
 
             #[doc = "The order in which to sort the results."]
-            #[clap(long, short, default = oxide_api::types::NameSortMode::default())]
+            #[clap(long, short, default_value_t)]
             pub sort_by: oxide_api::types::NameSortMode,
 
             #[doc = "The VPC that holds the subnets."]
@@ -373,7 +373,7 @@ fn test_crud_gen() {
                         .get_all(
                             &self.organization,
                             &self.project,
-                            &self.sort_by,
+                            self.sort_by.clone(),
                             &self.vpc
                         )
                         .await?
@@ -382,10 +382,10 @@ fn test_crud_gen() {
                         .subnets()
                         .get_page(
                             self.limit,
-                            "",
                             &self.organization,
+                            "",
                             &self.project,
-                            &self.sort_by,
+                            self.sort_by.clone(),
                             &self.vpc
                         )
                         .await?
@@ -397,8 +397,8 @@ fn test_crud_gen() {
                     return Ok(());
                 }
 
-                let table = tabled::Table::new(results).to_string();
-                write!(ctx.io.out, "{}", table)?;
+                let table = tabled::Table::new(results).with(tabled::Style::psql()).to_string();
+                writeln!(ctx.io.out, "{}", table)?;
 
                 Ok(())
             }

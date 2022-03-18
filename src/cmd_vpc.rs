@@ -478,6 +478,7 @@ mod test {
             TestItem {
                 name: "list zero limit".to_string(),
                 cmd: crate::cmd_vpc::SubCommand::List(crate::cmd_vpc::CmdVpcList {
+                    sort_by: Default::default(),
                     limit: 0,
                     organization: "".to_string(),
                     project: "".to_string(),

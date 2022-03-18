@@ -369,7 +369,7 @@ impl Operation {
                 // TODO: set the default sort mode.
                 params.push(quote! {
                     #[doc = #param_doc]
-                    #[clap(long, short)]
+                    #[clap(long, short, default_value_t)]
                     pub #p_ident: oxide_api::types::#type_ident,
                 });
             } else {
@@ -504,8 +504,8 @@ impl Operation {
                     return Ok(());
                 }
 
-                let table = tabled::Table::new(results).to_string();
-                write!(ctx.io.out, "{}", table)?;
+                let table = tabled::Table::new(results).with(tabled::Style::psql()).to_string();
+                writeln!(ctx.io.out, "{}", table)?;
 
                 Ok(())
             }

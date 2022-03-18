@@ -18,9 +18,9 @@ enum SubCommand {}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSled {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         match &self.subcmd {
-            _ => todo!(),
+            SubCommand::List(cmd) => cmd.run(ctx).await,
         }
     }
 }
