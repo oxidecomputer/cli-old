@@ -398,11 +398,13 @@ impl Operation {
         let singular_tag_lc = format_ident!("{}", singular(tag));
         let struct_name = format_ident!("Cmd{}View", to_title_case(&singular(tag)));
 
-        let struct_doc = format!("View {}.", singular_tag_str);
+        let struct_doc = format!(
+            "View {}.\n\nDisplay information about an Oxide {}.\n\nWith '--web', open the {} in a web browser instead.",
+            singular_tag_str, singular_tag_str, singular_tag_str
+        );
         let struct_inner_project_doc = format!("The project that holds the {}.", singular_tag_str);
 
-        let struct_inner_web_doc = format!("Open the {} in the browser.\n\nDisplay information about an Oxide {}.\n\nWith '--web', open the {} in a web browser instead.
-            ", singular_tag_str, singular_tag_str, singular_tag_str);
+        let struct_inner_web_doc = format!("Open the {} in the browser.", singular_tag_str);
         let struct_inner_name_doc = format!("The {} to view. Can be an ID or name.", singular_tag_str);
 
         let mut api_call_params: Vec<TokenStream> = Vec::new();
