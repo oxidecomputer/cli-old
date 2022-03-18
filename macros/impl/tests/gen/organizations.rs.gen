@@ -1,6 +1,7 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     List(CmdOrganizationList),
+    Create(CmdOrganizationCreate),
     #[clap(alias = "get")]
     View(CmdOrganizationView),
     Delete(CmdOrganizationDelete),
@@ -49,6 +50,33 @@ impl crate::cmd::Command for CmdOrganizationList {
             .with(tabled::Style::psql())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "Create a new organization.\n\nTo create a organization interactively, use `oxide organization create` with no arguments."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdOrganizationCreate {
+    #[doc = "The name of the organization to create."]
+    #[clap(name = "organization", required = true)]
+    pub organization: String,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdOrganizationCreate {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let mut description = self.description.clone();
+        let mut name = self.name.clone();
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("description required in non-interactive mode"));
+        }
+
+        if name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("name required in non-interactive mode"));
+        }
+
+        let client = ctx.api_client("")?;
         Ok(())
     }
 }

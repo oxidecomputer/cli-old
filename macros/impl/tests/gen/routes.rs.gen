@@ -1,6 +1,7 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     List(CmdRouteList),
+    Create(CmdRouteCreate),
     #[clap(alias = "get")]
     View(CmdRouteView),
     Delete(CmdRouteDelete),
@@ -78,6 +79,75 @@ impl crate::cmd::Command for CmdRouteList {
             .with(tabled::Style::psql())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "Create a new route.\n\nTo create a route interactively, use `oxide route create` with no arguments."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdRouteCreate {
+    #[doc = "The name of the route to create."]
+    #[clap(name = "route", required = true)]
+    pub route: String,
+    #[doc = "The project that holds the route."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "The router that holds the route."]
+    #[clap(long, short, default_value_t)]
+    pub router: String,
+    #[doc = "The VPC that holds the route."]
+    #[clap(long, short, default_value_t)]
+    pub vpc: String,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdRouteCreate {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let mut description = self.description.clone();
+        let mut destination = self.destination.clone();
+        let mut name = self.name.clone();
+        let mut organization = self.organization.clone();
+        let mut project = self.project.clone();
+        let mut router = self.router.clone();
+        let mut target = self.target.clone();
+        let mut vpc = self.vpc.clone();
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("description required in non-interactive mode"));
+        }
+
+        if destination.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("destination required in non-interactive mode"));
+        }
+
+        if name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("name required in non-interactive mode"));
+        }
+
+        if organization.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("organization required in non-interactive mode"));
+        }
+
+        if project.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("project required in non-interactive mode"));
+        }
+
+        if router.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("router required in non-interactive mode"));
+        }
+
+        if target.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("target required in non-interactive mode"));
+        }
+
+        if vpc.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("vpc required in non-interactive mode"));
+        }
+
+        let client = ctx.api_client("")?;
         Ok(())
     }
 }

@@ -20,7 +20,7 @@ pub fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let params = from_tokenstream::<Params>(&attr)?;
 
     // Lets get the Open API spec.
-    let api: openapiv3::OpenAPI = load_api_spec()?;
+    let api = load_api_spec()?;
 
     let ops = get_operations_with_tag(&api, &params.tag)?;
 
@@ -55,6 +55,18 @@ pub fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
             // Clap with alphabetize the help text subcommands so it is fine to just shove
             // the variants on the end.
             variants.push(view_enum_item);
+        } else if op.is_root_create_operation(&params.tag) {
+            let (create_cmd, create_enum_item) = op.generate_create_command(&params.tag)?;
+
+            commands = quote! {
+                #commands
+
+                #create_cmd
+            };
+
+            // Clap with alphabetize the help text subcommands so it is fine to just shove
+            // the variants on the end.
+            variants.push(create_enum_item);
         } else if op.is_root_list_operation(&params.tag) {
             let (list_cmd, list_enum_item) = op.generate_list_command(&params.tag)?;
 
@@ -84,10 +96,7 @@ pub fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
 }
 
 /// Get the OpenAPI spec from the file.
-fn load_api_spec<T>() -> Result<T>
-where
-    for<'de> T: Deserialize<'de>,
-{
+fn load_api_spec() -> Result<openapiv3::OpenAPI> {
     let s = include_str!("../../../spec.json");
     Ok(serde_json::from_str(s)?)
 }
@@ -95,6 +104,7 @@ where
 trait ReferenceOrExt<T> {
     fn item(&self) -> Result<&T>;
     fn reference(&self) -> Result<String>;
+    fn get_schema_from_reference(&self) -> Result<openapiv3::Schema>;
 }
 
 impl<T> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
@@ -116,6 +126,24 @@ impl<T> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
                 Ok(reference.trim_start_matches("#/components/schemas/").to_string())
             }
         }
+    }
+
+    fn get_schema_from_reference(&self) -> Result<openapiv3::Schema> {
+        let name = self.reference()?;
+
+        let spec = load_api_spec()?;
+
+        let components = spec
+            .components
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("components not found in spec"))?;
+
+        let schema = components
+            .schemas
+            .get(&name)
+            .ok_or_else(|| anyhow::anyhow!("Could not find schema with name {}", name))?;
+
+        Ok(schema.item()?.clone())
     }
 }
 
@@ -176,6 +204,12 @@ struct Operation {
     id: String,
 }
 
+struct Property {
+    #[allow(dead_code)]
+    schema: Box<openapiv3::Schema>,
+    required: bool,
+}
+
 impl Operation {
     /// Returns if the given operation is a root level operation on a specific tag.
     fn is_root_level_operation(&self, tag: &str) -> bool {
@@ -193,6 +227,11 @@ impl Operation {
             };
 
         self.id.ends_with(&format!("{}_{}", tag, self.method.to_lowercase())) && pagination && self.method == "GET"
+    }
+
+    /// Returns if the given operation is a root create operation on a specific tag.
+    fn is_root_create_operation(&self, tag: &str) -> bool {
+        self.id.ends_with(&format!("{}_{}", tag, self.method.to_lowercase())) && self.method == "POST"
     }
 
     fn get_parameters(&self) -> Result<BTreeMap<String, openapiv3::Parameter>> {
@@ -232,7 +271,7 @@ impl Operation {
         false
     }
 
-    fn get_request_body_properties(&self) -> Result<BTreeMap<String, Box<openapiv3::Schema>>> {
+    fn get_request_body_properties(&self) -> Result<BTreeMap<String, Property>> {
         let mut properties = BTreeMap::new();
 
         let request_body = match self.op.request_body.as_ref() {
@@ -249,8 +288,18 @@ impl Operation {
         let schema = match content.schema.as_ref() {
             Some(s) => s,
             None => return Ok(properties),
-        }
-        .item()?;
+        };
+
+        let schema = match schema.item() {
+            Ok(b) => b.clone(),
+            Err(e) => {
+                if e.to_string().contains("reference") {
+                    schema.get_schema_from_reference()?
+                } else {
+                    anyhow::bail!("Could not get schema from request body: {}", e);
+                }
+            }
+        };
 
         let obj = match &schema.schema_kind {
             openapiv3::SchemaKind::Type(openapiv3::Type::Object(o)) => o,
@@ -258,7 +307,23 @@ impl Operation {
         };
 
         for (key, prop) in obj.properties.iter() {
-            properties.insert(key.clone(), prop.item()?.clone());
+            let s = match prop.item() {
+                Ok(s) => s.clone(),
+                Err(e) => {
+                    if e.to_string().contains("reference") {
+                        Box::new(prop.get_schema_from_reference()?)
+                    } else {
+                        anyhow::bail!("Could not get schema from prop `{}`: {}", key, e);
+                    }
+                }
+            };
+            properties.insert(
+                key.clone(),
+                Property {
+                    schema: s,
+                    required: obj.required.contains(&key),
+                },
+            );
         }
 
         Ok(properties)
@@ -266,37 +331,12 @@ impl Operation {
 
     #[allow(dead_code)]
     fn is_request_body_property(&self, property: &str) -> bool {
-        let request_body = match self.op.request_body.as_ref() {
-            Some(r) => r,
-            None => return false,
-        };
-
-        let request_body = match request_body.item() {
-            Ok(i) => i,
+        let properties = match self.get_request_body_properties() {
+            Ok(p) => p,
             Err(_) => return false,
         };
 
-        let content = match request_body.content.get("application/json") {
-            Some(c) => c,
-            None => return false,
-        };
-
-        let schema = match content.schema.as_ref() {
-            Some(s) => s,
-            None => return false,
-        };
-
-        let schema = match schema.item() {
-            Ok(s) => s,
-            Err(_) => return false,
-        };
-
-        let obj = match &schema.schema_kind {
-            openapiv3::SchemaKind::Type(openapiv3::Type::Object(o)) => o,
-            _ => return false,
-        };
-
-        for (key, _) in obj.properties.iter() {
+        for key in properties.keys() {
             if key == property {
                 return true;
             }
@@ -323,8 +363,30 @@ impl Operation {
         Ok(param_names)
     }
 
+    /// Gets a list of all the required string parameters for the operation.
+    /// This includes the path parameters, query parameters, and request_body parameters.
+    fn get_all_required_param_names(&self) -> Result<Vec<String>> {
+        let mut param_names = Vec::new();
+
+        for (param, p) in self.get_parameters()? {
+            if p.data().unwrap().required {
+                param_names.push(param.to_string());
+            }
+        }
+
+        for (param, p) in self.get_request_body_properties()? {
+            if p.required {
+                param_names.push(param.to_string());
+            }
+        }
+
+        param_names.sort();
+
+        Ok(param_names)
+    }
+
     /// Get additional struct parameters.
-    fn get_additional_struct_params(&self, tag: &str) -> Result<Vec<TokenStream>> {
+    fn get_additional_struct_params(&self, tag: &str, is_create: bool) -> Result<Vec<TokenStream>> {
         let mut params = Vec::new();
 
         for (param, p) in self.get_parameters()? {
@@ -375,6 +437,13 @@ impl Operation {
                     #[clap(long, short, default_value_t)]
                     pub #p_ident: oxide_api::types::#type_ident,
                 });
+            } else if is_create {
+                params.push(quote! {
+                    #[doc = #param_doc]
+                    #[clap(long, short, default_value_t)]
+                    pub #p_ident: String,
+                });
+                // On create, we want to set default values for the parameters.
             } else {
                 params.push(quote! {
                     #[doc = #param_doc]
@@ -385,6 +454,119 @@ impl Operation {
         }
 
         Ok(params)
+    }
+
+    /// Generate the create command.
+    fn generate_create_command(&self, tag: &str) -> Result<(TokenStream, syn::Variant)> {
+        let tag_ident = format_ident!("{}", tag);
+        let singular_tag_str = if tag == "vpcs" {
+            singular(tag).to_uppercase()
+        } else {
+            singular(tag)
+        };
+        let singular_tag_lc = format_ident!("{}", singular(tag));
+        let struct_name = format_ident!("Cmd{}Create", to_title_case(&singular(tag)));
+
+        let struct_doc = format!(
+            "Create a new {}.\n\nTo create a {} interactively, use `oxide {} create` with no arguments.",
+            singular_tag_str,
+            singular_tag_str,
+            &singular(tag)
+        );
+        let struct_inner_project_doc = format!("The project that holds the {}.", singular_tag_str);
+
+        let struct_inner_name_doc = format!("The name of the {} to create.", singular_tag_str);
+
+        let mut api_call_params: Vec<TokenStream> = Vec::new();
+        let mut mutable_variables: Vec<TokenStream> = Vec::new();
+        for p in self.get_all_param_names()? {
+            let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
+
+            api_call_params.push(quote!(&self.#p));
+            mutable_variables.push(quote!(
+                let mut #p = self.#p.clone();
+            ));
+        }
+
+        let mut required_checks: Vec<TokenStream> = Vec::new();
+        for p in self.get_all_required_param_names()? {
+            let n = p.trim_end_matches("_name").trim_end_matches("_id");
+            let p = format_ident!("{}", n);
+
+            let formatted = if n == singular(tag) {
+                // Format like an argument not a flag.
+                format!("[{}]", n)
+            } else {
+                // TODO: We should give the actual flags here.
+                format!("{}", n)
+            };
+
+            let error_msg = format!("{} required in non-interactive mode", formatted);
+
+            required_checks.push(quote!(if #p.is_empty() && !ctx.io.can_prompt() {
+                return Err(anyhow!(#error_msg));
+            }));
+        }
+
+        // We need to check if project is a parameter to this call.
+        let project_param = if self.is_parameter("project") && tag != "projects" {
+            quote! {
+                #[doc = #struct_inner_project_doc]
+                #[clap(long, short, required = true)]
+                pub project: String,
+            }
+        } else {
+            quote!()
+        };
+
+        // We need to check if organization is a parameter to this call.
+        let organization_param = if self.is_parameter("organization") && tag != "organizations" {
+            quote! {
+                /// The organization that holds the project.
+                #[clap(long, short, required = true, env = "OXIDE_ORG")]
+                pub organization: String,
+            }
+        } else {
+            quote!()
+        };
+
+        let additional_struct_params = self.get_additional_struct_params(tag, true)?;
+
+        let cmd = quote!(
+            #[doc = #struct_doc]
+            #[derive(clap::Parser, Debug, Clone)]
+            #[clap(verbatim_doc_comment)]
+            pub struct #struct_name {
+                #[doc = #struct_inner_name_doc]
+                #[clap(name = #singular_tag_str, required = true)]
+                pub #singular_tag_lc: String,
+
+                #project_param
+
+                #organization_param
+
+                #(#additional_struct_params)*
+            }
+
+            #[async_trait::async_trait]
+            impl crate::cmd::Command for #struct_name {
+                async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+                    #(#mutable_variables)*
+
+                    #(#required_checks)*
+
+                    let client = ctx.api_client("")?;
+
+                    // Prompt for various parameters if we can, and the user passed them as empty.
+
+                    Ok(())
+                }
+            }
+        );
+
+        let enum_item: syn::Variant = syn::parse2(quote!(Create(#struct_name)))?;
+
+        Ok((cmd, enum_item))
     }
 
     /// Generate the view command.
@@ -436,7 +618,7 @@ impl Operation {
             quote!()
         };
 
-        let additional_struct_params = self.get_additional_struct_params(tag)?;
+        let additional_struct_params = self.get_additional_struct_params(tag, false)?;
 
         let cmd = quote!(
             #[doc = #struct_doc]
@@ -573,7 +755,7 @@ impl Operation {
             quote!()
         };
 
-        let additional_struct_params = self.get_additional_struct_params(tag)?;
+        let additional_struct_params = self.get_additional_struct_params(tag, false)?;
 
         let cmd = quote!(
             #[doc = #struct_doc]
@@ -687,7 +869,7 @@ impl Operation {
             quote!()
         };
 
-        let additional_struct_params = self.get_additional_struct_params(tag)?;
+        let additional_struct_params = self.get_additional_struct_params(tag, false)?;
 
         // We need to form the output back to the client.
         let output = if self.is_parameter("organization") && self.is_parameter("project") {

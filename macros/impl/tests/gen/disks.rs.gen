@@ -5,6 +5,7 @@ enum SubCommand {
     Detach(CmdDiskDetach),
     Edit(CmdDiskEdit),
     List(CmdDiskList),
+    Create(CmdDiskCreate),
     #[clap(alias = "get")]
     View(CmdDiskView),
     Delete(CmdDiskDelete),
@@ -68,6 +69,55 @@ impl crate::cmd::Command for CmdDiskList {
             .with(tabled::Style::psql())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "Create a new disk.\n\nTo create a disk interactively, use `oxide disk create` with no arguments."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdDiskCreate {
+    #[doc = "The name of the disk to create."]
+    #[clap(name = "disk", required = true)]
+    pub disk: String,
+    #[doc = "The project that holds the disk."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdDiskCreate {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let mut description = self.description.clone();
+        let mut name = self.name.clone();
+        let mut organization = self.organization.clone();
+        let mut project = self.project.clone();
+        let mut size = self.size.clone();
+        let mut snapshot = self.snapshot.clone();
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("description required in non-interactive mode"));
+        }
+
+        if name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("name required in non-interactive mode"));
+        }
+
+        if organization.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("organization required in non-interactive mode"));
+        }
+
+        if project.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("project required in non-interactive mode"));
+        }
+
+        if size.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("size required in non-interactive mode"));
+        }
+
+        let client = ctx.api_client("")?;
         Ok(())
     }
 }

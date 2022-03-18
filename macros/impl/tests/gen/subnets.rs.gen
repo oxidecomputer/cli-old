@@ -1,6 +1,7 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     List(CmdSubnetList),
+    Create(CmdSubnetCreate),
     #[clap(alias = "get")]
     View(CmdSubnetView),
     Delete(CmdSubnetDelete),
@@ -73,6 +74,63 @@ impl crate::cmd::Command for CmdSubnetList {
             .with(tabled::Style::psql())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "Create a new subnet.\n\nTo create a subnet interactively, use `oxide subnet create` with no arguments."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdSubnetCreate {
+    #[doc = "The name of the subnet to create."]
+    #[clap(name = "subnet", required = true)]
+    pub subnet: String,
+    #[doc = "The project that holds the subnet."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "The VPC that holds the subnet."]
+    #[clap(long, short, default_value_t)]
+    pub vpc: String,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdSubnetCreate {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let mut description = self.description.clone();
+        let mut ipv4_block = self.ipv4_block.clone();
+        let mut ipv6_block = self.ipv6_block.clone();
+        let mut name = self.name.clone();
+        let mut organization = self.organization.clone();
+        let mut project = self.project.clone();
+        let mut vpc = self.vpc.clone();
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("description required in non-interactive mode"));
+        }
+
+        if ipv4_block.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("ipv4_block required in non-interactive mode"));
+        }
+
+        if name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("name required in non-interactive mode"));
+        }
+
+        if organization.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("organization required in non-interactive mode"));
+        }
+
+        if project.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("project required in non-interactive mode"));
+        }
+
+        if vpc.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow!("vpc required in non-interactive mode"));
+        }
+
+        let client = ctx.api_client("")?;
         Ok(())
     }
 }
