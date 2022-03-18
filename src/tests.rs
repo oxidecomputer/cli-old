@@ -457,9 +457,12 @@ created:"#
                 "oxide".to_string(),
                 "project".to_string(),
                 "list".to_string(),
+                "--organization".to_string(),
                 "maze-war".to_string(),
             ],
-            want_out: "NAME  DESCRTIPTION  UPDATED\n".to_string(),
+            want_out: "id | name | description | organization_id |
+----+------+-------------+-----------------"
+                .to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -509,10 +512,8 @@ created:"#
                 "--json".to_string(),
                 "--paginate".to_string(),
             ],
-            want_out: r#"[
-  {
-    "description": "The development project",
-    "id": ""#
+            want_out: r#""name": "production",
+    "organization_id": ""#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -633,7 +634,9 @@ organization:"#
                 "--project".to_string(),
                 "development".to_string(),
             ],
-            want_out: "NAME  DESCRTIPTION  STATE  UPDATED\n".to_string(),
+            want_out: "id | name | description | hostname | memory | ncpus | project_id | run_state |
+----+------+-------------+----------+--------+-------+------------+-----------"
+                .to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -833,7 +836,9 @@ state:"#
                 "--project".to_string(),
                 "development".to_string(),
             ],
-            want_out: "NAME  DESCRTIPTION  STATE  DEVICE PATH  UPDATED\n".to_string(),
+            want_out: "id | name | description | device_path | project_id | size | snapshot_id | state |
+----+------+-------------+-------------+------------+------+-------------+-------"
+                .to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -1037,9 +1042,7 @@ snapshot:"#
                 "--project".to_string(),
                 "development".to_string(),
             ],
-            want_out: r#"NAME     DESCRTIPTION  DNS      SYSTEM ROUTER                         UPDATED
-default  Default VPC   default"#
-                .to_string(),
+            want_out: r#"default | Default VPC | default  |"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
