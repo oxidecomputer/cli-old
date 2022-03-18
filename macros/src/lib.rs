@@ -415,8 +415,8 @@ impl Operation {
 
             if p == "sort_by" {
                 // Sort by is an enum so we don't want to "&" it
-                api_call_params_all.push(quote!(self.#p));
-                api_call_params.push(quote!(self.#p));
+                api_call_params_all.push(quote!(self.#p.clone()));
+                api_call_params.push(quote!(self.#p.clone()));
                 continue;
             }
 
@@ -505,7 +505,7 @@ impl Operation {
                 }
 
                 let table = tabled::Table::new(results).to_string();
-                write!(ctx.io.out, table)?;
+                write!(ctx.io.out, "{}", table)?;
 
                 Ok(())
             }
