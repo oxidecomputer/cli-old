@@ -277,6 +277,19 @@ impl crate::cmd::Command for CmdRouteCreate {
             }
         }
 
+        client
+            .routes()
+            .post(
+                &self.description,
+                &self.destination,
+                &self.name,
+                &self.organization,
+                &self.project,
+                &self.router,
+                &self.target,
+                &self.vpc,
+            )
+            .await?;
         Ok(())
     }
 }

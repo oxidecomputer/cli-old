@@ -670,6 +670,13 @@ impl Operation {
 
                     #(#additional_prompts)*
 
+                    client
+                        .#tag_ident()
+                        .post(
+                            #(#api_call_params),*
+                        )
+                        .await?;
+
 
                     Ok(())
                 }

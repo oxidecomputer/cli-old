@@ -113,6 +113,10 @@ impl crate::cmd::Command for CmdOrganizationCreate {
             }
         }
 
+        client
+            .organizations()
+            .post(&self.description, &self.name)
+            .await?;
         Ok(())
     }
 }

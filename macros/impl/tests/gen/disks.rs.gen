@@ -211,6 +211,17 @@ impl crate::cmd::Command for CmdDiskCreate {
             }
         }
 
+        client
+            .disks()
+            .post(
+                &self.description,
+                &self.name,
+                &self.organization,
+                &self.project,
+                &self.size,
+                &self.snapshot,
+            )
+            .await?;
         Ok(())
     }
 }
