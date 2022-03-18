@@ -117,6 +117,14 @@ impl crate::cmd::Command for CmdOrganizationCreate {
             .organizations()
             .post(&self.description, &self.name)
             .await?;
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Created {} {}",
+            cs.success_icon(),
+            "organization",
+            self.organization
+        )?;
         Ok(())
     }
 }

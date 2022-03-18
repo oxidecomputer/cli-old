@@ -248,6 +248,16 @@ impl crate::cmd::Command for CmdSubnetCreate {
                 &self.vpc,
             )
             .await?;
+        let cs = ctx.io.color_scheme();
+        let full_name = format!("{}/{}", self.organization, self.project);
+        writeln!(
+            ctx.io.out,
+            "{} Created {} {} in {}",
+            cs.success_icon(),
+            "subnet",
+            self.subnet,
+            full_name
+        )?;
         Ok(())
     }
 }

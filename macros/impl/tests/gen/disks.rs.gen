@@ -222,6 +222,16 @@ impl crate::cmd::Command for CmdDiskCreate {
                 &self.snapshot,
             )
             .await?;
+        let cs = ctx.io.color_scheme();
+        let full_name = format!("{}/{}", self.organization, self.project);
+        writeln!(
+            ctx.io.out,
+            "{} Created {} {} in {}",
+            cs.success_icon(),
+            "disk",
+            self.disk,
+            full_name
+        )?;
         Ok(())
     }
 }

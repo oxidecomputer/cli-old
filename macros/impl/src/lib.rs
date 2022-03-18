@@ -634,6 +634,47 @@ impl Operation {
             });
         }
 
+        // We need to form the output back to the client.
+        let output = if self.is_parameter("organization") && self.is_parameter("project") {
+            let start = quote! {
+                let full_name = format!("{}/{}", self.organization, self.project);
+            };
+            if tag != "projects" {
+                quote! {
+                    #start
+                    writeln!(
+                        ctx.io.out,
+                        "{} Created {} {} in {}",
+                        cs.success_icon(),
+                        #singular_tag_str,
+                        self.#singular_tag_lc,
+                        full_name
+                    )?;
+                }
+            } else {
+                quote! {
+                    #start
+                    writeln!(
+                        ctx.io.out,
+                        "{} Created {} {}",
+                        cs.success_icon(),
+                        #singular_tag_str,
+                        full_name
+                    )?;
+                }
+            }
+        } else {
+            quote! {
+                writeln!(
+                    ctx.io.out,
+                    "{} Created {} {}",
+                    cs.success_icon(),
+                    #singular_tag_str,
+                    self.#singular_tag_lc
+                )?;
+            }
+        };
+
         let additional_struct_params = self.get_additional_struct_params(tag, true)?;
 
         let cmd = quote!(
@@ -677,6 +718,8 @@ impl Operation {
                         )
                         .await?;
 
+                    let cs = ctx.io.color_scheme();
+                    #output
 
                     Ok(())
                 }

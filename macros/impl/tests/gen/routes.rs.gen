@@ -290,6 +290,16 @@ impl crate::cmd::Command for CmdRouteCreate {
                 &self.vpc,
             )
             .await?;
+        let cs = ctx.io.color_scheme();
+        let full_name = format!("{}/{}", self.organization, self.project);
+        writeln!(
+            ctx.io.out,
+            "{} Created {} {} in {}",
+            cs.success_icon(),
+            "route",
+            self.route,
+            full_name
+        )?;
         Ok(())
     }
 }
