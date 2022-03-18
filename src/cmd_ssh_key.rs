@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 
-/// Manage SSH keys.
+/// Manage ssh keys.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSSHKey {
@@ -27,7 +27,7 @@ impl crate::cmd::Command for CmdSSHKey {
     }
 }
 
-/// Add an SSH key to your Oxide account.
+/// Add an ssh key to your Oxide account.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSSHKeyAdd {}
@@ -40,7 +40,7 @@ impl crate::cmd::Command for CmdSSHKeyAdd {
     }
 }
 
-/// Delete an SSH Key from your Oxide account.
+/// Delete an ssh key from your Oxide account.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSSHKeyDelete {}
@@ -53,7 +53,7 @@ impl crate::cmd::Command for CmdSSHKeyDelete {
     }
 }
 
-/// List SSH Keys in your Oxide account.
+/// List ssh keys in your Oxide account.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSSHKeyList {}

@@ -2,7 +2,6 @@ use std::io::Write;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
-use cli_macros::crud_gen;
 
 /// Create, list, edit, view, and delete routes.
 #[derive(Parser, Debug, Clone)]
@@ -12,12 +11,10 @@ pub struct CmdRoute {
     subcmd: SubCommand,
 }
 
-#[crud_gen {
-    tag = "routes",
-}]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     Create(CmdRouteCreate),
+    Delete(CmdRouteDelete),
     Edit(CmdRouteEdit),
     List(CmdRouteList),
     View(CmdRouteView),
@@ -71,6 +68,84 @@ pub struct CmdRouteCreate {
 impl crate::cmd::Command for CmdRouteCreate {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
         println!("Not implemented yet.");
+        Ok(())
+    }
+}
+
+/// Delete a route.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdRouteDelete {
+    /// The route to delete. Can be an ID or name.
+    #[clap(name = "route", required = true)]
+    route: String,
+
+    /// The router the route belongs to.
+    #[clap(long, short, required = true)]
+    pub router: String,
+
+    /// The VPC that holds the route.
+    #[clap(long, short, required = true)]
+    pub vpc: String,
+
+    /// The project to delete the route from.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// Confirm deletion without prompting.
+    #[clap(long)]
+    pub confirm: bool,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdRouteDelete {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if !ctx.io.can_prompt() && !self.confirm {
+            return Err(anyhow!("--confirm required when not running interactively"));
+        }
+
+        let client = ctx.api_client("")?;
+
+        let full_name = format!("{}/{}", self.organization, self.project);
+
+        // Confirm deletion.
+        if !self.confirm {
+            if let Err(err) = dialoguer::Input::<String>::new()
+                .with_prompt(format!("Type {} to confirm deletion:", self.route))
+                .validate_with(|input: &String| -> Result<(), &str> {
+                    if input.trim() == full_name {
+                        Ok(())
+                    } else {
+                        Err("mismatched confirmation")
+                    }
+                })
+                .interact_text()
+            {
+                return Err(anyhow!("prompt failed: {}", err));
+            }
+        }
+
+        // Delete the project.
+        client
+            .routes()
+            .delete(&self.organization, &self.project, &self.route, &self.router, &self.vpc)
+            .await?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Deleted route {} from {} in VPC {} and router {}",
+            cs.success_icon_with_color(ansi_term::Color::Red),
+            self.route,
+            full_name,
+            self.router,
+            self.vpc
+        )?;
+
         Ok(())
     }
 }

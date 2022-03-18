@@ -19,6 +19,8 @@ pub mod cmd_config;
 pub mod cmd_disk;
 /// The generate command.
 pub mod cmd_generate;
+/// The image command.
+pub mod cmd_image;
 /// The instance command.
 pub mod cmd_instance;
 /// The organization command.
@@ -29,6 +31,8 @@ pub mod cmd_project;
 pub mod cmd_route;
 /// The router command.
 pub mod cmd_router;
+/// The snapshot command.
+pub mod cmd_snapshot;
 /// The ssh-key command.
 pub mod cmd_ssh_key;
 /// The subnet command.
@@ -122,6 +126,8 @@ enum SubCommand {
     #[clap(alias = "disks")]
     Disk(cmd_disk::CmdDisk),
     Generate(cmd_generate::CmdGenerate),
+    #[clap(alias = "images")]
+    Image(cmd_image::CmdImage),
     #[clap(alias = "instances")]
     Instance(cmd_instance::CmdInstance),
     #[clap(alias = "orgs")]
@@ -132,6 +138,8 @@ enum SubCommand {
     Route(cmd_route::CmdRoute),
     #[clap(alias = "routers")]
     Router(cmd_router::CmdRouter),
+    #[clap(alias = "snapshots")]
+    Snapshot(cmd_snapshot::CmdSnapshot),
     #[clap(alias = "ssh-keys")]
     SshKey(cmd_ssh_key::CmdSSHKey),
     #[clap(alias = "subnets")]
@@ -249,11 +257,13 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Config(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Disk(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Generate(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Image(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Instance(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Org(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Project(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Route(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Router(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Snapshot(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::SshKey(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Subnet(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Version(cmd) => run_cmd(&cmd, ctx).await,
