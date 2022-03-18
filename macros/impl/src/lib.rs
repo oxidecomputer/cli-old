@@ -493,7 +493,7 @@ impl Operation {
                         .with(tabled::Modify::new(tabled::Full)
                             .with(tabled::Alignment::left())
                             .with(tabled::Alignment::top())
-                        ).with(tabled::Style::psql()).to_string();
+                        ).with(tabled::Style::psql().header_off()).to_string();
 
                     writeln!(ctx.io.out, "{}", table)?;
 
