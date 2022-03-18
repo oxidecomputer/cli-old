@@ -383,6 +383,8 @@ impl Operation {
             quote!()
         };
 
+        let additional_struct_params = self.get_additional_struct_params(tag)?;
+
         let cmd = quote!(
             #[doc = #struct_doc]
             #[derive(clap::Parser, Debug, Clone)]
@@ -391,6 +393,8 @@ impl Operation {
                 #project_param
 
                 #organization_param
+
+                #(#additional_struct_params);*
 
                 /// Maximum number of items to list.
                 #[clap(long, short, default_value = "30")]

@@ -329,6 +329,10 @@ fn test_crud_gen() {
             #[clap(long, short, required = true, env = "OXIDE_ORG")]
             pub organization: String,
 
+            #[doc = "The VPC that holds the subnets."]
+            #[clap(long, short, required = true)]
+            pub vpc: String,
+
             /// Maximum number of items to list.
             #[clap(long, short, default_value = "30")]
             pub limit: u32,
@@ -340,10 +344,6 @@ fn test_crud_gen() {
             /// Output JSON.
             #[clap(long)]
             pub json: bool,
-
-            /// The VPC that holds the subnets.
-            #[clap(long, short, required = true)]
-            pub vpc: String,
         }
 
         #[async_trait::async_trait]
