@@ -77,7 +77,7 @@ impl crate::cmd::Command for CmdSubnetList {
     }
 }
 
-#[doc = "View subnet."]
+#[doc = "View subnet.\n\nDisplay information about an Oxide subnet.\n\nWith '--web', open the subnet in a web browser instead."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSubnetView {
@@ -93,7 +93,7 @@ pub struct CmdSubnetView {
     #[doc = "The VPC that holds the subnet."]
     #[clap(long, short, required = true)]
     pub vpc: String,
-    #[doc = "Open the subnet in the browser.\n\nDisplay information about an Oxide subnet.\n\nWith '--web', open the subnet in a web browser instead.\n            "]
+    #[doc = "Open the subnet in the browser."]
     #[clap(short, long)]
     pub web: bool,
     #[doc = r" Output JSON."]
@@ -127,7 +127,7 @@ impl crate::cmd::Command for CmdSubnetView {
                     .with(tabled::Alignment::left())
                     .with(tabled::Alignment::top()),
             )
-            .with(tabled::Style::psql())
+            .with(tabled::Style::psql().header_off())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
         Ok(())

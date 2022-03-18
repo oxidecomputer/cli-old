@@ -72,7 +72,7 @@ impl crate::cmd::Command for CmdDiskList {
     }
 }
 
-#[doc = "View disk."]
+#[doc = "View disk.\n\nDisplay information about an Oxide disk.\n\nWith '--web', open the disk in a web browser instead."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdDiskView {
@@ -85,7 +85,7 @@ pub struct CmdDiskView {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "Open the disk in the browser.\n\nDisplay information about an Oxide disk.\n\nWith '--web', open the disk in a web browser instead.\n            "]
+    #[doc = "Open the disk in the browser."]
     #[clap(short, long)]
     pub web: bool,
     #[doc = r" Output JSON."]
@@ -119,7 +119,7 @@ impl crate::cmd::Command for CmdDiskView {
                     .with(tabled::Alignment::left())
                     .with(tabled::Alignment::top()),
             )
-            .with(tabled::Style::psql())
+            .with(tabled::Style::psql().header_off())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
         Ok(())

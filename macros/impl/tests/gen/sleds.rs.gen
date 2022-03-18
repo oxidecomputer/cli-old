@@ -52,14 +52,14 @@ impl crate::cmd::Command for CmdSledList {
     }
 }
 
-#[doc = "View sled."]
+#[doc = "View sled.\n\nDisplay information about an Oxide sled.\n\nWith '--web', open the sled in a web browser instead."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSledView {
     #[doc = "The sled to view. Can be an ID or name."]
     #[clap(name = "sled", required = true)]
     pub sled: String,
-    #[doc = "Open the sled in the browser.\n\nDisplay information about an Oxide sled.\n\nWith '--web', open the sled in a web browser instead.\n            "]
+    #[doc = "Open the sled in the browser."]
     #[clap(short, long)]
     pub web: bool,
     #[doc = r" Output JSON."]
@@ -90,7 +90,7 @@ impl crate::cmd::Command for CmdSledView {
                     .with(tabled::Alignment::left())
                     .with(tabled::Alignment::top()),
             )
-            .with(tabled::Style::psql())
+            .with(tabled::Style::psql().header_off())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
         Ok(())
