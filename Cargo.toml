@@ -1,6 +1,6 @@
 [package]
 name = "oxide"
-version = "0.1.0-pre.5"
+version = "0.1.0-pre.6"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -23,7 +23,7 @@ http = "^0.2.6"
 log = "^0.4"
 regex = "1"
 open = "^2.1.1"
-oxide-api = "0.1.0-rc.21"
+oxide-api = "0.1.0-rc.22"
 pulldown-cmark = "^0.9.1"
 pulldown-cmark-to-cmark = "^10.0.0"
 reqwest = { version = "^0.11.9", default-features = false, features = ["json", "rustls-tls"] }
