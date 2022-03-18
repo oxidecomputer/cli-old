@@ -341,7 +341,7 @@ impl Operation {
                 key.clone(),
                 Property {
                     schema: s,
-                    required: obj.required.contains(&key),
+                    required: obj.required.contains(key),
                 },
             );
         }
@@ -377,7 +377,23 @@ impl Operation {
         params.sort();
 
         for p in params {
+            if p == "page_token" {
+                api_call_params.push(quote!(""));
+                continue;
+            }
+
+            if p == "limit" {
+                api_call_params.push(quote!(self.limit));
+                continue;
+            }
+
             let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
+
+            if p == "sort_by" {
+                // Sort by is an enum so we don't want to "&" it
+                api_call_params.push(quote!(self.#p.clone()));
+                continue;
+            }
 
             api_call_params.push(quote!(&self.#p));
         }
@@ -541,7 +557,7 @@ impl Operation {
                 format!("[{}]", n)
             } else {
                 // TODO: We should give the actual flags here.
-                format!("{}", n)
+                n.to_string()
             };
 
             let error_msg = format!("{} required in non-interactive mode", formatted);
@@ -794,12 +810,7 @@ impl Operation {
         let struct_inner_web_doc = format!("Open the {} in the browser.", singular_tag_str);
         let struct_inner_name_doc = format!("The {} to view. Can be an ID or name.", singular_tag_str);
 
-        let mut api_call_params: Vec<TokenStream> = Vec::new();
-        for p in self.get_all_param_names()? {
-            let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
-
-            api_call_params.push(quote!(&self.#p));
-        }
+        let api_call_params = self.get_api_call_params()?;
 
         // We need to check if project is a parameter to this call.
         let project_param = if self.is_parameter("project") && tag != "projects" {
@@ -911,31 +922,21 @@ impl Operation {
         let struct_doc = format!("List {}.", plural(&singular_tag_str));
         let struct_inner_project_doc = format!("The project that holds the {}.", plural(&singular_tag_str));
 
+        let api_call_params = self.get_api_call_params()?;
+
         let mut api_call_params_all: Vec<TokenStream> = Vec::new();
-        let mut api_call_params: Vec<TokenStream> = Vec::new();
         for p in self.get_all_param_names()? {
-            // TODO: we should support sort by.
-            if p == "page_token" {
-                api_call_params.push(quote!(""));
+            if p == "limit" || p == "page_token" {
                 continue;
             }
-
-            if p == "limit" {
-                api_call_params.push(quote!(self.limit));
-                continue;
-            }
-
-            let p = format_ident!("{}", p.trim_end_matches("_name"));
 
             if p == "sort_by" {
-                // Sort by is an enum so we don't want to "&" it
-                api_call_params_all.push(quote!(self.#p.clone()));
-                api_call_params.push(quote!(self.#p.clone()));
+                api_call_params_all.push(quote!(self.sort_by.clone()));
                 continue;
             }
 
+            let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
             api_call_params_all.push(quote!(&self.#p));
-            api_call_params.push(quote!(&self.#p));
         }
 
         // We need to check if project is a parameter to this call.
@@ -1046,11 +1047,7 @@ impl Operation {
         let struct_inner_name_doc = format!("The {} to delete. Can be an ID or name.", singular_tag_str);
         let struct_inner_project_doc = format!("The project to delete the {} from.", singular_tag_str);
 
-        let mut api_call_params: Vec<TokenStream> = Vec::new();
-        for p in self.get_all_param_names()? {
-            let p = format_ident!("{}", p.trim_end_matches("_name"));
-            api_call_params.push(quote!(&self.#p));
-        }
+        let api_call_params = self.get_api_call_params()?;
 
         // We need to check if project is a parameter to this call.
         let project_param = if self.is_parameter("project") && tag != "projects" {
