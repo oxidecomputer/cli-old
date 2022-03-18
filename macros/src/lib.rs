@@ -157,7 +157,7 @@ impl Operation {
     fn is_root_list_operation(&self, tag: &str) -> bool {
         let pagination =
             if let Some(serde_json::value::Value::Bool(b)) = self.op.extensions.get("x-dropshot-pagination") {
-                b.clone()
+                *b
             } else {
                 return false;
             };
@@ -299,12 +299,16 @@ impl Operation {
         let mut params = Vec::new();
 
         for (param, p) in self.get_parameters()? {
+            // TODO: we should eventually handle sort by
             if param == "project"
                 || param == "organization"
                 || param == "project_name"
                 || param == "organization_name"
                 || param == singular(tag)
                 || param == format!("{}_name", singular(tag))
+                || param == "limit"
+                || param == "page_token"
+                || param == "sort_by"
             {
                 continue;
             }
@@ -325,7 +329,12 @@ impl Operation {
                 } else {
                     name.to_string()
                 };
-                format!("The {} that holds the {}.", n, singular(tag))
+
+                if self.is_root_list_operation(tag) {
+                    format!("The {} that holds the {}.", n, plural(tag))
+                } else {
+                    format!("The {} that holds the {}.", n, singular(tag))
+                }
             };
 
             params.push(quote! {
@@ -658,10 +667,10 @@ fn get_operations_with_tag(api: &openapiv3::OpenAPI, tag: &str) -> Result<Vec<Op
 fn plural(s: &str) -> String {
     let s = singular(s);
 
-    if s.ends_with("s") {
+    if s.ends_with('s') {
         return format!("{}es", s);
-    } else if s.ends_with("y") {
-        return format!("{}ies", s.trim_end_matches("y"));
+    } else if s.ends_with('y') {
+        return format!("{}ies", s.trim_end_matches('y'));
     }
 
     format!("{}s", s)
