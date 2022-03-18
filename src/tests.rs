@@ -971,12 +971,7 @@ date:"#
                 "development".to_string(),
                 "new-disk".to_string(),
             ],
-            want_out: r#"name:         new-disk
-description:  My new disk
-state:        attaching
-size:         1024
-device path:  /mnt/new-disk
-snapshot:"#
+            want_out: r#"device_path   | /mnt/new-disk"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -1130,10 +1125,7 @@ snapshot:"#
                 "development".to_string(),
                 "netns2".to_string(),
             ],
-            want_out: r#"name:           netns2
-description:    The real deal netns
-dns name:       netns
-system router:"#
+            want_out: r#"description      | The real deal netns"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
