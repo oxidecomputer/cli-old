@@ -19,7 +19,6 @@ pub struct CmdSubnet {
 enum SubCommand {
     Create(CmdSubnetCreate),
     Edit(CmdSubnetEdit),
-    List(CmdSubnetList),
     View(CmdSubnetView),
 }
 
@@ -332,102 +331,6 @@ impl crate::cmd::Command for CmdSubnetEdit {
             full_name,
             self.vpc,
         )?;
-
-        Ok(())
-    }
-}
-
-/// List subnets owned by a VPC.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdSubnetList {
-    /// The VPC that holds the subnets.
-    #[clap(long, short, required = true)]
-    pub vpc: String,
-
-    /// The project that holds the VPC.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization that holds the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Maximum number of subnets to list.
-    #[clap(long, short, default_value = "30")]
-    pub limit: u32,
-
-    /// Make additional HTTP requests to fetch all pages of subnets.
-    #[clap(long)]
-    pub paginate: bool,
-
-    /// Output JSON.
-    #[clap(long)]
-    pub json: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdSubnetList {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.limit < 1 {
-            return Err(anyhow!("--limit must be greater than 0"));
-        }
-
-        let client = ctx.api_client("")?;
-
-        let subnets = if self.paginate {
-            client
-                .subnets()
-                .get_all(
-                    oxide_api::types::NameSortModeAscending::NameAscending,
-                    &self.organization,
-                    &self.project,
-                    &self.vpc,
-                )
-                .await?
-        } else {
-            client
-                .subnets()
-                .get_page(
-                    self.limit,
-                    "",
-                    oxide_api::types::NameSortModeAscending::NameAscending,
-                    &self.organization,
-                    &self.project,
-                    &self.vpc,
-                )
-                .await?
-        };
-
-        if self.json {
-            // If they specified --json, just dump the JSON.
-            ctx.io.write_json(&serde_json::json!(subnets))?;
-            return Ok(());
-        }
-
-        let cs = ctx.io.color_scheme();
-
-        // TODO: add more columns, maybe make customizable.
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tIPv4 BLOCK\tIPv6 BLOCK\tVPC\tLAST UPDATED")?;
-        for subnet in subnets {
-            let last_updated =
-                chrono::Utc::now() - subnet.time_modified.unwrap_or_else(|| subnet.time_created.unwrap());
-            writeln!(
-                tw,
-                "{}\t{}\t{}\t{}\t{}\t{}",
-                &subnet.name,
-                &subnet.description,
-                &subnet.ipv4_block,
-                &subnet.ipv6_block,
-                &subnet.vpc_id,
-                cs.gray(&chrono_humanize::HumanTime::from(last_updated).to_string())
-            )?;
-        }
-        tw.flush()?;
-
-        let table = String::from_utf8(tw.into_inner()?)?;
-        writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
     }

@@ -22,7 +22,6 @@ enum SubCommand {
     Create(CmdInstanceCreate),
     Disks(CmdInstanceDisks),
     Edit(CmdInstanceEdit),
-    List(CmdInstanceList),
     Start(CmdInstanceStart),
     Stop(CmdInstanceStop),
     Reboot(CmdInstanceReboot),
@@ -341,96 +340,6 @@ pub struct CmdInstanceEdit {}
 impl crate::cmd::Command for CmdInstanceEdit {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
         println!("Not implemented yet in omicron.");
-        Ok(())
-    }
-}
-
-/// List instances in a project.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdInstanceList {
-    /// The project that holds the instances.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization that holds the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Maximum number of instances to list.
-    #[clap(long, short, default_value = "30")]
-    pub limit: u32,
-
-    /// Make additional HTTP requests to fetch all pages of instances.
-    #[clap(long)]
-    pub paginate: bool,
-
-    /// Output JSON.
-    #[clap(long)]
-    pub json: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdInstanceList {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.limit < 1 {
-            return Err(anyhow!("--limit must be greater than 0"));
-        }
-
-        let client = ctx.api_client("")?;
-
-        let instances = if self.paginate {
-            client
-                .instances()
-                .get_all(
-                    oxide_api::types::NameSortModeAscending::NameAscending,
-                    &self.organization,
-                    &self.project,
-                )
-                .await?
-        } else {
-            client
-                .instances()
-                .get_page(
-                    self.limit,
-                    "",
-                    oxide_api::types::NameSortModeAscending::NameAscending,
-                    &self.organization,
-                    &self.project,
-                )
-                .await?
-        };
-
-        if self.json {
-            // If they specified --json, just dump the JSON.
-            ctx.io.write_json(&serde_json::json!(instances))?;
-            return Ok(());
-        }
-
-        let cs = ctx.io.color_scheme();
-
-        // TODO: add more columns, maybe make customizable.
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tSTATE\tUPDATED")?;
-        for instance in instances {
-            let last_updated = chrono::Utc::now()
-                - instance
-                    .time_run_state_updated
-                    .unwrap_or_else(|| instance.time_created.unwrap());
-            writeln!(
-                tw,
-                "{}\t{}\t{}\t{}",
-                &instance.name,
-                &instance.description,
-                &instance.run_state,
-                cs.gray(&chrono_humanize::HumanTime::from(last_updated).to_string())
-            )?;
-        }
-        tw.flush()?;
-
-        let table = String::from_utf8(tw.into_inner()?)?;
-        writeln!(ctx.io.out, "{}", table)?;
-
         Ok(())
     }
 }

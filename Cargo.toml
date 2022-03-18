@@ -39,6 +39,7 @@ slog-scope = "4"
 slog-stdlog = "4"
 slog-term = "2"
 tabwriter = "^1.2.1"
+tabled = { version = "^0.5.0", features = ["color"] }
 tempfile = "^3.3.0"
 termbg = "^0.4.0"
 terminal_size = "^0.1.17"

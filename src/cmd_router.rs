@@ -19,7 +19,6 @@ pub struct CmdRouter {
 enum SubCommand {
     Create(CmdRouterCreate),
     Edit(CmdRouterEdit),
-    List(CmdRouterList),
     View(CmdRouterView),
 }
 
@@ -272,101 +271,6 @@ impl crate::cmd::Command for CmdRouterEdit {
             full_name,
             self.vpc,
         )?;
-
-        Ok(())
-    }
-}
-
-/// List routers owned by a VPC.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdRouterList {
-    /// The VPC that holds the routers.
-    #[clap(long, short, required = true)]
-    pub vpc: String,
-
-    /// The project that holds the routers.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization that holds the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Maximum number of routers to list.
-    #[clap(long, short, default_value = "30")]
-    pub limit: u32,
-
-    /// Make additional HTTP requests to fetch all pages of routers.
-    #[clap(long)]
-    pub paginate: bool,
-
-    /// Output JSON.
-    #[clap(long)]
-    pub json: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdRouterList {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.limit < 1 {
-            return Err(anyhow!("--limit must be greater than 0"));
-        }
-
-        let client = ctx.api_client("")?;
-
-        let routers = if self.paginate {
-            client
-                .routers()
-                .get_all(
-                    oxide_api::types::NameSortModeAscending::NameAscending,
-                    &self.organization,
-                    &self.project,
-                    &self.vpc,
-                )
-                .await?
-        } else {
-            client
-                .routers()
-                .get_page(
-                    self.limit,
-                    "",
-                    oxide_api::types::NameSortModeAscending::NameAscending,
-                    &self.organization,
-                    &self.project,
-                    &self.vpc,
-                )
-                .await?
-        };
-
-        if self.json {
-            // If they specified --json, just dump the JSON.
-            ctx.io.write_json(&serde_json::json!(routers))?;
-            return Ok(());
-        }
-
-        let cs = ctx.io.color_scheme();
-
-        // TODO: add more columns, maybe make customizable.
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tKIND\tVPC\tLAST UPDATED")?;
-        for router in routers {
-            let last_updated =
-                chrono::Utc::now() - router.time_modified.unwrap_or_else(|| router.time_created.unwrap());
-            writeln!(
-                tw,
-                "{}\t{}\t{}\t{}\t{}",
-                &router.name,
-                &router.description,
-                &router.kind,
-                &router.vpc_id,
-                cs.gray(&chrono_humanize::HumanTime::from(last_updated).to_string())
-            )?;
-        }
-        tw.flush()?;
-
-        let table = String::from_utf8(tw.into_inner()?)?;
-        writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
     }

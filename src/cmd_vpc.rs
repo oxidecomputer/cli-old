@@ -19,7 +19,6 @@ pub struct CmdVpc {
 enum SubCommand {
     Create(CmdVpcCreate),
     Edit(CmdVpcEdit),
-    List(CmdVpcList),
     View(CmdVpcView),
 }
 
@@ -30,7 +29,6 @@ impl crate::cmd::Command for CmdVpc {
             SubCommand::Create(cmd) => cmd.run(ctx).await,
             SubCommand::Delete(cmd) => cmd.run(ctx).await,
             SubCommand::Edit(cmd) => cmd.run(ctx).await,
-            SubCommand::List(cmd) => cmd.run(ctx).await,
             SubCommand::View(cmd) => cmd.run(ctx).await,
         }
     }
@@ -290,99 +288,11 @@ impl crate::cmd::Command for CmdVpcEdit {
     }
 }
 
-/// List VPCs owned by a project.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdVpcList {
-    /// The project that holds the VPCs.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization that holds the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Maximum number of VPCs to list.
-    #[clap(long, short, default_value = "30")]
-    pub limit: u32,
-
-    /// Make additional HTTP requests to fetch all pages of VPCs.
-    #[clap(long)]
-    pub paginate: bool,
-
-    /// Output JSON.
-    #[clap(long)]
-    pub json: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdVpcList {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.limit < 1 {
-            return Err(anyhow!("--limit must be greater than 0"));
-        }
-
-        let client = ctx.api_client("")?;
-
-        let vpcs = if self.paginate {
-            client
-                .vpcs()
-                .get_all(
-                    oxide_api::types::NameSortModeAscending::NameAscending,
-                    &self.organization,
-                    &self.project,
-                )
-                .await?
-        } else {
-            client
-                .vpcs()
-                .get_page(
-                    self.limit,
-                    "",
-                    oxide_api::types::NameSortModeAscending::NameAscending,
-                    &self.organization,
-                    &self.project,
-                )
-                .await?
-        };
-
-        if self.json {
-            // If they specified --json, just dump the JSON.
-            ctx.io.write_json(&serde_json::json!(vpcs))?;
-            return Ok(());
-        }
-
-        let cs = ctx.io.color_scheme();
-
-        // TODO: add more columns, maybe make customizable.
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tDNS\tSYSTEM ROUTER\tUPDATED")?;
-        for vpc in vpcs {
-            let last_updated = chrono::Utc::now() - vpc.time_modified.unwrap_or_else(|| vpc.time_created.unwrap());
-            writeln!(
-                tw,
-                "{}\t{}\t{}\t{}\t{}",
-                &vpc.name,
-                &vpc.description,
-                &vpc.dns_name,
-                &vpc.system_router_id,
-                cs.gray(&chrono_humanize::HumanTime::from(last_updated).to_string())
-            )?;
-        }
-        tw.flush()?;
-
-        let table = String::from_utf8(tw.into_inner()?)?;
-        writeln!(ctx.io.out, "{}", table)?;
-
-        Ok(())
-    }
-}
-
-/// View a vpc.
+/// View a VPC.
 ///
-/// Display the description and other information of an Oxide vpc.
+/// Display the description and other information of an Oxide VPC.
 ///
-/// With '--web', open the vpc in a web browser instead.
+/// With '--web', open the VPC in a web browser instead.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdVpcView {

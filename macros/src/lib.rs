@@ -92,6 +92,7 @@ where
 
 trait ReferenceOrExt<T> {
     fn item(&self) -> Result<&T>;
+    fn reference(&self) -> Result<String>;
 }
 
 impl<T> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
@@ -100,6 +101,32 @@ impl<T> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
             openapiv3::ReferenceOr::Item(i) => Ok(i),
             openapiv3::ReferenceOr::Reference { reference } => {
                 anyhow::bail!("reference not supported here: {}", reference);
+            }
+        }
+    }
+
+    fn reference(&self) -> Result<String> {
+        match self {
+            openapiv3::ReferenceOr::Item(..) => {
+                anyhow::bail!("item not supported here");
+            }
+            openapiv3::ReferenceOr::Reference { reference } => {
+                Ok(reference.trim_start_matches("#/components/schemas/").to_string())
+            }
+        }
+    }
+}
+
+trait ParameterSchemaOrContentExt {
+    fn schema(&self) -> Result<openapiv3::ReferenceOr<openapiv3::Schema>>;
+}
+
+impl ParameterSchemaOrContentExt for openapiv3::ParameterSchemaOrContent {
+    fn schema(&self) -> Result<openapiv3::ReferenceOr<openapiv3::Schema>> {
+        match self {
+            openapiv3::ParameterSchemaOrContent::Schema(s) => Ok(s.clone()),
+            openapiv3::ParameterSchemaOrContent::Content(..) => {
+                anyhow::bail!("content not supported here");
             }
         }
     }
@@ -299,7 +326,6 @@ impl Operation {
         let mut params = Vec::new();
 
         for (param, p) in self.get_parameters()? {
-            // TODO: we should eventually handle sort by
             if param == "project"
                 || param == "organization"
                 || param == "project_name"
@@ -308,7 +334,6 @@ impl Operation {
                 || param == format!("{}_name", singular(tag))
                 || param == "limit"
                 || param == "page_token"
-                || param == "sort_by"
             {
                 continue;
             }
@@ -323,6 +348,8 @@ impl Operation {
             let p_ident = format_ident!("{}", name);
             let param_doc = if let Some(desc) = &data.description {
                 desc.to_string()
+            } else if name == "sort_by" {
+                "The order in which to sort the results.".to_string()
             } else {
                 let n = if name == "vpc" {
                     name.to_uppercase()
@@ -337,11 +364,20 @@ impl Operation {
                 }
             };
 
-            params.push(quote! {
-                #[doc = #param_doc]
-                #[clap(long, short, required = true)]
-                pub #p_ident: String,
-            });
+            if name == "sort_by" {
+                let type_ident = format_ident!("{}", data.format.schema()?.reference()?);
+                params.push(quote! {
+                    #[doc = #param_doc]
+                    #[clap(long, short, default = oxide_api::types::#type_ident::default())]
+                    pub #p_ident: oxide_api::types::#type_ident,
+                });
+            } else {
+                params.push(quote! {
+                    #[doc = #param_doc]
+                    #[clap(long, short, required = true)]
+                    pub #p_ident: String,
+                });
+            }
         }
 
         Ok(params)
@@ -363,7 +399,7 @@ impl Operation {
         let mut api_call_params: Vec<TokenStream> = Vec::new();
         for p in self.get_all_param_names()? {
             // TODO: we should support sort by.
-            if p == "page_token" || p == "limit" || p == "sort_by" {
+            if p == "page_token" || p == "limit" {
                 continue;
             }
             let p = format_ident!("{}", p.trim_end_matches("_name"));
@@ -403,7 +439,7 @@ impl Operation {
 
                 #organization_param
 
-                #(#additional_struct_params);*
+                #(#additional_struct_params)*
 
                 /// Maximum number of items to list.
                 #[clap(long, short, default_value = "30")]
@@ -432,7 +468,6 @@ impl Operation {
                     client
                         .#tag_ident()
                         .get_all(
-                            oxide_api::types::NameSortModeAscending::NameAscending,
                             #(#api_call_params),*
                         )
                         .await?
@@ -442,7 +477,6 @@ impl Operation {
                         .get_page(
                             self.limit,
                             "",
-                            oxide_api::types::NameSortModeAscending::NameAscending,
                             #(#api_call_params),*
                         )
                         .await?
@@ -454,7 +488,8 @@ impl Operation {
                     return Ok(());
                 }
 
-                let cs = ctx.io.color_scheme();
+                let table = tabled::Table::new(results).to_string();
+                writeln!(ctx.io.out, table)?;
 
                 Ok(())
             }
@@ -565,7 +600,7 @@ impl Operation {
 
                 #organization_param
 
-                #(#additional_struct_params);*
+                #(#additional_struct_params)*
 
                 /// Confirm deletion without prompting.
                 #[clap(long)]
