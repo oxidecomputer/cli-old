@@ -237,16 +237,8 @@ impl SchemaExt for openapiv3::Schema {
                     .items
                     .as_ref()
                     .ok_or_else(|| anyhow::anyhow!("no items in array `{:#?}`", a))?;
-                match schema.item() {
-                    Ok(s) => s.render_type(),
-                    Err(e) => {
-                        if e.to_string().contains("reference") {
-                            schema.reference_render_type()
-                        } else {
-                            anyhow::bail!("could not get schema type from array `{:#?}`: {}", a, e);
-                        }
-                    }
-                }
+
+                schema.render_type()
             }
             openapiv3::SchemaKind::Type(openapiv3::Type::String(st)) => {
                 if !st.enumeration.is_empty() {
@@ -379,16 +371,8 @@ impl SchemaExt for openapiv3::Schema {
                 }
 
                 let schema = all_of.get(0).unwrap();
-                match schema.item() {
-                    Ok(s) => s.render_type(),
-                    Err(e) => {
-                        if e.to_string().contains("reference") {
-                            schema.reference_render_type()
-                        } else {
-                            anyhow::bail!("could not get schema type from allOf `{:#?}`: {}", all_of, e);
-                        }
-                    }
-                }
+
+                schema.render_type()
             }
             x => anyhow::bail!("unexpected type {:#?}", x),
         }
@@ -397,7 +381,7 @@ impl SchemaExt for openapiv3::Schema {
 
 impl SchemaExt for Box<openapiv3::Schema> {
     fn render_type(&self) -> Result<TokenStream> {
-        (*self).render_type()
+        anyhow::bail!("`render_type` not implemented for `Box<openapiv3::Schema>`")
     }
 }
 
@@ -743,16 +727,7 @@ impl Operation {
             }
         };
 
-        let type_name = match schema.item() {
-            Ok(s) => s.render_type()?,
-            Err(e) => {
-                if e.to_string().contains("reference") {
-                    schema.reference_render_type()?
-                } else {
-                    anyhow::bail!("could not get schema type from param `{}`: {}", name, e);
-                }
-            }
-        };
+        let type_name = schema.render_type()?;
 
         let clap_line = if self.method == "POST" || name == "sort_by" {
             // On create, we want to set default values for the parameters.
