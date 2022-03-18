@@ -212,7 +212,7 @@ impl crate::cmd::Command for CmdRouteList {
                     &self.organization,
                     &self.project,
                     &self.router,
-                    oxide_api::types::NameSortModeAscending::NameAscending,
+                    oxide_api::types::NameSortMode::NameAscending,
                     &self.vpc,
                 )
                 .await?
@@ -225,7 +225,7 @@ impl crate::cmd::Command for CmdRouteList {
                     &self.organization,
                     &self.project,
                     &self.router,
-                    oxide_api::types::NameSortModeAscending::NameAscending,
+                    oxide_api::types::NameSortMode::NameAscending,
                     &self.vpc,
                 )
                 .await?

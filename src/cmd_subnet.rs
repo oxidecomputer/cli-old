@@ -107,7 +107,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
             let mut org_projects: Vec<String> = Vec::new();
             let projects = client
                 .projects()
-                .get_all(&organization, oxide_api::types::NameSortMode::NameAscending)
+                .get_all(&organization, oxide_api::types::NameOrIdSortMode::NameAscending)
                 .await?;
             for project in projects {
                 org_projects.push(project.name.to_string());
@@ -134,7 +134,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
                 .get_all(
                     &organization,
                     &project_name,
-                    oxide_api::types::NameSortModeAscending::NameAscending,
+                    oxide_api::types::NameSortMode::NameAscending,
                 )
                 .await?;
             for vpc in vpcs {
