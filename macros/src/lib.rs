@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 extern crate proc_macro;
 
 use std::collections::BTreeMap;
@@ -50,6 +53,18 @@ fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
             // Clap with alphabetize the help text subcommands so it is fine to just shove
             // the variants on the end.
             variants.push(delete_enum_item);
+        } else if op.is_root_list_operation(&params.tag) {
+            let (list_cmd, list_enum_item) = op.generate_list_command(&params.tag)?;
+
+            commands = quote! {
+                #commands
+
+                #list_cmd
+            };
+
+            // Clap with alphabetize the help text subcommands so it is fine to just shove
+            // the variants on the end.
+            variants.push(list_enum_item);
         }
     }
 
@@ -136,6 +151,18 @@ impl Operation {
     fn is_root_level_operation(&self, tag: &str) -> bool {
         self.id
             .ends_with(&format!("{}_{}", self.method.to_lowercase(), singular(tag)))
+    }
+
+    /// Returns if the given operation is a root list operation on a specific tag.
+    fn is_root_list_operation(&self, tag: &str) -> bool {
+        let pagination =
+            if let Some(serde_json::value::Value::Bool(b)) = self.op.extensions.get("x-dropshot-pagination") {
+                b.clone()
+            } else {
+                return false;
+            };
+
+        self.id.ends_with(&format!("{}_{}", tag, self.method.to_lowercase())) && pagination && self.method == "GET"
     }
 
     fn get_parameters(&self) -> Result<BTreeMap<String, openapiv3::Parameter>> {
@@ -311,6 +338,121 @@ impl Operation {
         Ok(params)
     }
 
+    /// Generate the list command.
+    fn generate_list_command(&self, tag: &str) -> Result<(TokenStream, syn::Variant)> {
+        let tag_ident = format_ident!("{}", tag);
+        let singular_tag_str = if tag == "vpcs" {
+            singular(tag).to_uppercase()
+        } else {
+            singular(tag)
+        };
+        let struct_name = format_ident!("Cmd{}List", to_title_case(&singular(tag)));
+
+        let struct_doc = format!("List {}.", plural(&singular_tag_str));
+        let struct_inner_project_doc = format!("The project that holds the {}.", plural(&singular_tag_str));
+
+        let mut api_call_params: Vec<TokenStream> = Vec::new();
+        for p in self.get_all_param_names()? {
+            // TODO: we should support sort by.
+            if p == "page_token" || p == "limit" || p == "sort_by" {
+                continue;
+            }
+            let p = format_ident!("{}", p.trim_end_matches("_name"));
+            api_call_params.push(quote!(&self.#p));
+        }
+
+        // We need to check if project is a parameter to this call.
+        let project_param = if self.is_parameter("project") && tag != "projects" {
+            quote! {
+                #[doc = #struct_inner_project_doc]
+                #[clap(long, short, required = true)]
+                pub project: String,
+            }
+        } else {
+            quote!()
+        };
+
+        // We need to check if organization is a parameter to this call.
+        let organization_param = if self.is_parameter("organization") && tag != "organizations" {
+            quote! {
+                /// The organization that holds the project.
+                #[clap(long, short, required = true, env = "OXIDE_ORG")]
+                pub organization: String,
+            }
+        } else {
+            quote!()
+        };
+
+        let cmd = quote!(
+            #[doc = #struct_doc]
+            #[derive(clap::Parser, Debug, Clone)]
+            #[clap(verbatim_doc_comment)]
+            pub struct #struct_name {
+                #project_param
+
+                #organization_param
+
+                /// Maximum number of items to list.
+                #[clap(long, short, default_value = "30")]
+                pub limit: u32,
+
+                /// Make additional HTTP requests to fetch all pages.
+                #[clap(long)]
+                pub paginate: bool,
+
+                // TODO: Change this to be format instead!
+                /// Output JSON.
+                #[clap(long)]
+                pub json: bool,
+            }
+
+            #[async_trait::async_trait]
+            impl crate::cmd::Command for #struct_name {
+                async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+                    if self.limit < 1 {
+                    return Err(anyhow::anyhow!("--limit must be greater than 0"));
+                }
+
+                let client = ctx.api_client("")?;
+
+                let results = if self.paginate {
+                    client
+                        .#tag_ident()
+                        .get_all(
+                            oxide_api::types::NameSortModeAscending::NameAscending,
+                            #(#api_call_params),*
+                        )
+                        .await?
+                } else {
+                    client
+                        .#tag_ident()
+                        .get_page(
+                            self.limit,
+                            "",
+                            oxide_api::types::NameSortModeAscending::NameAscending,
+                            #(#api_call_params),*
+                        )
+                        .await?
+                };
+
+                if self.json {
+                    // If they specified --json, just dump the JSON.
+                    ctx.io.write_json(&serde_json::json!(results))?;
+                    return Ok(());
+                }
+
+                let cs = ctx.io.color_scheme();
+
+                Ok(())
+            }
+        }
+        );
+
+        let enum_item: syn::Variant = syn::parse2(quote!(List(#struct_name)))?;
+
+        Ok((cmd, enum_item))
+    }
+
     /// Generate the delete command.
     fn generate_delete_command(&self, tag: &str) -> Result<(TokenStream, syn::Variant)> {
         let tag_ident = format_ident!("{}", tag);
@@ -322,7 +464,7 @@ impl Operation {
         let singular_tag_lc = format_ident!("{}", singular(tag));
         let struct_name = format_ident!("Cmd{}Delete", to_title_case(&singular(tag)));
 
-        let struct_doc = format!("Delete a {}.", singular_tag_str);
+        let struct_doc = format!("Delete {}.", singular_tag_str);
         let struct_inner_name_doc = format!("The {} to delete. Can be an ID or name.", singular_tag_str);
         let struct_inner_project_doc = format!("The project to delete the {} from.", singular_tag_str);
 
@@ -447,7 +589,7 @@ impl Operation {
 
                     client
                         .#tag_ident()
-                        .delete(#(#api_call_params),*,)
+                        .delete(#(#api_call_params),*)
                         .await?;
 
                     let cs = ctx.io.color_scheme();
@@ -508,285 +650,24 @@ fn get_operations_with_tag(api: &openapiv3::OpenAPI, tag: &str) -> Result<Vec<Op
     Ok(paths)
 }
 
+/// Return the plural version of a string.
+fn plural(s: &str) -> String {
+    let s = singular(s);
+
+    if s.ends_with("s") {
+        return format!("{}es", s);
+    } else if s.ends_with("y") {
+        return format!("{}ies", s.trim_end_matches("y"));
+    }
+
+    format!("{}s", s)
+}
+
 /// Return the singular version of a string (if it plural).
 fn singular(s: &str) -> String {
     if let Some(b) = s.strip_suffix('s') {
-        b.to_string()
-    } else {
-        s.to_string()
+        return b.to_string();
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use pretty_assertions::assert_eq;
-
-    use super::*;
-
-    #[test]
-    fn test_crud_gen() {
-        let mut ret = do_gen(
-            quote! {
-                tag = "disks",
-            },
-            quote! {
-                #[derive(Parser, Debug, Clone)]
-                enum SubCommand {
-                    Attach(CmdDiskAttach),
-                    Create(CmdDiskCreate),
-                    Detach(CmdDiskDetach),
-                    Edit(CmdDiskEdit),
-                    List(CmdDiskList),
-                    View(CmdDiskView),
-                }
-            },
-        );
-        let mut expected = quote! {
-            #[derive(Parser, Debug, Clone)]
-            enum SubCommand {
-                Attach(CmdDiskAttach),
-                Create(CmdDiskCreate),
-                Detach(CmdDiskDetach),
-                Edit(CmdDiskEdit),
-                List(CmdDiskList),
-                View(CmdDiskView),
-                Delete(CmdDiskDelete)
-            }
-
-            #[doc = "Delete a disk."]
-            #[derive(clap::Parser, Debug, Clone)]
-            #[clap(verbatim_doc_comment)]
-            pub struct CmdDiskDelete {
-                #[doc = "The disk to delete. Can be an ID or name."]
-                #[clap(name = "disk", required = true)]
-                pub disk: String,
-
-                #[doc = "The project to delete the disk from."]
-                #[clap(long, short, required = true)]
-                pub project: String,
-
-                /// The organization that holds the project.
-                #[clap(long, short, required = true, env = "OXIDE_ORG")]
-                pub organization: String,
-
-                /// Confirm deletion without prompting.
-                #[clap(long)]
-                pub confirm: bool,
-            }
-
-            #[async_trait::async_trait]
-            impl crate::cmd::Command for CmdDiskDelete {
-                async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
-                    if !ctx.io.can_prompt() && !self.confirm {
-                        return Err(anyhow::anyhow!("--confirm required when not running interactively"));
-                    }
-
-                    let client = ctx.api_client("")?;
-
-                    // Confirm deletion.
-                    if !self.confirm {
-                        if let Err(err) = dialoguer::Input::<String>::new()
-                            .with_prompt(format!("Type {} to confirm deletion:", self.disk))
-                            .validate_with(|input: &String| -> Result<(), &str> {
-                                if input.trim() == self.disk {
-                                    Ok(())
-                                } else {
-                                    Err("mismatched confirmation")
-                                }
-                            })
-                            .interact_text()
-                        {
-                            return Err(anyhow::anyhow!("prompt failed: {}", err));
-                        }
-                    }
-
-                    client
-                        .disks()
-                        .delete(&self.disk, &self.organization, &self.project,)
-                        .await?;
-
-                    let cs = ctx.io.color_scheme();
-
-                    let full_name = format!("{}/{}", self.organization, self.project);
-                    writeln!(
-                        ctx.io.out,
-                        "{} Deleted {} {} from {}",
-                        cs.success_icon_with_color(ansi_term::Color::Red),
-                        "disk",
-                        self.disk,
-                        full_name
-                    )?;
-
-                    Ok(())
-                }
-            }
-        };
-
-        assert_eq!(expected.to_string(), ret.unwrap().to_string());
-
-        ret = do_gen(
-            quote! {
-                tag = "organizations",
-            },
-            quote! {
-                #[derive(Parser, Debug, Clone)]
-                enum SubCommand {}
-            },
-        );
-
-        expected = quote! {
-            #[derive(Parser, Debug, Clone)]
-            enum SubCommand {
-                Delete(CmdOrganizationDelete)
-            }
-
-            #[doc = "Delete a organization."]
-            #[derive(clap::Parser, Debug, Clone)]
-            #[clap(verbatim_doc_comment)]
-            pub struct CmdOrganizationDelete {
-                #[doc = "The organization to delete. Can be an ID or name."]
-                #[clap(name = "organization", required = true)]
-                pub organization: String,
-
-                /// Confirm deletion without prompting.
-                #[clap(long)]
-                pub confirm: bool,
-            }
-
-            #[async_trait::async_trait]
-            impl crate::cmd::Command for CmdOrganizationDelete {
-                async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
-                    if !ctx.io.can_prompt() && !self.confirm {
-                        return Err(anyhow::anyhow!("--confirm required when not running interactively"));
-                    }
-
-                    let client = ctx.api_client("")?;
-
-                    // Confirm deletion.
-                    if !self.confirm {
-                        if let Err(err) = dialoguer::Input::<String>::new()
-                            .with_prompt(format!("Type {} to confirm deletion:", self.organization))
-                            .validate_with(|input: &String| -> Result<(), &str> {
-                                if input.trim() == self.organization {
-                                    Ok(())
-                                } else {
-                                    Err("mismatched confirmation")
-                                }
-                            })
-                            .interact_text()
-                        {
-                            return Err(anyhow::anyhow!("prompt failed: {}", err));
-                        }
-                    }
-
-                    client.organizations().delete(&self.organization,).await?;
-
-                    let cs = ctx.io.color_scheme();
-                    writeln!(
-                        ctx.io.out,
-                        "{} Deleted {} {}",
-                        cs.success_icon_with_color(ansi_term::Color::Red),
-                        "organization",
-                        self.organization
-                    )?;
-
-                    Ok(())
-                }
-            }
-        };
-
-        assert_eq!(expected.to_string(), ret.unwrap().to_string());
-
-        ret = do_gen(
-            quote! {
-                tag = "subnets",
-            },
-            quote! {
-                #[derive(Parser, Debug, Clone)]
-                enum SubCommand {}
-            },
-        );
-
-        expected = quote! {
-            #[derive(Parser, Debug, Clone)]
-            enum SubCommand {
-                Delete(CmdSubnetDelete)
-            }
-
-            #[doc = "Delete a subnet."]
-            #[derive(clap::Parser, Debug, Clone)]
-            #[clap(verbatim_doc_comment)]
-            pub struct CmdSubnetDelete {
-                #[doc = "The subnet to delete. Can be an ID or name."]
-                #[clap(name = "subnet", required = true)]
-                pub subnet: String,
-
-                #[doc = "The project to delete the subnet from."]
-                #[clap(long, short, required = true)]
-                pub project: String,
-
-                /// The organization that holds the project.
-                #[clap(long, short, required = true, env = "OXIDE_ORG")]
-                pub organization: String,
-
-                #[doc = "The VPC that holds the subnet."]
-                #[clap(long, short, required = true)]
-                pub vpc: String,
-
-                /// Confirm deletion without prompting.
-                #[clap(long)]
-                pub confirm: bool,
-            }
-
-            #[async_trait::async_trait]
-            impl crate::cmd::Command for CmdSubnetDelete {
-                async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
-                    if !ctx.io.can_prompt() && !self.confirm {
-                        return Err(anyhow::anyhow!("--confirm required when not running interactively"));
-                    }
-
-                    let client = ctx.api_client("")?;
-
-                    // Confirm deletion.
-                    if !self.confirm {
-                        if let Err(err) = dialoguer::Input::<String>::new()
-                            .with_prompt(format!("Type {} to confirm deletion:", self.subnet))
-                            .validate_with(|input: &String| -> Result<(), &str> {
-                                if input.trim() == self.subnet {
-                                    Ok(())
-                                } else {
-                                    Err("mismatched confirmation")
-                                }
-                            })
-                            .interact_text()
-                        {
-                            return Err(anyhow::anyhow!("prompt failed: {}", err));
-                        }
-                    }
-
-                    // Delete the project.
-                    client
-                        .subnets()
-                        .delete(&self.organization, &self.project, &self.subnet, &self.vpc,)
-                        .await?;
-
-                    let cs = ctx.io.color_scheme();
-
-                    let full_name = format!("{}/{}", self.organization, self.project);
-                    writeln!(
-                        ctx.io.out,
-                        "{} Deleted {} {} from {}",
-                        cs.success_icon_with_color(ansi_term::Color::Red),
-                        "subnet",
-                        self.subnet,
-                        full_name
-                    )?;
-
-                    Ok(())
-                }
-            }
-        };
-
-        assert_eq!(expected.to_string(), ret.unwrap().to_string());
-    }
+    s.to_string()
 }
