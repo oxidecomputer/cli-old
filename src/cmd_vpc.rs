@@ -29,6 +29,7 @@ impl crate::cmd::Command for CmdVpc {
             SubCommand::Create(cmd) => cmd.run(ctx).await,
             SubCommand::Delete(cmd) => cmd.run(ctx).await,
             SubCommand::Edit(cmd) => cmd.run(ctx).await,
+            SubCommand::List(cmd) => cmd.run(ctx).await,
             SubCommand::View(cmd) => cmd.run(ctx).await,
         }
     }

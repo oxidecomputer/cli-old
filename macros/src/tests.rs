@@ -98,7 +98,7 @@ fn test_crud_gen() {
                 }
 
                 let table = tabled::Table::new(results).to_string();
-                write!(ctx.io.out, table)?;
+                write!(ctx.io.out, "{}", table)?;
 
                 Ok(())
             }
@@ -245,7 +245,7 @@ fn test_crud_gen() {
                 }
 
                 let table = tabled::Table::new(results).to_string();
-                write!(ctx.io.out, table)?;
+                write!(ctx.io.out, "{}", table)?;
 
                 Ok(())
             }
@@ -398,7 +398,7 @@ fn test_crud_gen() {
                 }
 
                 let table = tabled::Table::new(results).to_string();
-                write!(ctx.io.out, table)?;
+                write!(ctx.io.out, "{}", table)?;
 
                 Ok(())
             }
