@@ -280,9 +280,17 @@ impl SchemaExt for openapiv3::Schema {
                             uint = true;
                             width = 32;
                         }
+                        "uint8" => {
+                            uint = true;
+                            width = 8;
+                        }
+                        "uint16" => {
+                            uint = true;
+                            width = 16;
+                        }
                         "uint64" => {
                             uint = true;
-                            width = 32;
+                            width = 64;
                         }
                         f => anyhow::bail!("unknown integer format {}", f),
                     }
@@ -834,7 +842,7 @@ impl Operation {
                         .organizations()
                         .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
                         .await?;
-                    for org in orgs {
+                    for org in resp {
                         orgs.push(org.name.to_string());
                     }
 
