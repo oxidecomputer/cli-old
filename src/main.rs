@@ -27,10 +27,16 @@ pub mod cmd_instance;
 pub mod cmd_org;
 /// The project command.
 pub mod cmd_project;
+/// The rack command.
+pub mod cmd_rack;
+/// The role command.
+pub mod cmd_role;
 /// The route command.
 pub mod cmd_route;
 /// The router command.
 pub mod cmd_router;
+/// The sled command.
+pub mod cmd_sled;
 /// The snapshot command.
 pub mod cmd_snapshot;
 /// The ssh-key command.
@@ -134,10 +140,16 @@ enum SubCommand {
     Org(cmd_org::CmdOrganization),
     #[clap(alias = "projects")]
     Project(cmd_project::CmdProject),
+    #[clap(alias = "racks")]
+    Rack(cmd_rack::CmdRack),
+    #[clap(alias = "roles")]
+    Role(cmd_role::CmdRole),
     #[clap(alias = "routes")]
     Route(cmd_route::CmdRoute),
     #[clap(alias = "routers")]
     Router(cmd_router::CmdRouter),
+    #[clap(alias = "sleds")]
+    Sled(cmd_sled::CmdSled),
     #[clap(alias = "snapshots")]
     Snapshot(cmd_snapshot::CmdSnapshot),
     #[clap(alias = "ssh-keys")]
@@ -261,8 +273,11 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Instance(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Org(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Project(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Rack(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Role(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Route(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Router(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Sled(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Snapshot(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::SshKey(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Subnet(cmd) => run_cmd(&cmd, ctx).await,
