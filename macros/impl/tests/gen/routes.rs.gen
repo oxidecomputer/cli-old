@@ -1,6 +1,7 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     List(CmdRouteList),
+    #[clap(alias = "get")]
     View(CmdRouteView),
     Delete(CmdRouteDelete),
 }

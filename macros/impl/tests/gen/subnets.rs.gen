@@ -1,6 +1,7 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     List(CmdSubnetList),
+    #[clap(alias = "get")]
     View(CmdSubnetView),
     Delete(CmdSubnetDelete),
 }

@@ -5,6 +5,7 @@ enum SubCommand {
     Detach(CmdDiskDetach),
     Edit(CmdDiskEdit),
     List(CmdDiskList),
+    #[clap(alias = "get")]
     View(CmdDiskView),
     Delete(CmdDiskDelete),
 }

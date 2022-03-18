@@ -1,6 +1,7 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     List(CmdSledList),
+    #[clap(alias = "get")]
     View(CmdSledView),
 }
 

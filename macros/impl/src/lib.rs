@@ -501,7 +501,10 @@ impl Operation {
             }
         );
 
-        let enum_item: syn::Variant = syn::parse2(quote!(View(#struct_name)))?;
+        let enum_item: syn::Variant = syn::parse2(quote!(
+                #[clap(alias = "get")]
+                View(#struct_name)
+        ))?;
 
         Ok((cmd, enum_item))
     }

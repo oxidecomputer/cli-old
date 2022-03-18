@@ -1,6 +1,7 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
     List(CmdOrganizationList),
+    #[clap(alias = "get")]
     View(CmdOrganizationView),
     Delete(CmdOrganizationDelete),
 }
