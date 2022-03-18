@@ -372,7 +372,8 @@ impl Operation {
     fn get_api_call_params(&self) -> Result<Vec<TokenStream>> {
         let mut api_call_params: Vec<TokenStream> = Vec::new();
 
-        let mut params = self.get_parameters()?.keys().collect::<Vec<_>>();
+        let params = self.get_parameters()?;
+        let mut params = params.keys().collect::<Vec<_>>();
         params.sort();
 
         for p in params {
@@ -381,7 +382,8 @@ impl Operation {
             api_call_params.push(quote!(&self.#p));
         }
 
-        let req_body_properties = self.get_request_body_properties()?.keys();
+        let req_body_properties = self.get_request_body_properties()?;
+        let req_body_properties = req_body_properties.keys();
         if req_body_properties.len() > 0 {
             let req_body_properties = req_body_properties
                 .map(|p| {
@@ -518,16 +520,16 @@ impl Operation {
 
         let struct_inner_name_doc = format!("The name of the {} to create.", singular_tag_str);
 
-        let mut api_call_params: Vec<TokenStream> = Vec::new();
         let mut mutable_variables: Vec<TokenStream> = Vec::new();
         for p in self.get_all_param_names()? {
             let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
 
-            api_call_params.push(quote!(&self.#p));
             mutable_variables.push(quote!(
                 let mut #p = self.#p.clone();
             ));
         }
+
+        let api_call_params = self.get_api_call_params()?;
 
         let mut required_checks: Vec<TokenStream> = Vec::new();
         for p in self.get_all_required_param_names()? {

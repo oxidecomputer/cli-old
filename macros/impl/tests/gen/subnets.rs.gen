@@ -239,13 +239,15 @@ impl crate::cmd::Command for CmdSubnetCreate {
         client
             .subnets()
             .post(
-                &self.description,
-                &self.ipv4_block,
-                &self.ipv6_block,
-                &self.name,
                 &self.organization,
                 &self.project,
                 &self.vpc,
+                &oxide_api::types::VpcSubnetCreate {
+                    description: description.clone(),
+                    ipv4_block: ipv4_block.clone(),
+                    ipv6_block: ipv6_block.clone(),
+                    name: name.clone(),
+                },
             )
             .await?;
         let cs = ctx.io.color_scheme();

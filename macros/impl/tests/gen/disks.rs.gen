@@ -214,12 +214,14 @@ impl crate::cmd::Command for CmdDiskCreate {
         client
             .disks()
             .post(
-                &self.description,
-                &self.name,
                 &self.organization,
                 &self.project,
-                &self.size,
-                &self.snapshot,
+                &oxide_api::types::DiskCreate {
+                    description: description.clone(),
+                    name: name.clone(),
+                    size: size.clone(),
+                    snapshot: snapshot.clone(),
+                },
             )
             .await?;
         let cs = ctx.io.color_scheme();

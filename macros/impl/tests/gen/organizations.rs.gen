@@ -115,7 +115,10 @@ impl crate::cmd::Command for CmdOrganizationCreate {
 
         client
             .organizations()
-            .post(&self.description, &self.name)
+            .post(&oxide_api::types::OrganizationCreate {
+                description: description.clone(),
+                name: name.clone(),
+            })
             .await?;
         let cs = ctx.io.color_scheme();
         writeln!(

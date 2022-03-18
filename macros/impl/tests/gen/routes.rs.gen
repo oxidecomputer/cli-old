@@ -280,14 +280,16 @@ impl crate::cmd::Command for CmdRouteCreate {
         client
             .routes()
             .post(
-                &self.description,
-                &self.destination,
-                &self.name,
                 &self.organization,
                 &self.project,
                 &self.router,
-                &self.target,
                 &self.vpc,
+                &oxide_api::types::RouterRouteCreateParams {
+                    description: description.clone(),
+                    destination: destination.clone(),
+                    name: name.clone(),
+                    target: target.clone(),
+                },
             )
             .await?;
         let cs = ctx.io.color_scheme();
