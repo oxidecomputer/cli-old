@@ -34,7 +34,7 @@ fn test_do_gen() {
     )
     .unwrap();
 
-    expectorate::assert_contents("tests/gen/disks.rs", &get_text(&actual).unwrap());
+    expectorate::assert_contents("tests/gen/disks.rs.gen", &get_text(&actual).unwrap());
 
     actual = do_gen(
         quote! {
@@ -49,7 +49,7 @@ fn test_do_gen() {
     )
     .unwrap();
 
-    expectorate::assert_contents("tests/gen/organizations.rs", &get_text(&actual).unwrap());
+    expectorate::assert_contents("tests/gen/organizations.rs.gen", &get_text(&actual).unwrap());
 
     actual = do_gen(
         quote! {
@@ -64,7 +64,7 @@ fn test_do_gen() {
     )
     .unwrap();
 
-    expectorate::assert_contents("tests/gen/subnets.rs", &get_text(&actual).unwrap());
+    expectorate::assert_contents("tests/gen/subnets.rs.gen", &get_text(&actual).unwrap());
 
     actual = do_gen(
         quote! {
@@ -79,5 +79,5 @@ fn test_do_gen() {
     )
     .unwrap();
 
-    expectorate::assert_contents("tests/gen/routes.rs", &get_text(&actual).unwrap());
+    expectorate::assert_contents("tests/gen/routes.rs.gen", &get_text(&actual).unwrap());
 }
