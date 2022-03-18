@@ -110,7 +110,7 @@ impl crate::cmd::Command for CmdVpcCreate {
             let mut org_projects: Vec<String> = Vec::new();
             let projects = client
                 .projects()
-                .get_all(oxide_api::types::NameSortMode::NameAscending, &organization)
+                .get_all(&organization, oxide_api::types::NameSortMode::NameAscending)
                 .await?;
             for project in projects {
                 org_projects.push(project.name.to_string());
@@ -180,7 +180,7 @@ impl crate::cmd::Command for CmdVpcCreate {
                     name: vpc_name.to_string(),
                     description: description.to_string(),
                     dns_name: dns_name.to_string(),
-                    ipv_6_prefix: "".to_string(),
+                    ipv6_prefix: "".to_string(),
                 },
             )
             .await?;

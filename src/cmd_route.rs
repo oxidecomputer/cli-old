@@ -209,10 +209,10 @@ impl crate::cmd::Command for CmdRouteList {
             client
                 .routes()
                 .get_all(
-                    oxide_api::types::NameSortModeAscending::NameAscending,
                     &self.organization,
                     &self.project,
                     &self.router,
+                    oxide_api::types::NameSortModeAscending::NameAscending,
                     &self.vpc,
                 )
                 .await?
@@ -222,10 +222,10 @@ impl crate::cmd::Command for CmdRouteList {
                 .get_page(
                     self.limit,
                     "",
-                    oxide_api::types::NameSortModeAscending::NameAscending,
                     &self.organization,
                     &self.project,
                     &self.router,
+                    oxide_api::types::NameSortModeAscending::NameAscending,
                     &self.vpc,
                 )
                 .await?

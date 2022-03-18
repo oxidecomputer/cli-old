@@ -316,8 +316,6 @@ impl Operation {
             param_names.push(param.to_string());
         }
 
-        // Since we sort in the client, we also sort here such that parameters wind up in the right
-        // order always.
         param_names.sort();
 
         Ok(param_names)
@@ -368,9 +366,10 @@ impl Operation {
 
             if name == "sort_by" {
                 let type_ident = format_ident!("{}", data.format.schema()?.reference()?);
+                // TODO: set the default sort mode.
                 params.push(quote! {
                     #[doc = #param_doc]
-                    #[clap(long, short, default = oxide_api::types::#type_ident::default())]
+                    #[clap(long, short)]
                     pub #p_ident: oxide_api::types::#type_ident,
                 });
             } else {
@@ -398,13 +397,30 @@ impl Operation {
         let struct_doc = format!("List {}.", plural(&singular_tag_str));
         let struct_inner_project_doc = format!("The project that holds the {}.", plural(&singular_tag_str));
 
+        let mut api_call_params_all: Vec<TokenStream> = Vec::new();
         let mut api_call_params: Vec<TokenStream> = Vec::new();
         for p in self.get_all_param_names()? {
             // TODO: we should support sort by.
-            if p == "page_token" || p == "limit" {
+            if p == "page_token" {
+                api_call_params.push(quote!(""));
                 continue;
             }
+
+            if p == "limit" {
+                api_call_params.push(quote!(self.limit));
+                continue;
+            }
+
             let p = format_ident!("{}", p.trim_end_matches("_name"));
+
+            if p == "sort_by" {
+                // Sort by is an enum so we don't want to "&" it
+                api_call_params_all.push(quote!(self.#p));
+                api_call_params.push(quote!(self.#p));
+                continue;
+            }
+
+            api_call_params_all.push(quote!(&self.#p));
             api_call_params.push(quote!(&self.#p));
         }
 
@@ -470,15 +486,13 @@ impl Operation {
                     client
                         .#tag_ident()
                         .get_all(
-                            #(#api_call_params),*
+                            #(#api_call_params_all),*
                         )
                         .await?
                 } else {
                     client
                         .#tag_ident()
                         .get_page(
-                            self.limit,
-                            "",
                             #(#api_call_params),*
                         )
                         .await?
@@ -491,7 +505,7 @@ impl Operation {
                 }
 
                 let table = tabled::Table::new(results).to_string();
-                writeln!(ctx.io.out, table)?;
+                write!(ctx.io.out, table)?;
 
                 Ok(())
             }
