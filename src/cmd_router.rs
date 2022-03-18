@@ -19,7 +19,6 @@ pub struct CmdRouter {
 enum SubCommand {
     Create(CmdRouterCreate),
     Edit(CmdRouterEdit),
-    View(CmdRouterView),
 }
 
 #[async_trait::async_trait]
@@ -271,99 +270,6 @@ impl crate::cmd::Command for CmdRouterEdit {
             full_name,
             self.vpc,
         )?;
-
-        Ok(())
-    }
-}
-
-/// View a router.
-///
-/// Display the description and other information of an Oxide router.
-///
-/// With '--web', open the router in a web browser instead.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdRouterView {
-    /// The router to view.
-    #[clap(name = "router", required = true)]
-    pub router: String,
-
-    /// The VPC that holds the router.
-    #[clap(long, short, required = true)]
-    pub vpc: String,
-
-    /// The project that holds the router.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization to view the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Open a project in the browser.
-    #[clap(short, long)]
-    pub web: bool,
-
-    /// Output JSON.
-    #[clap(long)]
-    pub json: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdRouterView {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.web {
-            // TODO: make sure this is the correct URL.
-            let url = format!(
-                "https://{}/{}/{}/routers/{}",
-                ctx.config.default_host()?,
-                self.organization,
-                self.project,
-                self.router
-            );
-
-            ctx.browser("", &url)?;
-            return Ok(());
-        }
-
-        let client = ctx.api_client("")?;
-
-        let router = client
-            .routers()
-            .get(&self.router, &self.organization, &self.project, &self.vpc)
-            .await?;
-
-        if self.json {
-            // If they specified --json, just dump the JSON.
-            ctx.io.write_json(&serde_json::json!(router))?;
-            return Ok(());
-        }
-
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "id:\t{}", router.id)?;
-        writeln!(tw, "name:\t{}", router.name)?;
-        writeln!(tw, "description:\t{}", router.description)?;
-        writeln!(tw, "kind:\t{}", router.kind)?;
-        writeln!(tw, "vpc:\t{}", router.vpc_id)?;
-        if let Some(time_created) = router.time_created {
-            writeln!(
-                tw,
-                "created:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_created)
-            )?;
-        }
-        if let Some(time_modified) = router.time_modified {
-            writeln!(
-                tw,
-                "modified:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_modified)
-            )?;
-        }
-
-        tw.flush()?;
-
-        let table = String::from_utf8(tw.into_inner()?)?;
-        writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
     }

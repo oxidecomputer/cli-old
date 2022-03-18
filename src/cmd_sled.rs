@@ -21,6 +21,7 @@ impl crate::cmd::Command for CmdSled {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         match &self.subcmd {
             SubCommand::List(cmd) => cmd.run(ctx).await,
+            SubCommand::View(cmd) => cmd.run(ctx).await,
         }
     }
 }

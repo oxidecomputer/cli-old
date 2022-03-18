@@ -362,6 +362,13 @@ dependencies = [
 name = "cli-macros"
 version = "0.1.0"
 dependencies = [
+ "cli-macros-impl",
+]
+
+[[package]]
+name = "cli-macros-impl"
+version = "0.1.0"
+dependencies = [
  "Inflector",
  "anyhow",
  "expectorate",

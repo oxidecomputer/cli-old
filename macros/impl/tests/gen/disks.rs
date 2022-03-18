@@ -1,15 +1,19 @@
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {
-    List(CmdSubnetList),
-    View(CmdSubnetView),
-    Delete(CmdSubnetDelete),
+    Attach(CmdDiskAttach),
+    Create(CmdDiskCreate),
+    Detach(CmdDiskDetach),
+    Edit(CmdDiskEdit),
+    List(CmdDiskList),
+    View(CmdDiskView),
+    Delete(CmdDiskDelete),
 }
 
-#[doc = "List subnets."]
+#[doc = "List disks."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdSubnetList {
-    #[doc = "The project that holds the subnets."]
+pub struct CmdDiskList {
+    #[doc = "The project that holds the disks."]
     #[clap(long, short, required = true)]
     pub project: String,
     #[doc = r" The organization that holds the project."]
@@ -18,9 +22,6 @@ pub struct CmdSubnetList {
     #[doc = "The order in which to sort the results."]
     #[clap(long, short, default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
-    #[doc = "The VPC that holds the subnets."]
-    #[clap(long, short, required = true)]
-    pub vpc: String,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
     pub limit: u32,
@@ -33,7 +34,7 @@ pub struct CmdSubnetList {
 }
 
 #[async_trait::async_trait]
-impl crate::cmd::Command for CmdSubnetList {
+impl crate::cmd::Command for CmdDiskList {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
         if self.limit < 1 {
             return Err(anyhow::anyhow!("--limit must be greater than 0"));
@@ -42,24 +43,18 @@ impl crate::cmd::Command for CmdSubnetList {
         let client = ctx.api_client("")?;
         let results = if self.paginate {
             client
-                .subnets()
-                .get_all(
-                    &self.organization,
-                    &self.project,
-                    self.sort_by.clone(),
-                    &self.vpc,
-                )
+                .disks()
+                .get_all(&self.organization, &self.project, self.sort_by.clone())
                 .await?
         } else {
             client
-                .subnets()
+                .disks()
                 .get_page(
                     self.limit,
                     &self.organization,
                     "",
                     &self.project,
                     self.sort_by.clone(),
-                    &self.vpc,
                 )
                 .await?
         };
@@ -76,20 +71,20 @@ impl crate::cmd::Command for CmdSubnetList {
     }
 }
 
-#[doc = "View subnet."]
+#[doc = "View disk."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdSubnetView {
-    #[doc = "The project that holds the subnet."]
+pub struct CmdDiskView {
+    #[doc = "The disk to view. Can be an ID or name."]
+    #[clap(name = "disk", required = true)]
+    pub disk: String,
+    #[doc = "The project that holds the disk."]
     #[clap(long, short, required = true)]
     pub project: String,
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The VPC that holds the subnet."]
-    #[clap(long, short, required = true)]
-    pub vpc: String,
-    #[doc = "Open the subnet in the browser."]
+    #[doc = "Open the disk in the browser.\n\nDisplay information about an Oxide disk.\n\nWith '--web', open the disk in a web browser instead.\n            "]
     #[clap(short, long)]
     pub web: bool,
     #[doc = r" Output JSON."]
@@ -98,26 +93,26 @@ pub struct CmdSubnetView {
 }
 
 #[async_trait::async_trait]
-impl crate::cmd::Command for CmdSubnetView {
+impl crate::cmd::Command for CmdDiskView {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
         if self.web {
-            let url = format!("https://{}/{}", ctx.config.default_host()?, self.subnet);
+            let url = format!("https://{}/{}", ctx.config.default_host()?, self.disk);
             ctx.browser("", &url)?;
             return Ok(());
         }
 
         let client = ctx.api_client("")?;
         let result = client
-            .subnets()
-            .get(&self.organization, &self.project, &self.subnet, &self.vpc)
+            .disks()
+            .get(&self.disk, &self.organization, &self.project)
             .await?;
         if self.json {
             ctx.io.write_json(&serde_json::json!(result))?;
             return Ok(());
         }
 
-        let table = tabled::Table::new(results)
-            .with(Rotate::Left)
+        let table = tabled::Table::new(vec![result])
+            .with(tabled::Rotate::Left)
             .with(tabled::Style::psql())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
@@ -125,29 +120,26 @@ impl crate::cmd::Command for CmdSubnetView {
     }
 }
 
-#[doc = "Delete subnet."]
+#[doc = "Delete disk."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdSubnetDelete {
-    #[doc = "The subnet to delete. Can be an ID or name."]
-    #[clap(name = "subnet", required = true)]
-    pub subnet: String,
-    #[doc = "The project to delete the subnet from."]
+pub struct CmdDiskDelete {
+    #[doc = "The disk to delete. Can be an ID or name."]
+    #[clap(name = "disk", required = true)]
+    pub disk: String,
+    #[doc = "The project to delete the disk from."]
     #[clap(long, short, required = true)]
     pub project: String,
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The VPC that holds the subnet."]
-    #[clap(long, short, required = true)]
-    pub vpc: String,
     #[doc = r" Confirm deletion without prompting."]
     #[clap(long)]
     pub confirm: bool,
 }
 
 #[async_trait::async_trait]
-impl crate::cmd::Command for CmdSubnetDelete {
+impl crate::cmd::Command for CmdDiskDelete {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
         if !ctx.io.can_prompt() && !self.confirm {
             return Err(anyhow::anyhow!(
@@ -158,9 +150,9 @@ impl crate::cmd::Command for CmdSubnetDelete {
         let client = ctx.api_client("")?;
         if !self.confirm {
             if let Err(err) = dialoguer::Input::<String>::new()
-                .with_prompt(format!("Type {} to confirm deletion:", self.subnet))
+                .with_prompt(format!("Type {} to confirm deletion:", self.disk))
                 .validate_with(|input: &String| -> Result<(), &str> {
-                    if input.trim() == self.subnet {
+                    if input.trim() == self.disk {
                         Ok(())
                     } else {
                         Err("mismatched confirmation")
@@ -173,8 +165,8 @@ impl crate::cmd::Command for CmdSubnetDelete {
         }
 
         client
-            .subnets()
-            .delete(&self.organization, &self.project, &self.subnet, &self.vpc)
+            .disks()
+            .delete(&self.disk, &self.organization, &self.project)
             .await?;
         let cs = ctx.io.color_scheme();
         let full_name = format!("{}/{}", self.organization, self.project);
@@ -182,8 +174,8 @@ impl crate::cmd::Command for CmdSubnetDelete {
             ctx.io.out,
             "{} Deleted {} {} from {}",
             cs.success_icon_with_color(ansi_term::Color::Red),
-            "subnet",
-            self.subnet,
+            "disk",
+            self.disk,
             full_name
         )?;
         Ok(())

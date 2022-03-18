@@ -25,7 +25,6 @@ enum SubCommand {
     Start(CmdInstanceStart),
     Stop(CmdInstanceStop),
     Reboot(CmdInstanceReboot),
-    View(CmdInstanceView),
 }
 
 #[async_trait::async_trait]
@@ -304,27 +303,7 @@ impl crate::cmd::Command for CmdInstanceDisks {
             return Ok(());
         }
 
-        let cs = ctx.io.color_scheme();
-
-        // TODO: add more columns, maybe make customizable.
-        // TODO: for state the api lib should implement display
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "NAME\tDESCRTIPTION\tSTATE\tDEVICE PATH\tUPDATED")?;
-        for disk in disks {
-            let last_updated = chrono::Utc::now() - disk.time_modified.unwrap_or_else(|| disk.time_created.unwrap());
-            writeln!(
-                tw,
-                "{}\t{}\t{:?}\t{}\t{}",
-                &disk.name,
-                &disk.description,
-                &disk.state,
-                &disk.device_path,
-                cs.gray(&chrono_humanize::HumanTime::from(last_updated).to_string())
-            )?;
-        }
-        tw.flush()?;
-
-        let table = String::from_utf8(tw.into_inner()?)?;
+        let table = tabled::Table::new(disks).with(tabled::Style::psql()).to_string();
         writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
@@ -521,104 +500,6 @@ impl crate::cmd::Command for CmdInstanceReboot {
             self.instance,
             full_name
         )?;
-
-        Ok(())
-    }
-}
-
-/// View an instance.
-///
-/// Display the description and other information of an Oxide instance.
-///
-/// With '--web', open the instance in a web browser instead.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdInstanceView {
-    /// The instance to view.
-    #[clap(name = "instance", required = true)]
-    pub instance: String,
-
-    /// The project that holds the instance.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization to view the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Open a project in the browser.
-    #[clap(short, long)]
-    pub web: bool,
-
-    /// Output JSON.
-    #[clap(long)]
-    pub json: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdInstanceView {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.web {
-            // TODO: make sure this is the correct URL.
-            let url = format!(
-                "https://{}/{}/{}/instances/{}",
-                ctx.config.default_host()?,
-                self.organization,
-                self.project,
-                self.instance
-            );
-
-            ctx.browser("", &url)?;
-            return Ok(());
-        }
-
-        let client = ctx.api_client("")?;
-
-        let instance = client
-            .instances()
-            .get(&self.instance, &self.organization, &self.project)
-            .await?;
-
-        if self.json {
-            // If they specified --json, just dump the JSON.
-            ctx.io.write_json(&serde_json::json!(instance))?;
-            return Ok(());
-        }
-
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "id:\t{}", instance.id)?;
-        writeln!(tw, "name:\t{}", instance.name)?;
-        writeln!(tw, "description:\t{}", instance.description)?;
-        writeln!(tw, "state:\t{}", instance.run_state)?;
-        if let Some(run_state_updated) = instance.time_run_state_updated {
-            writeln!(
-                tw,
-                "state updated:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - run_state_updated)
-            )?;
-        }
-        writeln!(tw, "hostname:\t{}", instance.hostname)?;
-        writeln!(tw, "ncpus:\t{}", instance.ncpus)?;
-        writeln!(tw, "memory:\t{}", instance.memory)?;
-        if let Some(time_created) = instance.time_created {
-            writeln!(
-                tw,
-                "created:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_created)
-            )?;
-        }
-        if let Some(time_modified) = instance.time_modified {
-            writeln!(
-                tw,
-                "modified:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_modified)
-            )?;
-        }
-
-        tw.flush()?;
-
-        let table = String::from_utf8(tw.into_inner()?)?;
-        writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
     }

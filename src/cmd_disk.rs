@@ -23,7 +23,6 @@ enum SubCommand {
     Create(CmdDiskCreate),
     Detach(CmdDiskDetach),
     Edit(CmdDiskEdit),
-    View(CmdDiskView),
 }
 
 #[async_trait::async_trait]
@@ -347,97 +346,6 @@ pub struct CmdDiskEdit {}
 impl crate::cmd::Command for CmdDiskEdit {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
         println!("Not implemented yet in omicron.");
-        Ok(())
-    }
-}
-
-/// View a disk.
-///
-/// Display the description and other information of an Oxide disk.
-///
-/// With '--web', open the disk in a web browser instead.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdDiskView {
-    /// The disk to view.
-    #[clap(name = "disk", required = true)]
-    pub disk: String,
-
-    /// The project that holds the disk.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization to view the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Open a project in the browser.
-    #[clap(short, long)]
-    pub web: bool,
-
-    /// Output JSON.
-    #[clap(long)]
-    pub json: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdDiskView {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.web {
-            // TODO: make sure this is the correct URL.
-            let url = format!(
-                "https://{}/{}/{}/disks/{}",
-                ctx.config.default_host()?,
-                self.organization,
-                self.project,
-                self.disk
-            );
-
-            ctx.browser("", &url)?;
-            return Ok(());
-        }
-
-        let client = ctx.api_client("")?;
-
-        let disk = client
-            .disks()
-            .get(&self.disk, &self.organization, &self.project)
-            .await?;
-
-        if self.json {
-            // If they specified --json, just dump the JSON.
-            ctx.io.write_json(&serde_json::json!(disk))?;
-            return Ok(());
-        }
-
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "id:\t{}", disk.id)?;
-        writeln!(tw, "name:\t{}", disk.name)?;
-        writeln!(tw, "description:\t{}", disk.description)?;
-        writeln!(tw, "state:\t{}", disk.state)?;
-        writeln!(tw, "size:\t{}", disk.size)?;
-        writeln!(tw, "device path:\t{}", disk.device_path)?;
-        writeln!(tw, "snapshot:\t{}", disk.snapshot_id)?;
-        if let Some(time_created) = disk.time_created {
-            writeln!(
-                tw,
-                "created:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_created)
-            )?;
-        }
-        if let Some(time_modified) = disk.time_modified {
-            writeln!(
-                tw,
-                "modified:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_modified)
-            )?;
-        }
-
-        tw.flush()?;
-
-        let table = String::from_utf8(tw.into_inner()?)?;
-        writeln!(ctx.io.out, "{}", table)?;
-
         Ok(())
     }
 }

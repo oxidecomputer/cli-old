@@ -287,8 +287,8 @@ date:"#
         TestItem {
             name: "list orgs empty".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
-            want_out: "id | name | description |
-----+------+-------------"
+            want_out: "id | name | description | time_created | time_modified |
+----+------+-------------+--------------+---------------"
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -317,10 +317,7 @@ date:"#
                 "view".to_string(),
                 "maze-war".to_string(),
             ],
-            want_out: r#"name:         maze-war
-description:  The Maze War game organization
-created:"#
-                .to_string(),
+            want_out: r#"description  |    The Maze War game organization"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -460,8 +457,8 @@ created:"#
                 "--organization".to_string(),
                 "maze-war".to_string(),
             ],
-            want_out: "id | name | description | organization_id |
-----+------+-------------+-----------------"
+            want_out: "id | name | description | organization_id | time_created | time_modified |
+----+------+-------------+-----------------+--------------+---------------"
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -529,10 +526,7 @@ created:"#
                 "maze-war".to_string(),
                 "development".to_string(),
             ],
-            want_out: r#"name:          development
-description:   The development project
-organization:"#
-                .to_string(),
+            want_out: r#"description   |       The development project"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -634,8 +628,8 @@ organization:"#
                 "--project".to_string(),
                 "development".to_string(),
             ],
-            want_out: "id | name | description | hostname | memory | ncpus | project_id | run_state |
-----+------+-------------+----------+--------+-------+------------+-----------"
+            want_out: "id | name | description | hostname | memory | ncpus | project_id | run_state | time_created | time_modified | time_run_state_updated |
+----+------+-------------+----------+--------+-------+------------+-----------+--------------+---------------+------------------------"
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -701,9 +695,7 @@ organization:"#
                 "development".to_string(),
                 "my-app".to_string(),
             ],
-            want_out: r#"name:           my-app
-description:    My application
-state:"#
+            want_out: r#"hostname        |                my-app"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -836,8 +828,8 @@ state:"#
                 "--project".to_string(),
                 "development".to_string(),
             ],
-            want_out: "id | name | description | device_path | project_id | size | snapshot_id | state |
-----+------+-------------+-------------+------------+------+-------------+-------"
+            want_out: "id | name | description | device_path | project_id | size | snapshot_id | state | time_created | time_modified |
+----+------+-------------+-------------+------------+------+-------------+-------+--------------+---------------"
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,

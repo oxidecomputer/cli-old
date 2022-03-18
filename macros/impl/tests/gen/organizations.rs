@@ -56,7 +56,10 @@ impl crate::cmd::Command for CmdOrganizationList {
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdOrganizationView {
-    #[doc = "Open the organization in the browser."]
+    #[doc = "The organization to view. Can be an ID or name."]
+    #[clap(name = "organization", required = true)]
+    pub organization: String,
+    #[doc = "Open the organization in the browser.\n\nDisplay information about an Oxide organization.\n\nWith '--web', open the organization in a web browser instead.\n            "]
     #[clap(short, long)]
     pub web: bool,
     #[doc = r" Output JSON."]
@@ -84,8 +87,8 @@ impl crate::cmd::Command for CmdOrganizationView {
             return Ok(());
         }
 
-        let table = tabled::Table::new(results)
-            .with(Rotate::Left)
+        let table = tabled::Table::new(vec![result])
+            .with(tabled::Rotate::Left)
             .with(tabled::Style::psql())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;

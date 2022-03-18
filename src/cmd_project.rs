@@ -19,7 +19,6 @@ pub struct CmdProject {
 enum SubCommand {
     Create(CmdProjectCreate),
     Edit(CmdProjectEdit),
-    View(CmdProjectView),
 }
 
 #[async_trait::async_trait]
@@ -209,86 +208,6 @@ impl crate::cmd::Command for CmdProjectEdit {
                 full_name
             )?;
         }
-
-        Ok(())
-    }
-}
-
-/// View a project.
-///
-/// Display the description and other information of an Oxide project.
-///
-/// With '--web', open the project in a web browser instead.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdProjectView {
-    /// The project to view.
-    #[clap(name = "project", required = true)]
-    pub project: String,
-
-    /// The organization to view the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Open a project in the browser.
-    #[clap(short, long)]
-    pub web: bool,
-
-    /// Output JSON.
-    #[clap(long)]
-    pub json: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdProjectView {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.web {
-            // TODO: make sure this is the correct URL.
-            let url = format!(
-                "https://{}/{}/{}",
-                ctx.config.default_host()?,
-                self.organization,
-                self.project
-            );
-
-            ctx.browser("", &url)?;
-            return Ok(());
-        }
-
-        let client = ctx.api_client("")?;
-
-        let project = client.projects().get(&self.organization, &self.project).await?;
-
-        if self.json {
-            // If they specified --json, just dump the JSON.
-            ctx.io.write_json(&serde_json::json!(project))?;
-            return Ok(());
-        }
-
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "id:\t{}", project.id)?;
-        writeln!(tw, "name:\t{}", project.name)?;
-        writeln!(tw, "description:\t{}", project.description)?;
-        writeln!(tw, "organization:\t{}", project.organization_id)?;
-        if let Some(time_created) = project.time_created {
-            writeln!(
-                tw,
-                "created:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_created)
-            )?;
-        }
-        if let Some(time_modified) = project.time_modified {
-            writeln!(
-                tw,
-                "modified:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_modified)
-            )?;
-        }
-
-        tw.flush()?;
-
-        let table = String::from_utf8(tw.into_inner()?)?;
-        writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
     }

@@ -1,4 +1,6 @@
-use super::*;
+use anyhow::Result;
+use cli_macros_impl::do_gen;
+use quote::quote;
 
 fn get_text(output: &proc_macro2::TokenStream) -> Result<String> {
     // Format the file with rustfmt.
@@ -15,7 +17,7 @@ fn get_text(output: &proc_macro2::TokenStream) -> Result<String> {
 }
 
 #[test]
-fn test_crud_gen() {
+fn test_do_gen() {
     let mut actual = do_gen(
         quote! {
             tag = "disks",
@@ -32,31 +34,50 @@ fn test_crud_gen() {
     )
     .unwrap();
 
-    expectorate::assert_contents("gen/disks.rs", &get_text(&actual).unwrap());
+    expectorate::assert_contents("tests/gen/disks.rs", &get_text(&actual).unwrap());
 
     actual = do_gen(
         quote! {
             tag = "organizations",
-        },
+        }
+        .into(),
         quote! {
             #[derive(Parser, Debug, Clone)]
             enum SubCommand {}
-        },
+        }
+        .into(),
     )
     .unwrap();
 
-    expectorate::assert_contents("gen/organizations.rs", &get_text(&actual).unwrap());
+    expectorate::assert_contents("tests/gen/organizations.rs", &get_text(&actual).unwrap());
 
     actual = do_gen(
         quote! {
             tag = "subnets",
-        },
+        }
+        .into(),
         quote! {
             #[derive(Parser, Debug, Clone)]
             enum SubCommand {}
-        },
+        }
+        .into(),
     )
     .unwrap();
 
-    expectorate::assert_contents("gen/subnets.rs", &get_text(&actual).unwrap());
+    expectorate::assert_contents("tests/gen/subnets.rs", &get_text(&actual).unwrap());
+
+    actual = do_gen(
+        quote! {
+            tag = "routes",
+        }
+        .into(),
+        quote! {
+            #[derive(Parser, Debug, Clone)]
+            enum SubCommand {}
+        }
+        .into(),
+    )
+    .unwrap();
+
+    expectorate::assert_contents("tests/gen/routes.rs", &get_text(&actual).unwrap());
 }

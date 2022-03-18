@@ -19,7 +19,6 @@ pub struct CmdSubnet {
 enum SubCommand {
     Create(CmdSubnetCreate),
     Edit(CmdSubnetEdit),
-    View(CmdSubnetView),
 }
 
 #[async_trait::async_trait]
@@ -331,100 +330,6 @@ impl crate::cmd::Command for CmdSubnetEdit {
             full_name,
             self.vpc,
         )?;
-
-        Ok(())
-    }
-}
-
-/// View a subnet.
-///
-/// Display the description and other information of an Oxide subnet.
-///
-/// With '--web', open the subnet in a web browser instead.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdSubnetView {
-    /// The subnet to view.
-    #[clap(name = "subnet", required = true)]
-    pub subnet: String,
-
-    /// The VPC that holds the subnet.
-    #[clap(long, short, required = true)]
-    pub vpc: String,
-
-    /// The project that holds the subnet.
-    #[clap(long, short, required = true)]
-    pub project: String,
-
-    /// The organization to view the project.
-    #[clap(long, short, required = true, env = "OXIDE_ORG")]
-    pub organization: String,
-
-    /// Open a project in the browser.
-    #[clap(short, long)]
-    pub web: bool,
-
-    /// Output JSON.
-    #[clap(long)]
-    pub json: bool,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdSubnetView {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.web {
-            // TODO: make sure this is the correct URL.
-            let url = format!(
-                "https://{}/{}/{}/subnets/{}",
-                ctx.config.default_host()?,
-                self.organization,
-                self.project,
-                self.subnet
-            );
-
-            ctx.browser("", &url)?;
-            return Ok(());
-        }
-
-        let client = ctx.api_client("")?;
-
-        let subnet = client
-            .subnets()
-            .get(&self.organization, &self.project, &self.subnet, &self.vpc)
-            .await?;
-
-        if self.json {
-            // If they specified --json, just dump the JSON.
-            ctx.io.write_json(&serde_json::json!(subnet))?;
-            return Ok(());
-        }
-
-        let mut tw = tabwriter::TabWriter::new(vec![]);
-        writeln!(tw, "id:\t{}", subnet.id)?;
-        writeln!(tw, "name:\t{}", subnet.name)?;
-        writeln!(tw, "description:\t{}", subnet.description)?;
-        writeln!(tw, "ipv4 block:\t{}", subnet.ipv4_block)?;
-        writeln!(tw, "ipv6 block:\t{}", subnet.ipv6_block)?;
-        writeln!(tw, "vpc:\t{}", subnet.vpc_id)?;
-        if let Some(time_created) = subnet.time_created {
-            writeln!(
-                tw,
-                "created:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_created)
-            )?;
-        }
-        if let Some(time_modified) = subnet.time_modified {
-            writeln!(
-                tw,
-                "modified:\t{}",
-                chrono_humanize::HumanTime::from(chrono::Utc::now() - time_modified)
-            )?;
-        }
-
-        tw.flush()?;
-
-        let table = String::from_utf8(tw.into_inner()?)?;
-        writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
     }
