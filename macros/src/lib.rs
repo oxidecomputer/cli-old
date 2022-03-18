@@ -384,6 +384,134 @@ impl Operation {
         Ok(params)
     }
 
+    /*/// Generate the view command.
+    fn generate_view_command(&self, tag: &str) -> Result<(TokenStream, syn::Variant)> {
+    let tag_ident = format_ident!("{}", tag);
+    let singular_tag_str = if tag == "vpcs" {
+        singular(tag).to_uppercase()
+    } else {
+        singular(tag)
+    };
+    let struct_name = format_ident!("Cmd{}View", to_title_case(&singular(tag)));
+
+    let struct_doc = format!("View {}.", singular_tag_str);
+    let struct_inner_project_doc = format!("The project that holds the {}.", singular_tag_str);
+
+    let struct_inner_web_doc = format!("Open the {} in the browser.", singular_tag_str);
+
+    let mut api_call_params: Vec<TokenStream> = Vec::new();
+    for p in self.get_all_param_names()? {
+        let p = format_ident!("{}", p.trim_end_matches("_name"));
+
+        api_call_params.push(quote!(&self.#p));
+    }
+
+    // We need to check if project is a parameter to this call.
+    let project_param = if self.is_parameter("project") && tag != "projects" {
+        quote! {
+            #[doc = #struct_inner_project_doc]
+            #[clap(long, short, required = true)]
+            pub project: String,
+        }
+    } else {
+        quote!()
+    };
+
+    // We need to check if organization is a parameter to this call.
+    let organization_param = if self.is_parameter("organization") && tag != "organizations" {
+        quote! {
+            /// The organization that holds the project.
+            #[clap(long, short, required = true, env = "OXIDE_ORG")]
+            pub organization: String,
+        }
+    } else {
+        quote!()
+    };
+
+    let additional_struct_params = self.get_additional_struct_params(tag)?;
+
+    let cmd = quote!(
+        #[doc = #struct_doc]
+        #[derive(clap::Parser, Debug, Clone)]
+        #[clap(verbatim_doc_comment)]
+        pub struct #struct_name {
+            #project_param
+
+            #organization_param
+
+            #(#additional_struct_params)*
+
+            #[doc = #struct_inner_web_doc]
+            #[clap(short, long)]
+            pub web: bool,
+
+            // TODO: Change this to be format instead!
+            /// Output JSON.
+            #[clap(long)]
+            pub json: bool,
+        }
+
+        #[async_trait::async_trait]
+        impl crate::cmd::Command for #struct_name {
+            async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+                if self.web {
+                    // TODO: make sure this is the correct URL.
+                    let url = format!(
+                        "https://{}/{}/{}/vpcs/{}",
+                        ctx.config.default_host()?,
+                        self.organization,
+                        self.project,
+                        self.vpc
+                    );
+
+                    ctx.browser("", &url)?;
+                    return Ok(());
+                }
+
+                let client = ctx.api_client("")?;
+
+                let result = client.#tag_ident().get(#(#api_call_params),*).await?;
+
+                if self.json {
+                    // If they specified --json, just dump the JSON.
+                    ctx.io.write_json(&serde_json::json!(result))?;
+                    return Ok(());
+                }
+
+                let mut tw = tabwriter::TabWriter::new(vec![]);
+                writeln!(tw, "id:\t{}", vpc.id)?;
+                writeln!(tw, "name:\t{}", vpc.name)?;
+                writeln!(tw, "description:\t{}", vpc.description)?;
+                writeln!(tw, "dns name:\t{}", vpc.dns_name)?;
+                writeln!(tw, "system router:\t{}", vpc.system_router_id)?;
+                if let Some(time_created) = vpc.time_created {
+                    writeln!(
+                        tw,
+                        "created:\t{}",
+                        chrono_humanize::HumanTime::from(chrono::Utc::now() - time_created)
+                    )?;
+                }
+                if let Some(time_modified) = vpc.time_modified {
+                    writeln!(
+                        tw,
+                        "modified:\t{}",
+                        chrono_humanize::HumanTime::from(chrono::Utc::now() - time_modified)
+                    )?;
+                }
+
+                tw.flush()?;
+
+                let table = String::from_utf8(tw.into_inner()?)?;
+                writeln!(ctx.io.out, "{}", table)?;
+
+                Ok(())
+            }
+        }
+    );
+
+    Ok((cmd, quote!(#struct_name)))
+    } */
+
     /// Generate the list command.
     fn generate_list_command(&self, tag: &str) -> Result<(TokenStream, syn::Variant)> {
         let tag_ident = format_ident!("{}", tag);

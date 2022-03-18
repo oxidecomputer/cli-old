@@ -21,3 +21,5 @@ syn = { version = "1.0", features = [ "derive", "parsing", "printing" ] }
 
 [dev-dependencies]
 expectorate = "1"
+regex = "1.5"
+rustfmt-wrapper = "^0.1"
