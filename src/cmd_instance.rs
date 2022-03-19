@@ -383,7 +383,7 @@ mod test {
                     organization: "foo".to_string(),
                     project: "bar".to_string(),
                     description: "blah blah".to_string(),
-                    memory: 0,
+                    memory: 1024,
                     ncpus: 0,
                     hostname: "sup".to_string(),
                     network_interfaces: Default::default(),
