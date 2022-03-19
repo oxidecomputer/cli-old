@@ -1031,7 +1031,7 @@ impl Operation {
         );
 
         let mut additional_prompts: Vec<TokenStream> = Vec::new();
-        for (p, _) in self.get_all_required_param_names_and_types()? {
+        for (p, v) in self.get_all_required_param_names_and_types()? {
             let n = p.trim_end_matches("_name").trim_end_matches("_id");
             if skip_defaults(n, tag) {
                 // Skip the prompt.
@@ -1040,7 +1040,7 @@ impl Operation {
 
             // TODO: for now skip any weird things and don't prompt for them
             // WE NEED TO FIX THIS
-            if n == "target" || n == "destination" || n == "memory" || n == "ncpus" || "size" == n {
+            if n == "target" || n == "destination" {
                 continue;
             }
 
@@ -1048,14 +1048,16 @@ impl Operation {
 
             let title = format!("{} {}:", singular_tag_str, n);
 
+            let is_check = v.get_is_check_fn()?;
+
             additional_prompts.push(quote! {
                 // Propmt if they didn't provide the value.
-                if #p.is_empty() {
+                if #p.#is_check() {
                     match dialoguer::Input::<_>::new()
                         .with_prompt(#title)
                         .interact_text()
                     {
-                        Ok(desc) => #p = desc,
+                        Ok(input) => #p = input,
                         Err(err) => {
                             return Err(anyhow::anyhow!("prompt failed: {}", err));
                         }
