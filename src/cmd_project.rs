@@ -127,12 +127,12 @@ mod test {
                 cmd: crate::cmd_project::SubCommand::Create(crate::cmd_project::CmdProjectCreate {
                     project: "".to_string(),
                     organization: "".to_string(),
-                    description: "".to_string(),
+                    description: "hello".to_string(),
                 }),
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "[project_name] required in non-interactive mode".to_string(),
+                want_err: "[project] required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "create no organization".to_string(),
@@ -144,7 +144,7 @@ mod test {
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "--organization,-o required in non-interactive mode".to_string(),
+                want_err: "organization required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "create no description".to_string(),

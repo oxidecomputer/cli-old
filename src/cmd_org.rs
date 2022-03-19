@@ -161,17 +161,17 @@ mod test {
                 name: "create no name".to_string(),
                 cmd: crate::cmd_org::SubCommand::Create(crate::cmd_org::CmdOrganizationCreate {
                     organization: "".to_string(),
-                    description: "".to_string(),
+                    description: "hi hi".to_string(),
                 }),
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "[organization_name] required in non-interactive mode".to_string(),
+                want_err: "[organization] required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "create no description".to_string(),
                 cmd: crate::cmd_org::SubCommand::Create(crate::cmd_org::CmdOrganizationCreate {
-                    organization: "things".to_string(),
+                    organization: "".to_string(),
                     description: "".to_string(),
                 }),
 

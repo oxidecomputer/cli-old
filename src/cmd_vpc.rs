@@ -141,51 +141,6 @@ mod test {
     async fn test_cmd_vpc() {
         let tests: Vec<TestItem> = vec![
             TestItem {
-                name: "create no name".to_string(),
-                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
-                    vpc: "".to_string(),
-                    organization: "".to_string(),
-                    project: "".to_string(),
-                    description: "".to_string(),
-                    dns: "".to_string(),
-                    ipv6_prefix: Default::default(),
-                }),
-
-                stdin: "".to_string(),
-                want_out: "".to_string(),
-                want_err: "[vpc_name] required in non-interactive mode".to_string(),
-            },
-            TestItem {
-                name: "create no organization".to_string(),
-                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
-                    vpc: "things".to_string(),
-                    organization: "".to_string(),
-                    project: "".to_string(),
-                    description: "".to_string(),
-                    dns: "".to_string(),
-                    ipv6_prefix: Default::default(),
-                }),
-
-                stdin: "".to_string(),
-                want_out: "".to_string(),
-                want_err: "--organization,-o required in non-interactive mode".to_string(),
-            },
-            TestItem {
-                name: "create no project".to_string(),
-                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
-                    vpc: "things".to_string(),
-                    organization: "foo".to_string(),
-                    project: "".to_string(),
-                    description: "".to_string(),
-                    dns: "".to_string(),
-                    ipv6_prefix: Default::default(),
-                }),
-
-                stdin: "".to_string(),
-                want_out: "".to_string(),
-                want_err: "--project,-p required in non-interactive mode".to_string(),
-            },
-            TestItem {
                 name: "create no description".to_string(),
                 cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
                     vpc: "things".to_string(),
@@ -198,7 +153,52 @@ mod test {
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "--description,-D required in non-interactive mode".to_string(),
+                want_err: "description required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no name".to_string(),
+                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
+                    vpc: "".to_string(),
+                    organization: "".to_string(),
+                    project: "".to_string(),
+                    description: "blah blah".to_string(),
+                    dns: "foo bar".to_string(),
+                    ipv6_prefix: Default::default(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "[vpc] required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no organization".to_string(),
+                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
+                    vpc: "things".to_string(),
+                    organization: "".to_string(),
+                    project: "".to_string(),
+                    description: "blah blah".to_string(),
+                    dns: "blah".to_string(),
+                    ipv6_prefix: Default::default(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "organization required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no project".to_string(),
+                cmd: crate::cmd_vpc::SubCommand::Create(crate::cmd_vpc::CmdVpcCreate {
+                    vpc: "things".to_string(),
+                    organization: "foo".to_string(),
+                    project: "".to_string(),
+                    description: "blah blah".to_string(),
+                    dns: "blah".to_string(),
+                    ipv6_prefix: Default::default(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "project required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "create no dns_name".to_string(),
@@ -213,7 +213,7 @@ mod test {
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "--dns-name required in non-interactive mode".to_string(),
+                want_err: "dns required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "delete no --confirm non-interactive".to_string(),

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use anyhow::Result;
-use inflector::cases::titlecase::to_title_case;
+use inflector::cases::{kebabcase::to_kebab_case, titlecase::to_title_case};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use serde::Deserialize;
@@ -823,23 +823,32 @@ impl Operation {
         let type_name = schema.render_type()?;
         let rendered = get_text(&type_name)?;
 
+        let flags = get_flags(name)?;
+        let short = flags.short;
+
+        let short_flag = if name == "description" {
+            quote!(short = #short)
+        } else {
+            quote!(short)
+        };
+
         let clap_line = if self.method == "POST" || name == "sort_by" {
             // On create, we want to set default values for the parameters.
             if rendered.starts_with("Option<") {
                 // A default value there is pretty much always going to be None.
                 quote! {
-                    #[clap(long, short)]
+                    #[clap(long, #short_flag)]
                 }
             } else {
                 quote! {
-                    #[clap(long, short, default_value_t)]
+                    #[clap(long, #short_flag, default_value_t)]
                 }
             }
         } else {
             let required = if required { quote!(true) } else { quote!(false) };
 
             quote! {
-                #[clap(long, short, required = #required)]
+                #[clap(long, #short_flag, required = #required)]
             }
         };
 
@@ -917,8 +926,8 @@ impl Operation {
                 // Format like an argument not a flag.
                 format!("[{}]", n)
             } else {
-                // TODO: We should give the actual flags here.
-                n.to_string()
+                let flags = get_flags(&n)?;
+                flags.format_help()
             };
 
             let error_msg = format!("{} required in non-interactive mode", formatted);
@@ -1653,4 +1662,32 @@ pub fn get_text_fmt(output: &proc_macro2::TokenStream) -> Result<String> {
     let content = rustfmt_wrapper::rustfmt(output).unwrap();
 
     Ok(clean_text(&content))
+}
+
+struct Flags {
+    short: char,
+    long: String,
+}
+
+impl Flags {
+    fn format_help(&self) -> String {
+        format!("{}|{}", self.short, self.long)
+    }
+}
+
+fn get_flags(name: &str) -> Result<Flags> {
+    if name.len() < 2 {
+        anyhow::bail!("name must be at least 2 characters long");
+    }
+
+    let mut flags = Flags {
+        short: name.to_lowercase().chars().nth(0).unwrap(),
+        long: to_kebab_case(name),
+    };
+
+    if name == "description" {
+        flags.short = flags.short.to_ascii_uppercase();
+    }
+
+    Ok(flags)
 }

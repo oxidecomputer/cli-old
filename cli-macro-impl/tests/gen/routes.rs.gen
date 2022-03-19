@@ -104,7 +104,7 @@ pub struct CmdRouteCreate {
     #[clap(long, short, default_value_t)]
     pub vpc: oxide_api::types::Name,
     #[doc = "The description that holds the route."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 'D', default_value_t)]
     pub description: String,
     #[doc = "A `RouteDestination` is used to match traffic with a routing rule, on the destination of that traffic.\n\nWhen traffic is to be sent to a destination that is within a given `RouteDestination`, the corresponding [`RouterRoute`] applies, and traffic will be forward to the [`RouteTarget`] for that rule."]
     #[clap(long, short)]

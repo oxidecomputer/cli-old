@@ -187,14 +187,14 @@ mod test {
                     disk: "".to_string(),
                     organization: "".to_string(),
                     project: "".to_string(),
-                    description: "".to_string(),
+                    description: "hi hi".to_string(),
                     size: Default::default(),
                     snapshot: Default::default(),
                 }),
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "[disk_name] required in non-interactive mode".to_string(),
+                want_err: "[disk] required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "create no organization".to_string(),

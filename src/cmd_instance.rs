@@ -314,7 +314,7 @@ mod test {
                     instance: "".to_string(),
                     organization: "".to_string(),
                     project: "".to_string(),
-                    description: "".to_string(),
+                    description: "hi hi".to_string(),
                     memory: 0,
                     ncpus: 0,
                     hostname: "".to_string(),
@@ -323,7 +323,7 @@ mod test {
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "[instance_name] required in non-interactive mode".to_string(),
+                want_err: "[instance] required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "create no organization".to_string(),

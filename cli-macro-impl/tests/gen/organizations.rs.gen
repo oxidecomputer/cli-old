@@ -63,7 +63,7 @@ pub struct CmdOrganizationCreate {
     #[clap(name = "organization", required = true)]
     pub organization: String,
     #[doc = "The description that holds the organization."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 'D', default_value_t)]
     pub description: String,
 }
 
