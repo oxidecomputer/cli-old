@@ -110,9 +110,33 @@ trait ReferenceOrExt<T> {
     fn reference_render_type(&self) -> Result<TokenStream>;
     fn get_schema_from_reference(&self, recursive: bool) -> Result<openapiv3::Schema>;
     fn render_type(&self) -> Result<TokenStream>;
+    fn get_is_check_fn(&self) -> Result<proc_macro2::Ident>;
 }
 
 impl<T: SchemaExt> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
+    /// Returns the respective `is_zero`, `is_empty`, `is_none` function for the specific type.
+    fn get_is_check_fn(&self) -> Result<proc_macro2::Ident> {
+        let mut rendered = get_text(&self.render_type()?)?;
+
+        let ident = if rendered.starts_with("Option<") {
+            format_ident!("{}", "is_none")
+        } else {
+            rendered = match self.get_schema_from_reference(true) {
+                Ok(s) => get_text(&s.render_type()?)?,
+                Err(_) => rendered.to_string(),
+            };
+
+            if rendered.starts_with('u') || rendered.starts_with('i') || rendered.starts_with('f') {
+                // Handle numbers.
+                format_ident!("{}", "is_zero")
+            } else {
+                format_ident!("{}", "is_empty")
+            }
+        };
+
+        Ok(ident)
+    }
+
     fn item(&self) -> Result<&T> {
         match self {
             openapiv3::ReferenceOr::Item(i) => Ok(i),
@@ -901,31 +925,7 @@ impl Operation {
 
             let error_msg = format!("{} required in non-interactive mode", formatted);
 
-            let mut rendered = get_text(&t.render_type()?)?;
-
-            let is_check = if rendered.starts_with("Option<") {
-                format_ident!("{}", "is_none")
-            } else {
-                rendered = match t.get_schema_from_reference(true) {
-                    Ok(s) => {
-                        let r = get_text(&s.render_type()?)?;
-                        println!("REFERENCE: {} -> {} {}", rendered, r, tag);
-                        r
-                    }
-                    Err(e) => {
-                        let thing = t.item()?.render_type()?;
-                        println!("REFERENCE: {} -> {} {} .. {:?}\n\t{:?}", rendered, thing, tag, e, t);
-                        rendered.to_string()
-                    }
-                };
-
-                if rendered.starts_with('u') || rendered.starts_with('i') || rendered.starts_with('f') {
-                    // Handle numbers.
-                    format_ident!("{}", "is_zero")
-                } else {
-                    format_ident!("{}", "is_empty")
-                }
-            };
+            let is_check = t.get_is_check_fn()?;
 
             required_checks.push(quote!(
                 if #p.#is_check() && !ctx.io.can_prompt() {
