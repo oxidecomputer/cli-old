@@ -318,6 +318,7 @@ mod test {
                     memory: 0,
                     ncpus: 0,
                     hostname: "".to_string(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
@@ -334,6 +335,7 @@ mod test {
                     memory: 0,
                     ncpus: 0,
                     hostname: "".to_string(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
@@ -350,6 +352,7 @@ mod test {
                     memory: 0,
                     ncpus: 0,
                     hostname: "".to_string(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
@@ -366,6 +369,7 @@ mod test {
                     memory: 0,
                     ncpus: 0,
                     hostname: "".to_string(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
@@ -382,6 +386,7 @@ mod test {
                     memory: 0,
                     ncpus: 0,
                     hostname: "".to_string(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
@@ -398,6 +403,7 @@ mod test {
                     memory: 0,
                     ncpus: 2,
                     hostname: "".to_string(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
