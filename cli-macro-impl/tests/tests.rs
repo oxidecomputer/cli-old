@@ -24,13 +24,11 @@ fn test_do_gen() {
     actual = do_gen(
         quote! {
             tag = "organizations",
-        }
-        .into(),
+        },
         quote! {
             #[derive(Parser, Debug, Clone)]
             enum SubCommand {}
-        }
-        .into(),
+        },
     )
     .unwrap();
 
@@ -39,13 +37,11 @@ fn test_do_gen() {
     actual = do_gen(
         quote! {
             tag = "subnets",
-        }
-        .into(),
+        },
         quote! {
             #[derive(Parser, Debug, Clone)]
             enum SubCommand {}
-        }
-        .into(),
+        },
     )
     .unwrap();
 
@@ -54,13 +50,11 @@ fn test_do_gen() {
     actual = do_gen(
         quote! {
             tag = "routes",
-        }
-        .into(),
+        },
         quote! {
             #[derive(Parser, Debug, Clone)]
             enum SubCommand {}
-        }
-        .into(),
+        },
     )
     .unwrap();
 
@@ -69,13 +63,11 @@ fn test_do_gen() {
     actual = do_gen(
         quote! {
             tag = "sleds",
-        }
-        .into(),
+        },
         quote! {
             #[derive(Parser, Debug, Clone)]
             enum SubCommand {}
-        }
-        .into(),
+        },
     )
     .unwrap();
 
@@ -84,13 +76,11 @@ fn test_do_gen() {
     actual = do_gen(
         quote! {
             tag = "instances",
-        }
-        .into(),
+        },
         quote! {
             #[derive(Parser, Debug, Clone)]
             enum SubCommand {}
-        }
-        .into(),
+        },
     )
     .unwrap();
 
@@ -99,13 +89,11 @@ fn test_do_gen() {
     actual = do_gen(
         quote! {
             tag = "vpcs",
-        }
-        .into(),
+        },
         quote! {
             #[derive(Parser, Debug, Clone)]
             enum SubCommand {}
-        }
-        .into(),
+        },
     )
     .unwrap();
 

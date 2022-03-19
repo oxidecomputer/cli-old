@@ -19,9 +19,6 @@ enum SubCommand {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdImage {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        match &self.subcmd {
-            _ => todo!(),
-            //SubCommand::Delete(cmd) => cmd.run(ctx).await,
-        }
+        todo!()
     }
 }

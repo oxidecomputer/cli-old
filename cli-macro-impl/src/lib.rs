@@ -202,14 +202,12 @@ impl<T: SchemaExt> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
                 Ok(s) => Ok(s.clone()),
                 Err(_) => schema.get_schema_from_reference(recursive),
             }
+        } else if !recursive {
+            anyhow::bail!("item not supported here");
         } else {
-            if !recursive {
-                anyhow::bail!("item not supported here");
-            } else {
-                match self.recurse() {
-                    Ok(s) => Ok(s),
-                    Err(_) => self.get_schema_from_reference(recursive),
-                }
+            match self.recurse() {
+                Ok(s) => Ok(s),
+                Err(_) => self.get_schema_from_reference(recursive),
             }
         }
     }
@@ -710,7 +708,7 @@ impl Operation {
         }
 
         let req_body_properties = self.get_request_body_properties()?;
-        if req_body_properties.len() > 0 {
+        if !req_body_properties.is_empty() {
             let mut req_body_rendered = Vec::new();
             for (p, v) in req_body_properties {
                 let p_og = format_ident!("{}", p);
@@ -805,7 +803,7 @@ impl Operation {
         let name_ident = format_ident!("{}", name_cleaned);
 
         let doc = if let Some(desc) = description {
-            desc.to_string()
+            desc
         } else if name == "sort_by" {
             "The order in which to sort the results.".to_string()
         } else {
@@ -1633,17 +1631,17 @@ fn clean_text(s: &str) -> String {
     // Add newlines after end-braces at <= two levels of indentation.
     if cfg!(not(windows)) {
         let regex = regex::Regex::new(r#"(})(\n\s{0,8}[^} ])"#).unwrap();
-        regex.replace_all(&s, "$1\n$2").to_string()
+        regex.replace_all(s, "$1\n$2").to_string()
     } else {
         let regex = regex::Regex::new(r#"(})(\r\n\s{0,8}[^} ])"#).unwrap();
-        regex.replace_all(&s, "$1\r\n$2").to_string()
+        regex.replace_all(s, "$1\r\n$2").to_string()
     }
 }
 
 pub fn get_text(output: &proc_macro2::TokenStream) -> Result<String> {
     let content = output.to_string();
 
-    Ok(clean_text(&content).replace(" ", ""))
+    Ok(clean_text(&content).replace(' ', ""))
 }
 
 pub fn get_text_fmt(output: &proc_macro2::TokenStream) -> Result<String> {

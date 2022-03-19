@@ -316,7 +316,7 @@ mod test {
                     project: "".to_string(),
                     description: "".to_string(),
                     memory: 0,
-                    cpus: 0,
+                    ncpus: 0,
                     hostname: "".to_string(),
                 }),
 
@@ -332,7 +332,7 @@ mod test {
                     project: "".to_string(),
                     description: "".to_string(),
                     memory: 0,
-                    cpus: 0,
+                    ncpus: 0,
                     hostname: "".to_string(),
                 }),
 
@@ -348,7 +348,7 @@ mod test {
                     project: "".to_string(),
                     description: "".to_string(),
                     memory: 0,
-                    cpus: 0,
+                    ncpus: 0,
                     hostname: "".to_string(),
                 }),
 
@@ -364,7 +364,7 @@ mod test {
                     project: "bar".to_string(),
                     description: "".to_string(),
                     memory: 0,
-                    cpus: 0,
+                    ncpus: 0,
                     hostname: "".to_string(),
                 }),
 
@@ -380,7 +380,7 @@ mod test {
                     project: "bar".to_string(),
                     description: "blah blah".to_string(),
                     memory: 0,
-                    cpus: 0,
+                    ncpus: 0,
                     hostname: "".to_string(),
                 }),
 
@@ -396,7 +396,7 @@ mod test {
                     project: "bar".to_string(),
                     description: "blah blah".to_string(),
                     memory: 0,
-                    cpus: 2,
+                    ncpus: 2,
                     hostname: "".to_string(),
                 }),
 

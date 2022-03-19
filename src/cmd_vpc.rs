@@ -147,7 +147,7 @@ mod test {
                     organization: "".to_string(),
                     project: "".to_string(),
                     description: "".to_string(),
-                    dns_name: "".to_string(),
+                    dns: "".to_string(),
                 }),
 
                 stdin: "".to_string(),
@@ -161,7 +161,7 @@ mod test {
                     organization: "".to_string(),
                     project: "".to_string(),
                     description: "".to_string(),
-                    dns_name: "".to_string(),
+                    dns: "".to_string(),
                 }),
 
                 stdin: "".to_string(),
@@ -175,7 +175,7 @@ mod test {
                     organization: "foo".to_string(),
                     project: "".to_string(),
                     description: "".to_string(),
-                    dns_name: "".to_string(),
+                    dns: "".to_string(),
                 }),
 
                 stdin: "".to_string(),
@@ -189,7 +189,7 @@ mod test {
                     organization: "foo".to_string(),
                     project: "bar".to_string(),
                     description: "".to_string(),
-                    dns_name: "".to_string(),
+                    dns: "".to_string(),
                 }),
 
                 stdin: "".to_string(),
@@ -203,7 +203,7 @@ mod test {
                     organization: "foo".to_string(),
                     project: "bar".to_string(),
                     description: "blah blah".to_string(),
-                    dns_name: "".to_string(),
+                    dns: "".to_string(),
                 }),
 
                 stdin: "".to_string(),
