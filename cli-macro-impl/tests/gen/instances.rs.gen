@@ -207,7 +207,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
                 .with_prompt("instance description:")
                 .interact_text()
             {
-                Ok(desc) => description = desc,
+                Ok(input) => description = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
@@ -219,7 +219,31 @@ impl crate::cmd::Command for CmdInstanceCreate {
                 .with_prompt("instance hostname:")
                 .interact_text()
             {
-                Ok(desc) => hostname = desc,
+                Ok(input) => hostname = input,
+                Err(err) => {
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        if memory.is_zero() {
+            match dialoguer::Input::<_>::new()
+                .with_prompt("instance memory:")
+                .interact_text()
+            {
+                Ok(input) => memory = input,
+                Err(err) => {
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        if ncpus.is_zero() {
+            match dialoguer::Input::<_>::new()
+                .with_prompt("instance ncpus:")
+                .interact_text()
+            {
+                Ok(input) => ncpus = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }

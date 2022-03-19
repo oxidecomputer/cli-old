@@ -193,7 +193,19 @@ impl crate::cmd::Command for CmdDiskCreate {
                 .with_prompt("disk description:")
                 .interact_text()
             {
-                Ok(desc) => description = desc,
+                Ok(input) => description = input,
+                Err(err) => {
+                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+                }
+            }
+        }
+
+        if size.is_zero() {
+            match dialoguer::Input::<_>::new()
+                .with_prompt("disk size:")
+                .interact_text()
+            {
+                Ok(input) => size = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }

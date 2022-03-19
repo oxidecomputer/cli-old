@@ -102,7 +102,7 @@ impl crate::cmd::Command for CmdOrganizationCreate {
                 .with_prompt("organization description:")
                 .interact_text()
             {
-                Ok(desc) => description = desc,
+                Ok(input) => description = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }

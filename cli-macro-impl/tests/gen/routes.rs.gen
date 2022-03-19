@@ -226,7 +226,7 @@ impl crate::cmd::Command for CmdRouteCreate {
                 .with_prompt("route description:")
                 .interact_text()
             {
-                Ok(desc) => description = desc,
+                Ok(input) => description = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
@@ -238,7 +238,7 @@ impl crate::cmd::Command for CmdRouteCreate {
                 .with_prompt("route router:")
                 .interact_text()
             {
-                Ok(desc) => router = desc,
+                Ok(input) => router = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
@@ -250,7 +250,7 @@ impl crate::cmd::Command for CmdRouteCreate {
                 .with_prompt("route vpc:")
                 .interact_text()
             {
-                Ok(desc) => vpc = desc,
+                Ok(input) => vpc = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }

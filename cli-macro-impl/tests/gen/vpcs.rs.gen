@@ -189,7 +189,7 @@ impl crate::cmd::Command for CmdVpcCreate {
                 .with_prompt("VPC description:")
                 .interact_text()
             {
-                Ok(desc) => description = desc,
+                Ok(input) => description = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
@@ -201,7 +201,7 @@ impl crate::cmd::Command for CmdVpcCreate {
                 .with_prompt("VPC dns:")
                 .interact_text()
             {
-                Ok(desc) => dns = desc,
+                Ok(input) => dns = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }

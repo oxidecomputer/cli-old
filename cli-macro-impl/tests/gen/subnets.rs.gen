@@ -208,7 +208,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
                 .with_prompt("subnet description:")
                 .interact_text()
             {
-                Ok(desc) => description = desc,
+                Ok(input) => description = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
@@ -220,7 +220,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
                 .with_prompt("subnet ipv4_block:")
                 .interact_text()
             {
-                Ok(desc) => ipv4_block = desc,
+                Ok(input) => ipv4_block = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
@@ -232,7 +232,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
                 .with_prompt("subnet vpc:")
                 .interact_text()
             {
-                Ok(desc) => vpc = desc,
+                Ok(input) => vpc = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
