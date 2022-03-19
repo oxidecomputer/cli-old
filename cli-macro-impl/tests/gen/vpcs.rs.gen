@@ -104,12 +104,12 @@ impl crate::cmd::Command for CmdVpcCreate {
         let mut project = self.project.clone();
         if description.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "description required in non-interactive mode"
+                "D|description required in non-interactive mode"
             ));
         }
 
         if dns.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("dns required in non-interactive mode"));
+            return Err(anyhow::anyhow!("d|dns required in non-interactive mode"));
         }
 
         if vpc.is_empty() && !ctx.io.can_prompt() {
@@ -118,12 +118,14 @@ impl crate::cmd::Command for CmdVpcCreate {
 
         if organization.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "organization required in non-interactive mode"
+                "o|organization required in non-interactive mode"
             ));
         }
 
         if project.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("project required in non-interactive mode"));
+            return Err(anyhow::anyhow!(
+                "p|project required in non-interactive mode"
+            ));
         }
 
         let client = ctx.api_client("")?;

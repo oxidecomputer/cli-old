@@ -1671,7 +1671,7 @@ struct Flags {
 
 impl Flags {
     fn format_help(&self) -> String {
-        format!("{}|{}", self.short, self.long)
+        format!("-{}|--{}", self.short, self.long)
     }
 }
 
