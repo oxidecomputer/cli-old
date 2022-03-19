@@ -1693,9 +1693,11 @@ fn get_flags(name: &str) -> Result<Flags> {
         long: to_kebab_case(name),
     };
 
+    // TODO: we should smartly parse the flags and make sure there is no overlap.
     if name == "description" {
         flags.short = flags.short.to_ascii_uppercase();
-    } else if name == "hostname" || name == "size" || name == "dns" {
+    } else if name == "size" || flags.short == 'd' || flags.short == 'h' {
+        // 'd' is debug, 'h' is help
         flags.short = '0';
     } else if name == "ncpus" {
         flags.short = 'c';
