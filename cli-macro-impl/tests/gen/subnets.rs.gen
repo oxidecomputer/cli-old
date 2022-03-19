@@ -21,7 +21,7 @@ pub struct CmdSubnetList {
     #[doc = "The order in which to sort the results."]
     #[clap(long, short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
-    #[doc = "The VPC_NAME that holds the subnets."]
+    #[doc = "The VPC that holds the subnets."]
     #[clap(long, short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = r" Maximum number of items to list."]
@@ -92,10 +92,10 @@ pub struct CmdSubnetCreate {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The VPC_NAME that holds the subnet."]
+    #[doc = "The VPC that holds the subnet."]
     #[clap(long, short = 'v', default_value_t)]
     pub vpc: oxide_api::types::Name,
-    #[doc = "The description that holds the subnet."]
+    #[doc = "The description for the subnet."]
     #[clap(long, short = 'D', default_value_t)]
     pub description: String,
     #[doc = "The IPv4 address range for this subnet.\n\nIt must be allocated from an RFC 1918 private address range, and must not overlap with any other existing subnet in the VPC."]
@@ -282,7 +282,7 @@ pub struct CmdSubnetView {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The VPC_NAME that holds the subnet."]
+    #[doc = "The VPC that holds the subnet."]
     #[clap(long, short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = "Open the subnet in the browser."]
@@ -339,7 +339,7 @@ pub struct CmdSubnetDelete {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The VPC_NAME that holds the subnet."]
+    #[doc = "The VPC that holds the subnet."]
     #[clap(long, short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = r" Confirm deletion without prompting."]

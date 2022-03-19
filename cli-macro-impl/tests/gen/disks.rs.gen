@@ -87,7 +87,7 @@ pub struct CmdDiskCreate {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The description that holds the disk."]
+    #[doc = "The description for the disk."]
     #[clap(long, short = 'D', default_value_t)]
     pub description: String,
     #[doc = "size of the Disk"]

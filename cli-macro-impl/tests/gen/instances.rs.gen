@@ -83,7 +83,7 @@ pub struct CmdInstanceCreate {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "The description that holds the instance."]
+    #[doc = "The description for the instance."]
     #[clap(long, short = 'D', default_value_t)]
     pub description: String,
     #[doc = "The hostname that holds the instance."]

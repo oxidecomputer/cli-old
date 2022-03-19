@@ -808,15 +808,24 @@ impl Operation {
             "The order in which to sort the results.".to_string()
         } else {
             let n = if name_cleaned == "vpc" {
-                name.to_uppercase()
+                name_cleaned.to_uppercase()
             } else {
-                name.to_string()
+                name_cleaned.to_string()
             };
 
-            if self.is_root_list_operation(tag) {
-                format!("The {} that holds the {}.", n, plural(tag))
+            let singular_tag = singular(tag);
+            let prop = if singular_tag == "vpc" {
+                singular_tag.to_uppercase()
             } else {
-                format!("The {} that holds the {}.", n, singular(tag))
+                singular_tag
+            };
+
+            if name == "description" {
+                format!("The description for the {}.", prop)
+            } else if self.is_root_list_operation(tag) {
+                format!("The {} that holds the {}.", n, plural(&prop))
+            } else {
+                format!("The {} that holds the {}.", n, prop)
             }
         };
 
