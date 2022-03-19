@@ -1316,6 +1316,8 @@ dependencies = [
 [[package]]
 name = "oxide-api"
 version = "0.1.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa5313fdc71793c88548e65c6be0615f0ee73d0e72759b101c7f37722d74207e"
 dependencies = [
  "anyhow",
  "bytes",
