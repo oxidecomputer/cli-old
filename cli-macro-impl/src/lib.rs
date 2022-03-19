@@ -824,13 +824,8 @@ impl Operation {
         let rendered = get_text(&type_name)?;
 
         let flags = get_flags(name)?;
-        let short = flags.short;
 
-        let short_flag = if name == "description" {
-            quote!(short = #short)
-        } else {
-            quote!(short)
-        };
+        let short_flag = flags.get_short_token();
 
         let clap_line = if self.method == "POST" || name == "sort_by" {
             // On create, we want to set default values for the parameters.
@@ -841,14 +836,14 @@ impl Operation {
                 }
             } else {
                 quote! {
-                    #[clap(long, #short_flag, default_value_t)]
+                    #[clap(long, #short_flag default_value_t)]
                 }
             }
         } else {
             let required = if required { quote!(true) } else { quote!(false) };
 
             quote! {
-                #[clap(long, #short_flag, required = #required)]
+                #[clap(long, #short_flag required = #required)]
             }
         };
 
@@ -1078,9 +1073,9 @@ impl Operation {
         }
 
         // We need to form the output back to the client.
-        let output = if self.is_parameter("organization") && self.is_parameter("project") {
+        let output = if self.is_parameter("organization") && (self.is_parameter("project") || tag == "projects") {
             let start = quote! {
-                let full_name = format!("{}/{}", self.organization, self.project);
+                let full_name = format!("{}/{}", organization, project);
             };
             if tag != "projects" {
                 quote! {
@@ -1090,7 +1085,7 @@ impl Operation {
                         "{} Created {} {} in {}",
                         cs.success_icon(),
                         #singular_tag_str,
-                        self.#singular_tag_lc,
+                        #singular_tag_lc,
                         full_name
                     )?;
                 }
@@ -1113,7 +1108,7 @@ impl Operation {
                     "{} Created {} {}",
                     cs.success_icon(),
                     #singular_tag_str,
-                    self.#singular_tag_lc
+                    #singular_tag_lc
                 )?;
             }
         };
@@ -1671,7 +1666,20 @@ struct Flags {
 
 impl Flags {
     fn format_help(&self) -> String {
-        format!("-{}|--{}", self.short, self.long)
+        if self.short.is_ascii_alphabetic() {
+            format!("-{}|--{}", self.short, self.long)
+        } else {
+            format!("--{}", self.long)
+        }
+    }
+
+    fn get_short_token(&self) -> TokenStream {
+        if self.short.is_ascii_alphabetic() {
+            let c = self.short;
+            quote!(short = #c,)
+        } else {
+            quote!()
+        }
     }
 }
 
@@ -1687,6 +1695,10 @@ fn get_flags(name: &str) -> Result<Flags> {
 
     if name == "description" {
         flags.short = flags.short.to_ascii_uppercase();
+    } else if name == "hostname" || name == "size" {
+        flags.short = '0';
+    } else if name == "ncpus" {
+        flags.short = 'c';
     }
 
     Ok(flags)

@@ -19,10 +19,10 @@ pub struct CmdSubnetList {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
     #[doc = "The VPC_NAME that holds the subnets."]
-    #[clap(long, short, required = true)]
+    #[clap(long, short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -93,16 +93,16 @@ pub struct CmdSubnetCreate {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The VPC_NAME that holds the subnet."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 'v', default_value_t)]
     pub vpc: oxide_api::types::Name,
     #[doc = "The description that holds the subnet."]
     #[clap(long, short = 'D', default_value_t)]
     pub description: String,
     #[doc = "The IPv4 address range for this subnet.\n\nIt must be allocated from an RFC 1918 private address range, and must not overlap with any other existing subnet in the VPC."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 'i', default_value_t)]
     pub ipv4_block: oxide_api::types::Ipv4Net,
     #[doc = "The IPv6 address range for this subnet.\n\nIt must be allocated from the RFC 4193 Unique Local Address range, with the prefix equal to the parent VPC's prefix. A random `/64` block will be assigned if one is not provided. It must not overlap with any existing subnet in the VPC."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 'i', default_value_t)]
     pub ipv6_block: oxide_api::types::Ipv6Net,
 }
 
@@ -256,13 +256,13 @@ impl crate::cmd::Command for CmdSubnetCreate {
             )
             .await?;
         let cs = ctx.io.color_scheme();
-        let full_name = format!("{}/{}", self.organization, self.project);
+        let full_name = format!("{}/{}", organization, project);
         writeln!(
             ctx.io.out,
             "{} Created {} {} in {}",
             cs.success_icon(),
             "subnet",
-            self.subnet,
+            subnet,
             full_name
         )?;
         Ok(())
@@ -283,7 +283,7 @@ pub struct CmdSubnetView {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The VPC_NAME that holds the subnet."]
-    #[clap(long, short, required = true)]
+    #[clap(long, short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = "Open the subnet in the browser."]
     #[clap(short, long)]
@@ -340,7 +340,7 @@ pub struct CmdSubnetDelete {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The VPC_NAME that holds the subnet."]
-    #[clap(long, short, required = true)]
+    #[clap(long, short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = r" Confirm deletion without prompting."]
     #[clap(long)]

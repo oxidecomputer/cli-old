@@ -19,7 +19,7 @@ pub struct CmdInstanceList {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -87,16 +87,16 @@ pub struct CmdInstanceCreate {
     #[clap(long, short = 'D', default_value_t)]
     pub description: String,
     #[doc = "The hostname that holds the instance."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, default_value_t)]
     pub hostname: String,
     #[doc = "A count of bytes, typically used either for memory or storage capacity\n\nThe maximum supported byte count is [`i64::MAX`].  This makes it somewhat inconvenient to define constructors: a u32 constructor can be infallible, but an i64 constructor can fail (if the value is negative) and a u64 constructor can fail (if the value is larger than i64::MAX).  We provide all of these for consumers' convenience."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 'm', default_value_t)]
     pub memory: oxide_api::types::ByteCount,
     #[doc = "The number of CPUs in an Instance"]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 'c', default_value_t)]
     pub ncpus: oxide_api::types::InstanceCpuCount,
     #[doc = "The network interfaces to be created for this instance."]
-    #[clap(long, short)]
+    #[clap(long, short = 'n')]
     pub network_interfaces: Option<oxide_api::types::InstanceNetworkInterfaceAttachment>,
 }
 
@@ -118,7 +118,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
 
         if hostname.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "-h|--hostname required in non-interactive mode"
+                "--hostname required in non-interactive mode"
             ));
         }
 
@@ -136,7 +136,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
 
         if ncpus.is_zero() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "-n|--ncpus required in non-interactive mode"
+                "-c|--ncpus required in non-interactive mode"
             ));
         }
 
@@ -274,13 +274,13 @@ impl crate::cmd::Command for CmdInstanceCreate {
             )
             .await?;
         let cs = ctx.io.color_scheme();
-        let full_name = format!("{}/{}", self.organization, self.project);
+        let full_name = format!("{}/{}", organization, project);
         writeln!(
             ctx.io.out,
             "{} Created {} {} in {}",
             cs.success_icon(),
             "instance",
-            self.instance,
+            instance,
             full_name
         )?;
         Ok(())

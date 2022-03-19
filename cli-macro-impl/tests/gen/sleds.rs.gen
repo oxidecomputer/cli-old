@@ -11,7 +11,7 @@ enum SubCommand {
 #[clap(verbatim_doc_comment)]
 pub struct CmdSledList {
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 's', default_value_t)]
     pub sort_by: oxide_api::types::IdSortMode,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]

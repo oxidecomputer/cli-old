@@ -391,7 +391,7 @@ mod test {
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "-n|--ncpus required in non-interactive mode".to_string(),
+                want_err: "-c|--ncpus required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "create no memory".to_string(),

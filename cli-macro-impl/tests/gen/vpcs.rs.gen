@@ -19,7 +19,7 @@ pub struct CmdVpcList {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -87,10 +87,10 @@ pub struct CmdVpcCreate {
     #[clap(long, short = 'D', default_value_t)]
     pub description: String,
     #[doc = "Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 'd', default_value_t)]
     pub dns: oxide_api::types::Name,
     #[doc = "The IPv6 prefix for this VPC.\n\nAll IPv6 subnets created from this VPC must be taken from this range, which sould be a Unique Local Address in the range `fd00::/48`. The default VPC Subnet will have the first `/64` range from this prefix."]
-    #[clap(long, short, default_value_t)]
+    #[clap(long, short = 'i', default_value_t)]
     pub ipv6_prefix: oxide_api::types::Ipv6Net,
 }
 
@@ -224,13 +224,13 @@ impl crate::cmd::Command for CmdVpcCreate {
             )
             .await?;
         let cs = ctx.io.color_scheme();
-        let full_name = format!("{}/{}", self.organization, self.project);
+        let full_name = format!("{}/{}", organization, project);
         writeln!(
             ctx.io.out,
             "{} Created {} {} in {}",
             cs.success_icon(),
             "VPC",
-            self.vpc,
+            vpc,
             full_name
         )?;
         Ok(())
