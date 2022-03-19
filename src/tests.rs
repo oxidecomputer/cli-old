@@ -184,7 +184,6 @@ async fn test_main(ctx: &mut MainContext) {
             want_out: "✔ Logged in as ".to_string(),
             want_err: "".to_string(),
             want_code: 0,
-            ..Default::default()
         },
         TestItem {
             name: "api /session/me".to_string(),

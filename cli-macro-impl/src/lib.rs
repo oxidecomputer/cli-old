@@ -1040,6 +1040,8 @@ impl Operation {
 
             // TODO: for now skip any weird things and don't prompt for them
             // WE NEED TO FIX THIS
+            // Likely its one prompt for the type then another prompt for whatever the field
+            // requires.
             if n == "target" || n == "destination" {
                 continue;
             }
