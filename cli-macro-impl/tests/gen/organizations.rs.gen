@@ -74,7 +74,7 @@ impl crate::cmd::Command for CmdOrganizationCreate {
         let mut organization = self.organization.clone();
         if description.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "D|description required in non-interactive mode"
+                "-D|--description required in non-interactive mode"
             ));
         }
 

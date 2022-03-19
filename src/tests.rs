@@ -303,7 +303,7 @@ date:"#
                 "-D".to_string(),
                 "The Maze War game organization".to_string(),
             ],
-            want_out: "✔ Successfully created organization maze-war\n".to_string(),
+            want_out: "✔ Created organization maze-war\n".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -397,7 +397,7 @@ date:"#
                 "-D".to_string(),
                 "A sandy desert game".to_string(),
             ],
-            want_out: "✔ Successfully created organization dune\n".to_string(),
+            want_out: "✔ Created organization dune\n".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -475,7 +475,7 @@ date:"#
                 "-D".to_string(),
                 "The development project".to_string(),
             ],
-            want_out: "✔ Successfully created project maze-war/development".to_string(),
+            want_out: "✔ Created project maze-war/development".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -492,7 +492,7 @@ date:"#
                 "-D".to_string(),
                 "The production project".to_string(),
             ],
-            want_out: "✔ Successfully created project maze-war/production".to_string(),
+            want_out: "✔ Created project maze-war/production".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -652,7 +652,7 @@ date:"#
                 "--description".to_string(),
                 "My database".to_string(),
             ],
-            want_out: "✔ Successfully created instance my-db in maze-war/development\n".to_string(),
+            want_out: "✔ Created instance my-db in maze-war/development\n".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -677,7 +677,7 @@ date:"#
                 "--description".to_string(),
                 "My application".to_string(),
             ],
-            want_out: "✔ Successfully created instance my-app in maze-war/development\n".to_string(),
+            want_out: "✔ Created instance my-app in maze-war/development\n".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -852,7 +852,7 @@ date:"#
                 "-D".to_string(),
                 "My new disk".to_string(),
             ],
-            want_out: "✔ Successfully created disk new-disk in maze-war/development\n".to_string(),
+            want_out: "✔ Created disk new-disk in maze-war/development\n".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -875,7 +875,7 @@ date:"#
                 "-D".to_string(),
                 "My second new disk".to_string(),
             ],
-            want_out: "✔ Successfully created disk second-disk in maze-war/development\n".to_string(),
+            want_out: "✔ Created disk second-disk in maze-war/development\n".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -1048,7 +1048,7 @@ date:"#
                 "--description".to_string(),
                 "My new network".to_string(),
             ],
-            want_out: "✔ Successfully created VPC new-network in maze-war/development\n".to_string(),
+            want_out: "✔ Created VPC new-network in maze-war/development\n".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -1069,7 +1069,7 @@ date:"#
                 "--description".to_string(),
                 "My netns network".to_string(),
             ],
-            want_out: "✔ Successfully created VPC netns in maze-war/development\n".to_string(),
+            want_out: "✔ Created VPC netns in maze-war/development\n".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()

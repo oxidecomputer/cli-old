@@ -112,18 +112,20 @@ impl crate::cmd::Command for CmdInstanceCreate {
         let mut project = self.project.clone();
         if description.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "D|description required in non-interactive mode"
+                "-D|--description required in non-interactive mode"
             ));
         }
 
         if hostname.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "h|hostname required in non-interactive mode"
+                "-h|--hostname required in non-interactive mode"
             ));
         }
 
         if memory.is_zero() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("m|memory required in non-interactive mode"));
+            return Err(anyhow::anyhow!(
+                "-m|--memory required in non-interactive mode"
+            ));
         }
 
         if instance.is_empty() && !ctx.io.can_prompt() {
@@ -133,18 +135,20 @@ impl crate::cmd::Command for CmdInstanceCreate {
         }
 
         if ncpus.is_zero() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("n|ncpus required in non-interactive mode"));
+            return Err(anyhow::anyhow!(
+                "-n|--ncpus required in non-interactive mode"
+            ));
         }
 
         if organization.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "o|organization required in non-interactive mode"
+                "-o|--organization required in non-interactive mode"
             ));
         }
 
         if project.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "p|project required in non-interactive mode"
+                "-p|--project required in non-interactive mode"
             ));
         }
 

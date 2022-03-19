@@ -202,14 +202,14 @@ mod test {
                     disk: "things".to_string(),
                     organization: "".to_string(),
                     project: "".to_string(),
-                    description: "".to_string(),
+                    description: "foo bar".to_string(),
                     size: Default::default(),
                     snapshot: Default::default(),
                 }),
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "--organization,-o required in non-interactive mode".to_string(),
+                want_err: "-o|--organization required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "create no project".to_string(),
@@ -217,14 +217,14 @@ mod test {
                     disk: "things".to_string(),
                     organization: "foo".to_string(),
                     project: "".to_string(),
-                    description: "".to_string(),
+                    description: "balla".to_string(),
                     size: Default::default(),
                     snapshot: Default::default(),
                 }),
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "--project,-p required in non-interactive mode".to_string(),
+                want_err: "-p|--project required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "create no description".to_string(),
@@ -239,7 +239,7 @@ mod test {
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "--description,-D required in non-interactive mode".to_string(),
+                want_err: "-D|--description required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "create no size".to_string(),

@@ -177,7 +177,7 @@ mod test {
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "--description,-D required in non-interactive mode".to_string(),
+                want_err: "-D|--description required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "delete no --confirm non-interactive".to_string(),

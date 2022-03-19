@@ -926,7 +926,7 @@ impl Operation {
                 // Format like an argument not a flag.
                 format!("[{}]", n)
             } else {
-                let flags = get_flags(&n)?;
+                let flags = get_flags(n)?;
                 flags.format_help()
             };
 
@@ -1681,7 +1681,7 @@ fn get_flags(name: &str) -> Result<Flags> {
     }
 
     let mut flags = Flags {
-        short: name.to_lowercase().chars().nth(0).unwrap(),
+        short: name.to_lowercase().chars().next().unwrap(),
         long: to_kebab_case(name),
     };
 

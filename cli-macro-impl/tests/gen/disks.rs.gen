@@ -108,7 +108,7 @@ impl crate::cmd::Command for CmdDiskCreate {
         let mut size = self.size.clone();
         if description.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "D|description required in non-interactive mode"
+                "-D|--description required in non-interactive mode"
             ));
         }
 
@@ -118,18 +118,20 @@ impl crate::cmd::Command for CmdDiskCreate {
 
         if organization.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "o|organization required in non-interactive mode"
+                "-o|--organization required in non-interactive mode"
             ));
         }
 
         if project.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
-                "p|project required in non-interactive mode"
+                "-p|--project required in non-interactive mode"
             ));
         }
 
         if size.is_zero() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("s|size required in non-interactive mode"));
+            return Err(anyhow::anyhow!(
+                "-s|--size required in non-interactive mode"
+            ));
         }
 
         let client = ctx.api_client("")?;
