@@ -105,9 +105,10 @@ fn load_api_spec() -> Result<openapiv3::OpenAPI> {
 
 trait ReferenceOrExt<T> {
     fn item(&self) -> Result<&T>;
+    fn recurse(&self) -> Result<openapiv3::Schema>;
     fn reference(&self) -> Result<String>;
     fn reference_render_type(&self) -> Result<TokenStream>;
-    fn get_schema_from_reference(&self) -> Result<openapiv3::Schema>;
+    fn get_schema_from_reference(&self, recursive: bool) -> Result<openapiv3::Schema>;
     fn render_type(&self) -> Result<TokenStream>;
 }
 
@@ -115,6 +116,15 @@ impl<T: SchemaExt> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
     fn item(&self) -> Result<&T> {
         match self {
             openapiv3::ReferenceOr::Item(i) => Ok(i),
+            openapiv3::ReferenceOr::Reference { reference } => {
+                anyhow::bail!("reference not supported here: {}", reference);
+            }
+        }
+    }
+
+    fn recurse(&self) -> Result<openapiv3::Schema> {
+        match self {
+            openapiv3::ReferenceOr::Item(i) => Ok(i.recurse()?),
             openapiv3::ReferenceOr::Reference { reference } => {
                 anyhow::bail!("reference not supported here: {}", reference);
             }
@@ -140,7 +150,7 @@ impl<T: SchemaExt> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
         let rendered = quote!(oxide_api::types::#ident);
 
         // If we have a oneOf, we will want to make it an option.
-        let schema = self.get_schema_from_reference()?;
+        let schema = self.get_schema_from_reference(false)?;
         if let openapiv3::SchemaKind::OneOf { one_of: _ } = schema.schema_kind {
             return Ok(quote! {
                 Option<#rendered>
@@ -150,29 +160,43 @@ impl<T: SchemaExt> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
         Ok(quote!(#rendered))
     }
 
-    fn get_schema_from_reference(&self) -> Result<openapiv3::Schema> {
-        let name = self.reference()?;
+    fn get_schema_from_reference(&self, recursive: bool) -> Result<openapiv3::Schema> {
+        if let Ok(name) = self.reference() {
+            let spec = load_api_spec()?;
 
-        let spec = load_api_spec()?;
+            let components = spec
+                .components
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("components not found in spec"))?;
 
-        let components = spec
-            .components
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("components not found in spec"))?;
+            let schema = components
+                .schemas
+                .get(&name)
+                .ok_or_else(|| anyhow::anyhow!("could not find schema with name {}", name))?;
 
-        let schema = components
-            .schemas
-            .get(&name)
-            .ok_or_else(|| anyhow::anyhow!("could not find schema with name {}", name))?;
-
-        Ok(schema.item()?.clone())
+            match schema.item() {
+                Ok(s) => Ok(s.clone()),
+                Err(_) => schema.get_schema_from_reference(recursive),
+            }
+        } else {
+            if !recursive {
+                anyhow::bail!("item not supported here");
+            } else {
+                match self.recurse() {
+                    Ok(s) => Ok(s),
+                    Err(_) => self.get_schema_from_reference(recursive),
+                }
+            }
+        }
     }
 
     fn render_type(&self) -> Result<TokenStream> {
         if let Ok(t) = self.reference_render_type() {
             Ok(t)
         } else {
-            self.item()?.render_type()
+            let schema = self.item()?;
+
+            schema.render_type()
         }
     }
 }
@@ -227,10 +251,31 @@ impl ParameterExt for openapiv3::Parameter {
 }
 
 trait SchemaExt {
+    fn recurse(&self) -> Result<openapiv3::Schema>
+    where
+        Self: Sized;
     fn render_type(&self) -> Result<TokenStream>;
 }
 
 impl SchemaExt for openapiv3::Schema {
+    // If there is an allOf with only one item, we can just return that.
+    fn recurse(&self) -> Result<openapiv3::Schema> {
+        if let openapiv3::SchemaKind::AllOf { all_of } = &self.schema_kind {
+            if all_of.len() == 1 {
+                let first = all_of[0].clone();
+
+                let r = match first {
+                    openapiv3::ReferenceOr::Item(i) => i,
+                    openapiv3::ReferenceOr::Reference { reference: _ } => first.get_schema_from_reference(true)?,
+                };
+
+                return Ok(r);
+            }
+        }
+
+        Ok(self.clone())
+    }
+
     fn render_type(&self) -> Result<TokenStream> {
         match &self.schema_kind {
             openapiv3::SchemaKind::Type(openapiv3::Type::Boolean {}) => Ok(quote!(bool)),
@@ -380,24 +425,40 @@ impl SchemaExt for openapiv3::Schema {
 }
 
 impl SchemaExt for Box<openapiv3::Schema> {
+    fn recurse(&self) -> Result<openapiv3::Schema> {
+        anyhow::bail!("`recurse` not implemented for `Box<openapiv3::Schema>`")
+    }
+
     fn render_type(&self) -> Result<TokenStream> {
         anyhow::bail!("`render_type` not implemented for `Box<openapiv3::Schema>`")
     }
 }
 
 impl SchemaExt for openapiv3::PathItem {
+    fn recurse(&self) -> Result<openapiv3::Schema> {
+        anyhow::bail!("`recurse` not implemented for `PathItem`")
+    }
+
     fn render_type(&self) -> Result<TokenStream> {
         anyhow::bail!("`render_type` not implemented for `PathItem`")
     }
 }
 
 impl SchemaExt for openapiv3::RequestBody {
+    fn recurse(&self) -> Result<openapiv3::Schema> {
+        anyhow::bail!("`recurse` not implemented for `RequestBody`")
+    }
+
     fn render_type(&self) -> Result<TokenStream> {
         anyhow::bail!("`render_type` not implemented for `RequestBody`")
     }
 }
 
 impl SchemaExt for openapiv3::Parameter {
+    fn recurse(&self) -> Result<openapiv3::Schema> {
+        anyhow::bail!("`recurse` not implemented for `RequestBody`")
+    }
+
     fn render_type(&self) -> Result<TokenStream> {
         anyhow::bail!("`render_type` not implemented for `Parameter`")
     }
@@ -538,7 +599,7 @@ impl Operation {
             Ok(b) => b.clone(),
             Err(e) => {
                 if e.to_string().contains("reference") {
-                    schema.get_schema_from_reference()?
+                    schema.get_schema_from_reference(false)?
                 } else {
                     anyhow::bail!("could not get schema from request body: {}", e);
                 }
@@ -555,7 +616,7 @@ impl Operation {
                 Ok(s) => *s.clone(),
                 Err(e) => {
                     if e.to_string().contains("reference") {
-                        prop.get_schema_from_reference()?
+                        prop.get_schema_from_reference(false)?
                     } else {
                         anyhow::bail!("could not get schema from prop `{}`: {}", key, e);
                     }
@@ -845,12 +906,17 @@ impl Operation {
             let is_check = if rendered.starts_with("Option<") {
                 format_ident!("{}", "is_none")
             } else {
-                rendered = if let Ok(s) = t.get_schema_from_reference() {
-                    let r = get_text(&s.render_type()?)?;
-                    println!("REFERENCE: {} -> {}", rendered, r);
-                    r
-                } else {
-                    rendered.to_string()
+                rendered = match t.get_schema_from_reference(true) {
+                    Ok(s) => {
+                        let r = get_text(&s.render_type()?)?;
+                        println!("REFERENCE: {} -> {} {}", rendered, r, tag);
+                        r
+                    }
+                    Err(e) => {
+                        let thing = t.item()?.render_type()?;
+                        println!("REFERENCE: {} -> {} {} .. {:?}\n\t{:?}", rendered, thing, tag, e, t);
+                        rendered.to_string()
+                    }
                 };
 
                 if rendered.starts_with('u') || rendered.starts_with('i') || rendered.starts_with('f') {

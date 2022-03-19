@@ -126,7 +126,7 @@ impl crate::cmd::Command for CmdDiskCreate {
             return Err(anyhow::anyhow!("project required in non-interactive mode"));
         }
 
-        if size.is_empty() && !ctx.io.can_prompt() {
+        if size.is_zero() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!("size required in non-interactive mode"));
         }
 
