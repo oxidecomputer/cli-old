@@ -148,7 +148,8 @@ mod test {
                     project: "".to_string(),
                     description: "".to_string(),
                     dns: "".to_string(),
-                    ipv6_prefix: default::default(),
+                    ipv6_prefix: Default::default(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
@@ -163,7 +164,8 @@ mod test {
                     project: "".to_string(),
                     description: "".to_string(),
                     dns: "".to_string(),
-                    ipv6_prefix: default::default(),
+                    ipv6_prefix: Default::default(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
@@ -178,7 +180,8 @@ mod test {
                     project: "".to_string(),
                     description: "".to_string(),
                     dns: "".to_string(),
-                    ipv6_prefix: default::default(),
+                    ipv6_prefix: Default::default(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
@@ -193,7 +196,8 @@ mod test {
                     project: "bar".to_string(),
                     description: "".to_string(),
                     dns: "".to_string(),
-                    ipv6_prefix: default::default(),
+                    ipv6_prefix: Default::default(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
@@ -208,7 +212,8 @@ mod test {
                     project: "bar".to_string(),
                     description: "blah blah".to_string(),
                     dns: "".to_string(),
-                    ipv6_prefix: default::default(),
+                    ipv6_prefix: Default::default(),
+                    network_interfaces: Default::default(),
                 }),
 
                 stdin: "".to_string(),
