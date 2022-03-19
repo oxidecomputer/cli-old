@@ -1695,7 +1695,7 @@ fn get_flags(name: &str) -> Result<Flags> {
 
     if name == "description" {
         flags.short = flags.short.to_ascii_uppercase();
-    } else if name == "hostname" || name == "size" {
+    } else if name == "hostname" || name == "size" || name == "dns" {
         flags.short = '0';
     } else if name == "ncpus" {
         flags.short = 'c';

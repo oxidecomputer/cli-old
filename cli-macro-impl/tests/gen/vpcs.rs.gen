@@ -109,7 +109,7 @@ impl crate::cmd::Command for CmdVpcCreate {
         }
 
         if dns.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("-d|--dns required in non-interactive mode"));
+            return Err(anyhow::anyhow!("--dns required in non-interactive mode"));
         }
 
         if vpc.is_empty() && !ctx.io.can_prompt() {
