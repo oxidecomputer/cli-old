@@ -344,16 +344,16 @@ pub struct CmdSubnetEdit {
     #[clap(long = "vpc-name", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = "The new description for the subnet."]
-    #[clap(long = "description", short = 'D', required = false)]
+    #[clap(long = "description", short = 'D', required = false, default_value_t)]
     pub new_description: String,
     #[doc = "The new ipv4 block for the subnet."]
-    #[clap(long = "ipv-4-block", short = 'i', required = false)]
+    #[clap(long = "ipv-4-block", short = 'i', required = false, default_value_t)]
     pub new_ipv4_block: oxide_api::types::Ipv4Net,
     #[doc = "The new ipv6 block for the subnet."]
-    #[clap(long = "ipv-6-block", short = 'i', required = false)]
+    #[clap(long = "ipv-6-block", short = 'i', required = false, default_value_t)]
     pub new_ipv6_block: oxide_api::types::Ipv6Net,
     #[doc = "The new name for the subnet."]
-    #[clap(long = "name", short = 'n', required = false)]
+    #[clap(long = "name", short = 'n', required = false, default_value_t)]
     pub new_name: oxide_api::types::Name,
 }
 

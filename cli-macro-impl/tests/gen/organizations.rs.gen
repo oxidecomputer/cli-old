@@ -186,10 +186,10 @@ pub struct CmdOrganizationEdit {
     #[clap(name = "organization", required = true)]
     pub organization: String,
     #[doc = "The new description for the organization."]
-    #[clap(long = "description", short = 'D', required = false)]
+    #[clap(long = "description", short = 'D', required = false, default_value_t)]
     pub new_description: String,
     #[doc = "The new name for the organization."]
-    #[clap(long = "name", short = 'n', required = false)]
+    #[clap(long = "name", short = 'n', required = false, default_value_t)]
     pub new_name: oxide_api::types::Name,
 }
 

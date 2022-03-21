@@ -379,13 +379,13 @@ pub struct CmdRouteEdit {
     #[clap(long = "vpc-name", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = "The new description for the route."]
-    #[clap(long = "description", short = 'D', required = false)]
+    #[clap(long = "description", short = 'D', required = false, default_value_t)]
     pub new_description: String,
     #[doc = "A `RouteDestination` is used to match traffic with a routing rule, on the destination of that traffic.\n\nWhen traffic is to be sent to a destination that is within a given `RouteDestination`, the corresponding [`RouterRoute`] applies, and traffic will be forward to the [`RouteTarget`] for that rule."]
     #[clap(long = "destination", required = true)]
     pub new_destination: Option<oxide_api::types::RouteDestination>,
     #[doc = "The new name for the route."]
-    #[clap(long = "name", short = 'n', required = false)]
+    #[clap(long = "name", short = 'n', required = false, default_value_t)]
     pub new_name: oxide_api::types::Name,
     #[doc = "A `RouteTarget` describes the possible locations that traffic matching a route destination can be sent."]
     #[clap(long = "target", short = 't', required = true)]

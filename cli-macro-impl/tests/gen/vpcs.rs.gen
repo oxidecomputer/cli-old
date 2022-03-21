@@ -308,13 +308,13 @@ pub struct CmdVpcEdit {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The new description for the VPC."]
-    #[clap(long = "description", short = 'D', required = false)]
+    #[clap(long = "description", short = 'D', required = false, default_value_t)]
     pub new_description: String,
     #[doc = "The new DNS name for the VPC."]
-    #[clap(long = "dns-name", required = false)]
+    #[clap(long = "dns-name", required = false, default_value_t)]
     pub new_dns_name: oxide_api::types::Name,
     #[doc = "The new name for the VPC."]
-    #[clap(long = "name", short = 'n', required = false)]
+    #[clap(long = "name", short = 'n', required = false, default_value_t)]
     pub new_name: oxide_api::types::Name,
 }
 

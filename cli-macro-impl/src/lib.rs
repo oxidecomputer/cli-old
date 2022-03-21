@@ -918,7 +918,11 @@ impl Operation {
                 }
             }
         } else {
-            let required = if required { quote!(true) } else { quote!(false) };
+            let required = if required {
+                quote!(true)
+            } else {
+                quote!(false, default_value_t)
+            };
 
             quote! {
                 #[clap(#long_flag, #short_flag required = #required)]
