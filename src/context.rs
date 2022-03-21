@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anyhow::{anyhow, Result};
 
 use crate::{config::Config, config_file::get_env_var, types::FormatOutput};
