@@ -333,7 +333,7 @@ impl InstanceDetails {
         // Start the progress bar.
         let handle = ctx
             .io
-            .start_process_indicator_with_label(&format!("Waiting for instance status to be `{}`", status));
+            .start_process_indicator_with_label(&format!(" Waiting for instance status to be `{}`", status));
 
         let client = ctx.api_client(&self.host)?;
 
