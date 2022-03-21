@@ -16,9 +16,7 @@ pub struct CmdRoute {
     tag = "routes",
 }]
 #[derive(Parser, Debug, Clone)]
-enum SubCommand {
-    Edit(CmdRouteEdit),
-}
+enum SubCommand {}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdRoute {
@@ -30,18 +28,5 @@ impl crate::cmd::Command for CmdRoute {
             SubCommand::List(cmd) => cmd.run(ctx).await,
             SubCommand::View(cmd) => cmd.run(ctx).await,
         }
-    }
-}
-
-/// Edit route settings.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdRouteEdit {}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdRouteEdit {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet.");
-        Ok(())
     }
 }

@@ -1433,6 +1433,7 @@ impl Operation {
 
                     let result = client.#tag_ident().put(#(#api_call_params),*).await?;
 
+                    let cs = ctx.io.color_scheme();
                     #output
 
                     Ok(())

@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use clap::Parser;
 use cli_macro::crud_gen;
 
@@ -16,9 +16,7 @@ pub struct CmdOrganization {
     tag = "organizations",
 }]
 #[derive(Parser, Debug, Clone)]
-enum SubCommand {
-    Edit(CmdOrganizationEdit),
-}
+enum SubCommand {}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdOrganization {
@@ -30,73 +28,6 @@ impl crate::cmd::Command for CmdOrganization {
             SubCommand::List(cmd) => cmd.run(ctx).await,
             SubCommand::View(cmd) => cmd.run(ctx).await,
         }
-    }
-}
-
-/// Edit organization settings.
-#[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
-pub struct CmdOrganizationEdit {
-    /// The organization to edit.
-    #[clap(name = "organization", required = true)]
-    pub organization: String,
-
-    /// The new name for the organization.
-    #[clap(long = "name", short)]
-    pub new_name: Option<String>,
-
-    /// The new description for the organization.
-    #[clap(long = "description", short = 'D')]
-    pub new_description: Option<String>,
-}
-
-#[async_trait::async_trait]
-impl crate::cmd::Command for CmdOrganizationEdit {
-    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.new_name.is_none() && self.new_description.is_none() {
-            return Err(anyhow!("nothing to edit"));
-        }
-
-        let client = ctx.api_client("")?;
-
-        let mut body = oxide_api::types::OrganizationUpdate {
-            name: "".to_string(),
-            description: "".to_string(),
-        };
-
-        let mut name = self.organization.to_string();
-
-        if let Some(n) = &self.new_name {
-            body.name = n.to_string();
-            // Update the name, so when we print it out in the end, it's correct.
-            name = n.to_string();
-        }
-
-        if let Some(d) = &self.new_description {
-            body.description = d.to_string();
-        }
-
-        client.organizations().put(&self.organization, &body).await?;
-
-        let cs = ctx.io.color_scheme();
-        if let Some(n) = &self.new_name {
-            writeln!(
-                ctx.io.out,
-                "{} Successfully edited organization {} -> {}",
-                cs.success_icon(),
-                self.organization,
-                n
-            )?;
-        } else {
-            writeln!(
-                ctx.io.out,
-                "{} Successfully edited organization {}",
-                cs.success_icon(),
-                name
-            )?;
-        }
-
-        Ok(())
     }
 }
 
