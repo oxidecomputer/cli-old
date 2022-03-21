@@ -529,8 +529,9 @@ date:"#
                 "yaml".to_string(),
                 "--paginate".to_string(),
             ],
-            want_out: r#""name": "production",
-    "organization_id": ""#
+            want_out: r#"  name: production
+  description: The production project
+  organization_id:"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
