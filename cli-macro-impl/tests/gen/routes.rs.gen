@@ -404,6 +404,11 @@ impl crate::cmd::Command for CmdRouteEdit {
         }
 
         let client = ctx.api_client("")?;
+        let mut name = self.route.clone();
+        if !self.new_name.is_empty() {
+            name = self.new_name.to_string();
+        }
+
         let result = client
             .routes()
             .put(
@@ -420,6 +425,28 @@ impl crate::cmd::Command for CmdRouteEdit {
                 },
             )
             .await?;
+        let full_name = format!("{}/{}", self.organization, self.project);
+        if !self.new_name.is_empty() {
+            writeln!(
+                ctx.io.out,
+                "{} Edited {} {} -> {} in {}",
+                cs.success_icon(),
+                "route",
+                self.route,
+                self.new_name,
+                full_name
+            )?;
+        } else {
+            writeln!(
+                ctx.io.out,
+                "{} Edited {} {} in {}",
+                cs.success_icon_with_color(ansi_term::Color::Red),
+                "route",
+                self.route,
+                full_name
+            )?;
+        }
+
         Ok(())
     }
 }

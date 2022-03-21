@@ -329,6 +329,11 @@ impl crate::cmd::Command for CmdVpcEdit {
         }
 
         let client = ctx.api_client("")?;
+        let mut name = self.vpc.clone();
+        if !self.new_name.is_empty() {
+            name = self.new_name.to_string();
+        }
+
         let result = client
             .vpcs()
             .put(
@@ -342,6 +347,28 @@ impl crate::cmd::Command for CmdVpcEdit {
                 },
             )
             .await?;
+        let full_name = format!("{}/{}", self.organization, self.project);
+        if !self.new_name.is_empty() {
+            writeln!(
+                ctx.io.out,
+                "{} Edited {} {} -> {} in {}",
+                cs.success_icon(),
+                "VPC",
+                self.vpc,
+                self.new_name,
+                full_name
+            )?;
+        } else {
+            writeln!(
+                ctx.io.out,
+                "{} Edited {} {} in {}",
+                cs.success_icon_with_color(ansi_term::Color::Red),
+                "VPC",
+                self.vpc,
+                full_name
+            )?;
+        }
+
         Ok(())
     }
 }

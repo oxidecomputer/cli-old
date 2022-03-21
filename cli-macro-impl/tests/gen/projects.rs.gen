@@ -226,6 +226,11 @@ impl crate::cmd::Command for CmdProjectEdit {
         }
 
         let client = ctx.api_client("")?;
+        let mut name = self.project.clone();
+        if !self.new_name.is_empty() {
+            name = self.new_name.to_string();
+        }
+
         let result = client
             .projects()
             .put(
@@ -237,6 +242,27 @@ impl crate::cmd::Command for CmdProjectEdit {
                 },
             )
             .await?;
+        let full_name = format!("{}/{}", self.organization, self.project);
+        if !self.new_name.is_empty() {
+            writeln!(
+                ctx.io.out,
+                "{} Edited {} {} -> {}/{}",
+                cs.success_icon(),
+                "project",
+                full_name,
+                self.organization,
+                self.new_name
+            )?;
+        } else {
+            writeln!(
+                ctx.io.out,
+                "{} Edited {} {}",
+                cs.success_icon_with_color(ansi_term::Color::Red),
+                "project",
+                full_name
+            )?;
+        }
+
         Ok(())
     }
 }

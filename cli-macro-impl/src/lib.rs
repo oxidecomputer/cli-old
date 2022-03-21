@@ -787,6 +787,7 @@ impl Operation {
 
     /// Gets a list of all the string parameters for the operation.
     /// This includes the path parameters, query parameters, and request_body parameters.
+    #[allow(dead_code)]
     fn get_all_param_names_and_types(&self) -> Result<Vec<(String, openapiv3::ReferenceOr<openapiv3::Schema>)>> {
         let mut param_names = Vec::new();
 
@@ -1323,6 +1324,82 @@ impl Operation {
             i = i + 1;
         }
 
+        // We need to form the output back to the client.
+        let output = if self.is_parameter("organization") && self.is_parameter("project") {
+            let start = quote! {
+                let full_name = format!("{}/{}", self.organization, self.project);
+            };
+            if tag != "projects" {
+                quote! {
+                    #start
+                    if !self.new_name.is_empty() {
+                        writeln!(
+                            ctx.io.out,
+                            "{} Edited {} {} -> {} in {}",
+                            cs.success_icon(),
+                            #singular_tag_str,
+                            self.#singular_tag_lc,
+                            self.new_name,
+                            full_name
+                        )?;
+                    } else {
+                        writeln!(
+                            ctx.io.out,
+                            "{} Edited {} {} in {}",
+                            cs.success_icon_with_color(ansi_term::Color::Red),
+                            #singular_tag_str,
+                            self.#singular_tag_lc,
+                            full_name
+                        )?;
+                    }
+                }
+            } else {
+                quote! {
+                    #start
+                    if !self.new_name.is_empty() {
+                        writeln!(
+                            ctx.io.out,
+                            "{} Edited {} {} -> {}/{}",
+                            cs.success_icon(),
+                            #singular_tag_str,
+                            full_name,
+                            self.organization,
+                            self.new_name
+                        )?;
+                    } else {
+                        writeln!(
+                            ctx.io.out,
+                            "{} Edited {} {}",
+                            cs.success_icon_with_color(ansi_term::Color::Red),
+                            #singular_tag_str,
+                            full_name
+                        )?;
+                    }
+                }
+            }
+        } else {
+            quote! {
+                if !self.new_name.is_empty() {
+                    writeln!(
+                        ctx.io.out,
+                        "{} Edited {} {} -> {}",
+                        cs.success_icon(),
+                        #singular_tag_str,
+                        self.#singular_tag_lc,
+                        self.new_name
+                    )?;
+                } else {
+                    writeln!(
+                        ctx.io.out,
+                        "{} Edited {} {}",
+                        cs.success_icon_with_color(ansi_term::Color::Red),
+                        #singular_tag_str,
+                        self.#singular_tag_lc
+                    )?;
+                }
+            }
+        };
+
         let additional_struct_params = self.get_additional_struct_params(tag)?;
 
         let cmd = quote!(
@@ -1348,7 +1425,15 @@ impl Operation {
 
                     let client = ctx.api_client("")?;
 
+                    let mut name = self.#singular_tag_lc.clone();
+
+                    if !self.new_name.is_empty() {
+                        name = self.new_name.to_string();
+                    }
+
                     let result = client.#tag_ident().put(#(#api_call_params),*).await?;
+
+                    #output
 
                     Ok(())
                 }

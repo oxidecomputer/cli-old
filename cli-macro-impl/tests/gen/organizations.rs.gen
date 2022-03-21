@@ -201,6 +201,11 @@ impl crate::cmd::Command for CmdOrganizationEdit {
         }
 
         let client = ctx.api_client("")?;
+        let mut name = self.organization.clone();
+        if !self.new_name.is_empty() {
+            name = self.new_name.to_string();
+        }
+
         let result = client
             .organizations()
             .put(
@@ -211,6 +216,25 @@ impl crate::cmd::Command for CmdOrganizationEdit {
                 },
             )
             .await?;
+        if !self.new_name.is_empty() {
+            writeln!(
+                ctx.io.out,
+                "{} Edited {} {} -> {}",
+                cs.success_icon(),
+                "organization",
+                self.organization,
+                self.new_name
+            )?;
+        } else {
+            writeln!(
+                ctx.io.out,
+                "{} Edited {} {}",
+                cs.success_icon_with_color(ansi_term::Color::Red),
+                "organization",
+                self.organization
+            )?;
+        }
+
         Ok(())
     }
 }
