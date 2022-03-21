@@ -276,7 +276,7 @@ impl IoStreams {
         crate::colors::ColorScheme::new(self.color_enabled(), self.color_support_256(), self.has_true_color())
     }
 
-    pub fn write_json(&mut self, json: &serde_json::Value) -> Result<()> {
+    pub fn write_output_json(&mut self, json: &serde_json::Value) -> Result<()> {
         if self.color_enabled() {
             // Print the response body.
             writeln!(self.out, "{}", colored_json::to_colored_json_auto(json)?)?;
@@ -284,6 +284,27 @@ impl IoStreams {
             // Print the response body.
             writeln!(self.out, "{}", serde_json::to_string_pretty(json)?)?;
         }
+
+        Ok(())
+    }
+
+    pub fn write_output_table<T>(&mut self, value: &T, is_view: bool) -> Result<()> {
+        let table = if is_view {
+            // In view format we rotate the table since there is only one record.
+            tabled::Table::new(value).with(tabled::Style::psql()).to_string()
+        } else {
+            tabled::Table::new(vec![value])
+                .with(tabled::Rotate::Left)
+                .with(
+                    tabled::Modify::new(tabled::Full)
+                        .with(tabled::Alignment::left())
+                        .with(tabled::Alignment::top()),
+                )
+                .with(tabled::Style::psql().header_off())
+                .to_string()
+        };
+
+        writeln!(ctx.io.out, "{}", table)?;
 
         Ok(())
     }

@@ -1546,21 +1546,12 @@ impl Operation {
                     let result = client.#tag_ident().get(#(#api_call_params),*).await?;
 
                     if self.json {
-                        // If they specified --json, just dump the JSON.
-                        ctx.io.write_json(&serde_json::json!(result))?;
+                        // If they specified json as the output format, just dump the JSON.
+                        ctx.io.write_output_json(&serde_json::json!(result))?;
                         return Ok(());
                     }
 
-                    let table = tabled::Table::new(vec![result])
-                        .with(tabled::Rotate::Left)
-                        .with(tabled::Modify::new(tabled::Full)
-                            .with(tabled::Alignment::left())
-                            .with(tabled::Alignment::top())
-                        ).with(tabled::Style::psql().header_off()).to_string();
-
-                    writeln!(ctx.io.out, "{}", table)?;
-
-
+                    ctx.io.write_output_table(&result, true)?;
                     Ok(())
                 }
             }
@@ -1681,14 +1672,12 @@ impl Operation {
                 };
 
                 if self.json {
-                    // If they specified --json, just dump the JSON.
-                    ctx.io.write_json(&serde_json::json!(results))?;
+                    // If they specified json, just dump the JSON.
+                    ctx.io.write_output_json(&serde_json::json!(results))?;
                     return Ok(());
                 }
 
-                let table = tabled::Table::new(results).with(tabled::Style::psql()).to_string();
-                writeln!(ctx.io.out, "{}", table)?;
-
+                ctx.io.write_output_table(&results, false)?;
                 Ok(())
             }
         }

@@ -84,14 +84,12 @@ impl crate::cmd::Command for CmdInstanceDisks {
             .await?;
 
         if self.json {
-            // If they specified --json, just dump the JSON.
-            ctx.io.write_json(&serde_json::json!(disks))?;
+            // If they specified json, just dump the JSON.
+            ctx.io.write_output_json(&serde_json::json!(disks))?;
             return Ok(());
         }
 
-        let table = tabled::Table::new(disks).with(tabled::Style::psql()).to_string();
-        writeln!(ctx.io.out, "{}", table)?;
-
+        ctx.io.write_output_table(&result, false)?;
         Ok(())
     }
 }
