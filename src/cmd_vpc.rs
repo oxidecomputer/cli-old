@@ -144,7 +144,7 @@ mod test {
                     organization: "".to_string(),
                     project: "".to_string(),
                     paginate: false,
-                    json: false,
+                    format: None,
                 }),
 
                 stdin: "".to_string(),

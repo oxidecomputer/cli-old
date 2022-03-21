@@ -57,7 +57,7 @@ impl crate::cmd::Command for CmdInstanceList {
                 )
                 .await?
         };
-        let format = ctx.format(self.format)?;
+        let format = ctx.format(&self.format)?;
         ctx.io.write_output_for_vec(&format, &results)?;
         Ok(())
     }
@@ -315,7 +315,7 @@ impl crate::cmd::Command for CmdInstanceView {
             .instances()
             .get(&self.instance, &self.organization, &self.project)
             .await?;
-        let format = ctx.format(self.format)?;
+        let format = ctx.format(&self.format)?;
         ctx.io.write_output(&format, &result)?;
         Ok(())
     }

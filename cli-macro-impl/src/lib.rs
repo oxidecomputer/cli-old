@@ -1544,7 +1544,7 @@ impl Operation {
 
                     let result = client.#tag_ident().get(#(#api_call_params),*).await?;
 
-                    let format = ctx.format(self.format)?;
+                    let format = ctx.format(&self.format)?;
                     ctx.io.write_output(&format, &result)?;
                     Ok(())
                 }
@@ -1664,7 +1664,7 @@ impl Operation {
                         .await?
                 };
 
-                let format = ctx.format(self.format)?;
+                let format = ctx.format(&self.format)?;
                 ctx.io.write_output_for_vec(&format, &results)?;
                 Ok(())
             }

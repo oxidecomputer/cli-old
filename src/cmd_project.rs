@@ -103,7 +103,7 @@ mod test {
                     limit: 0,
                     organization: "".to_string(),
                     paginate: false,
-                    json: false,
+                    format: None,
                 }),
 
                 stdin: "".to_string(),

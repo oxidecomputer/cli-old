@@ -127,7 +127,7 @@ mod test {
                     sort_by: Default::default(),
                     limit: 0,
                     paginate: false,
-                    json: false,
+                    format: None,
                 }),
 
                 stdin: "".to_string(),
@@ -140,7 +140,7 @@ mod test {
                     sort_by: Default::default(),
                     limit: 30,
                     paginate: true,
-                    json: true,
+                    format: Some(crate::types::FormatOutput::Json),
                 }),
 
                 stdin: "".to_string(),

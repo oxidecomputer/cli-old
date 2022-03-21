@@ -49,7 +49,7 @@ impl crate::cmd::Command for CmdProjectList {
                 .get_page(self.limit, &self.organization, "", self.sort_by.clone())
                 .await?
         };
-        let format = ctx.format(self.format)?;
+        let format = ctx.format(&self.format)?;
         ctx.io.write_output_for_vec(&format, &results)?;
         Ok(())
     }
@@ -174,7 +174,7 @@ impl crate::cmd::Command for CmdProjectView {
             .projects()
             .get(&self.organization, &self.project)
             .await?;
-        let format = ctx.format(self.format)?;
+        let format = ctx.format(&self.format)?;
         ctx.io.write_output(&format, &result)?;
         Ok(())
     }

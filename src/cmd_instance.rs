@@ -79,7 +79,7 @@ impl crate::cmd::Command for CmdInstanceDisks {
             )
             .await?;
 
-        let format = ctx.format(self.format)?;
+        let format = ctx.format(&self.format)?;
         ctx.io.write_output_for_vec(&format, &results)?;
         Ok(())
     }
@@ -500,7 +500,7 @@ mod test {
                     organization: "".to_string(),
                     project: "".to_string(),
                     paginate: false,
-                    json: false,
+                    format: None,
                     sort_by: Default::default(),
                 }),
 

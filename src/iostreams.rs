@@ -426,10 +426,6 @@ impl IoStreams {
     }
 }
 
-fn type_of<T>(_: T) -> &'static str {
-    std::any::type_name::<T>()
-}
-
 #[cfg(test)]
 fn test_tty_size() -> Result<(i32, i32)> {
     Err(anyhow::anyhow!("tty_size not implemented in tests"))

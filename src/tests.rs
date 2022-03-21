@@ -335,13 +335,14 @@ date:"#
             ..Default::default()
         },
         TestItem {
-            name: "view an org --json".to_string(),
+            name: "view an org --format json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "org".to_string(),
                 "view".to_string(),
                 "maze-war".to_string(),
-                "--json".to_string(),
+                "--format".to_string(),
+                "json".to_string(),
             ],
             want_out: r#"{
   "description": "The Maze War game organization",
@@ -498,14 +499,34 @@ date:"#
             ..Default::default()
         },
         TestItem {
-            name: "list projects --json --paginate".to_string(),
+            name: "list projects --format json --paginate".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "project".to_string(),
                 "list".to_string(),
                 "--organization".to_string(),
                 "maze-war".to_string(),
-                "--json".to_string(),
+                "--format".to_string(),
+                "json".to_string(),
+                "--paginate".to_string(),
+            ],
+            want_out: r#""name": "production",
+    "organization_id": ""#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "list projects --format yaml --paginate".to_string(),
+            args: vec![
+                "oxide".to_string(),
+                "project".to_string(),
+                "list".to_string(),
+                "--organization".to_string(),
+                "maze-war".to_string(),
+                "--format".to_string(),
+                "yaml".to_string(),
                 "--paginate".to_string(),
             ],
             want_out: r#""name": "production",
@@ -565,7 +586,7 @@ date:"#
             ..Default::default()
         },
         TestItem {
-            name: "view a project --json".to_string(),
+            name: "view a project --format json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "project".to_string(),
@@ -573,7 +594,8 @@ date:"#
                 "--organization".to_string(),
                 "maze-war".to_string(),
                 "prod-for-reals".to_string(),
-                "--json".to_string(),
+                "--format".to_string(),
+                "json".to_string(),
             ],
             want_out: r#"{
   "description": "The real deal prod env",
@@ -703,7 +725,7 @@ date:"#
             ..Default::default()
         },
         TestItem {
-            name: "view an instance --json".to_string(),
+            name: "view an instance --format json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "instance".to_string(),
@@ -713,7 +735,8 @@ date:"#
                 "--project".to_string(),
                 "development".to_string(),
                 "my-app".to_string(),
-                "--json".to_string(),
+                "--format".to_string(),
+                "json".to_string(),
             ],
             want_out: r#"{
   "description": "My application",
@@ -725,7 +748,7 @@ date:"#
             ..Default::default()
         },
         TestItem {
-            name: "list instances --paginate --json".to_string(),
+            name: "list instances --paginate --format json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "instance".to_string(),
@@ -734,7 +757,8 @@ date:"#
                 "maze-war".to_string(),
                 "--project".to_string(),
                 "development".to_string(),
-                "--json".to_string(),
+                "--format".to_string(),
+                "json".to_string(),
                 "--paginate".to_string(),
             ],
             want_out: r#"[
@@ -883,7 +907,7 @@ date:"#
             ..Default::default()
         },
         TestItem {
-            name: "list disks --paginate --json".to_string(),
+            name: "list disks --paginate --format json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "disk".to_string(),
@@ -892,7 +916,8 @@ date:"#
                 "maze-war".to_string(),
                 "--project".to_string(),
                 "development".to_string(),
-                "--json".to_string(),
+                "--format".to_string(),
+                "json".to_string(),
                 "--paginate".to_string(),
             ],
             want_out: r#"[
@@ -979,7 +1004,7 @@ date:"#
             ..Default::default()
         },
         TestItem {
-            name: "view a disk --json".to_string(),
+            name: "view a disk --format json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "disk".to_string(),
@@ -989,7 +1014,8 @@ date:"#
                 "--project".to_string(),
                 "development".to_string(),
                 "new-disk".to_string(),
-                "--json".to_string(),
+                "--format".to_string(),
+                "json".to_string(),
             ],
             want_out: r#"{
   "description": "My new disk",
@@ -1152,7 +1178,7 @@ date:"#
             ..Default::default()
         },
         TestItem {
-            name: "view a vpc --json".to_string(),
+            name: "view a vpc --format json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "vpc".to_string(),
@@ -1162,7 +1188,8 @@ date:"#
                 "--project".to_string(),
                 "development".to_string(),
                 "netns2".to_string(),
-                "--json".to_string(),
+                "--format".to_string(),
+                "json".to_string(),
             ],
             want_out: r#"{
   "description": "The realest of  deals netns",
@@ -1192,7 +1219,7 @@ date:"#
             ..Default::default()
         },
         TestItem {
-            name: "list vpcs --paginate --json".to_string(),
+            name: "list vpcs --paginate --format json".to_string(),
             args: vec![
                 "oxide".to_string(),
                 "vpc".to_string(),
@@ -1201,7 +1228,8 @@ date:"#
                 "maze-war".to_string(),
                 "--project".to_string(),
                 "development".to_string(),
-                "--json".to_string(),
+                "--format".to_string(),
+                "json".to_string(),
                 "--paginate".to_string(),
             ],
             want_out: r#"[

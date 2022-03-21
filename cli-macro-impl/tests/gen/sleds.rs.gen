@@ -40,7 +40,7 @@ impl crate::cmd::Command for CmdSledList {
                 .get_page(self.limit, "", self.sort_by.clone())
                 .await?
         };
-        let format = ctx.format(self.format)?;
+        let format = ctx.format(&self.format)?;
         ctx.io.write_output_for_vec(&format, &results)?;
         Ok(())
     }
@@ -72,7 +72,7 @@ impl crate::cmd::Command for CmdSledView {
 
         let client = ctx.api_client("")?;
         let result = client.sleds().get(&self.sled).await?;
-        let format = ctx.format(self.format)?;
+        let format = ctx.format(&self.format)?;
         ctx.io.write_output(&format, &result)?;
         Ok(())
     }

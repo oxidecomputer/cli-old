@@ -113,9 +113,9 @@ impl Context<'_> {
 
     /// Return the configured output format or override the default with the value passed in,
     /// if it is some.
-    pub fn format(&self, format: Option<FormatOutput>) -> Result<FormatOutput> {
+    pub fn format(&self, format: &Option<FormatOutput>) -> Result<FormatOutput> {
         if let Some(format) = format {
-            Ok(format)
+            Ok(format.clone())
         } else {
             let value = self.config.get("", "format")?;
             FormatOutput::from_str(&value)
