@@ -196,6 +196,10 @@ pub struct CmdOrganizationEdit {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdOrganizationEdit {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if self.new_description.is_empty() && self.new_name.is_empty() {
+            return Err(anyhow::anyhow!("nothing to edit"));
+        }
+
         let client = ctx.api_client("")?;
         let result = client
             .organizations()

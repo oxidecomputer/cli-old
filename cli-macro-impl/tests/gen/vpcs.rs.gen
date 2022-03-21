@@ -321,6 +321,13 @@ pub struct CmdVpcEdit {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdVpcEdit {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if self.new_description.is_empty()
+            && self.new_dns_name.is_empty()
+            && self.new_name.is_empty()
+        {
+            return Err(anyhow::anyhow!("nothing to edit"));
+        }
+
         let client = ctx.api_client("")?;
         let result = client
             .vpcs()

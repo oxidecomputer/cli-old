@@ -785,6 +785,29 @@ impl Operation {
         Ok(api_call_params)
     }
 
+    /// Gets a list of all the string parameters for the operation.
+    /// This includes the path parameters, query parameters, and request_body parameters.
+    fn get_all_param_names_and_types(&self) -> Result<Vec<(String, openapiv3::ReferenceOr<openapiv3::Schema>)>> {
+        let mut param_names = Vec::new();
+
+        for (param, p) in self.get_parameters()? {
+            let data = if let Some(data) = p.data() {
+                data
+            } else {
+                continue;
+            };
+            param_names.push((param.to_string(), data.format.schema()?));
+        }
+
+        for (param, p) in self.get_request_body_properties()? {
+            param_names.push((param.to_string(), p.schema));
+        }
+
+        param_names.sort_by(|a, b| a.0.cmp(&b.0));
+
+        Ok(param_names)
+    }
+
     /// Gets a list of all the required string parameters for the operation.
     /// This includes the path parameters, query parameters, and request_body parameters.
     fn get_all_required_param_names_and_types(
@@ -1266,6 +1289,40 @@ impl Operation {
             quote!()
         };
 
+        let mut check_nothing_to_edit = quote!(if);
+        let mut i = 0;
+        let req_body_properties = self.get_request_body_properties()?;
+        for (p, v) in &req_body_properties {
+            if skip_defaults(&p, tag) {
+                // Skip the defaults.
+                continue;
+            }
+
+            let n = clean_param_name(&p);
+            let p = format_ident!("{}", n);
+
+            let is_check = v.schema.get_is_check_fn()?;
+
+            check_nothing_to_edit = quote! {
+                #check_nothing_to_edit self.#p.#is_check()
+            };
+
+            if i < req_body_properties.len() - 1 {
+                // Add the && if we need it.
+                check_nothing_to_edit = quote! {
+                    #check_nothing_to_edit &&
+                };
+            } else {
+                check_nothing_to_edit = quote! {
+                    #check_nothing_to_edit {
+                        return Err(anyhow::anyhow!("nothing to edit"));
+                    }
+                };
+            }
+
+            i = i + 1;
+        }
+
         let additional_struct_params = self.get_additional_struct_params(tag)?;
 
         let cmd = quote!(
@@ -1287,6 +1344,7 @@ impl Operation {
             #[async_trait::async_trait]
             impl crate::cmd::Command for #struct_name {
                 async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+                    #check_nothing_to_edit
 
                     let client = ctx.api_client("")?;
 

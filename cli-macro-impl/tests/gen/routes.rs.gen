@@ -395,6 +395,14 @@ pub struct CmdRouteEdit {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdRouteEdit {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if self.new_description.is_empty()
+            && self.new_destination.is_none()
+            && self.new_name.is_empty()
+            && self.new_target.is_none()
+        {
+            return Err(anyhow::anyhow!("nothing to edit"));
+        }
+
         let client = ctx.api_client("")?;
         let result = client
             .routes()
