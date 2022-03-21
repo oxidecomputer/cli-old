@@ -5,6 +5,7 @@ enum SubCommand {
     Create(CmdSubnetCreate),
     #[clap(alias = "get")]
     View(CmdSubnetView),
+    Edit(CmdSubnetEdit),
     Delete(CmdSubnetDelete),
 }
 
@@ -19,10 +20,10 @@ pub struct CmdSubnetList {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short = 's', default_value_t)]
+    #[clap(long = "sort-by", short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
     #[doc = "The VPC that holds the subnets."]
-    #[clap(long, short = 'v', required = true)]
+    #[clap(long = "vpc-name", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -93,16 +94,16 @@ pub struct CmdSubnetCreate {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The VPC that holds the subnet."]
-    #[clap(long, short = 'v', default_value_t)]
+    #[clap(long = "vpc-name", short = 'v', default_value_t)]
     pub vpc: oxide_api::types::Name,
     #[doc = "The description for the subnet."]
-    #[clap(long, short = 'D', default_value_t)]
+    #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
     #[doc = "The IPv4 address range for this subnet.\n\nIt must be allocated from an RFC 1918 private address range, and must not overlap with any other existing subnet in the VPC."]
-    #[clap(long, short = 'i', default_value_t)]
+    #[clap(long = "ipv-4-block", short = 'i', default_value_t)]
     pub ipv4_block: oxide_api::types::Ipv4Net,
     #[doc = "The IPv6 address range for this subnet.\n\nIt must be allocated from the RFC 4193 Unique Local Address range, with the prefix equal to the parent VPC's prefix. A random `/64` block will be assigned if one is not provided. It must not overlap with any existing subnet in the VPC."]
-    #[clap(long, short = 'i', default_value_t)]
+    #[clap(long = "ipv-6-block", short = 'i', default_value_t)]
     pub ipv6_block: oxide_api::types::Ipv6Net,
 }
 
@@ -283,7 +284,7 @@ pub struct CmdSubnetView {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The VPC that holds the subnet."]
-    #[clap(long, short = 'v', required = true)]
+    #[clap(long = "vpc-name", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = "Open the subnet in the browser."]
     #[clap(short, long)]
@@ -326,6 +327,59 @@ impl crate::cmd::Command for CmdSubnetView {
     }
 }
 
+#[doc = "Edit subnet settings."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdSubnetEdit {
+    #[doc = "The subnet to edit. Can be an ID or name."]
+    #[clap(name = "subnet", required = true)]
+    pub subnet: String,
+    #[doc = "The project that holds the subnet."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "The VPC that holds the subnet."]
+    #[clap(long = "vpc-name", short = 'v', required = true)]
+    pub vpc: oxide_api::types::Name,
+    #[doc = "The new description for the subnet."]
+    #[clap(long = "description", short = 'D', required = false)]
+    pub new_description: String,
+    #[doc = "The new ipv4 block for the subnet."]
+    #[clap(long = "ipv-4-block", short = 'i', required = false)]
+    pub new_ipv4_block: oxide_api::types::Ipv4Net,
+    #[doc = "The new ipv6 block for the subnet."]
+    #[clap(long = "ipv-6-block", short = 'i', required = false)]
+    pub new_ipv6_block: oxide_api::types::Ipv6Net,
+    #[doc = "The new name for the subnet."]
+    #[clap(long = "name", short = 'n', required = false)]
+    pub new_name: oxide_api::types::Name,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdSubnetEdit {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let client = ctx.api_client("")?;
+        let result = client
+            .subnets()
+            .put(
+                &self.organization,
+                &self.project,
+                &self.subnet,
+                &self.vpc,
+                &oxide_api::types::VpcSubnetUpdate {
+                    description: self.new_description.clone(),
+                    ipv4_block: self.new_ipv4_block.clone(),
+                    ipv6_block: self.new_ipv6_block.clone(),
+                    name: self.new_name.clone(),
+                },
+            )
+            .await?;
+        Ok(())
+    }
+}
+
 #[doc = "Delete subnet."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
@@ -340,7 +394,7 @@ pub struct CmdSubnetDelete {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The VPC that holds the subnet."]
-    #[clap(long, short = 'v', required = true)]
+    #[clap(long = "vpc-name", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = r" Confirm deletion without prompting."]
     #[clap(long)]

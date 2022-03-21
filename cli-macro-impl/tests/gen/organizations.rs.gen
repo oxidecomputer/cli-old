@@ -5,6 +5,7 @@ enum SubCommand {
     Create(CmdOrganizationCreate),
     #[clap(alias = "get")]
     View(CmdOrganizationView),
+    Edit(CmdOrganizationEdit),
     Delete(CmdOrganizationDelete),
 }
 
@@ -13,7 +14,7 @@ enum SubCommand {
 #[clap(verbatim_doc_comment)]
 pub struct CmdOrganizationList {
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short = 's', default_value_t)]
+    #[clap(long = "sort-by", short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameOrIdSortMode,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -63,7 +64,7 @@ pub struct CmdOrganizationCreate {
     #[clap(name = "organization", required = true)]
     pub organization: String,
     #[doc = "The description for the organization."]
-    #[clap(long, short = 'D', default_value_t)]
+    #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
 }
 
@@ -173,6 +174,39 @@ impl crate::cmd::Command for CmdOrganizationView {
             .with(tabled::Style::psql().header_off())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "Edit organization settings."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdOrganizationEdit {
+    #[doc = "The organization to edit. Can be an ID or name."]
+    #[clap(name = "organization", required = true)]
+    pub organization: String,
+    #[doc = "The new description for the organization."]
+    #[clap(long = "description", short = 'D', required = false)]
+    pub new_description: String,
+    #[doc = "The new name for the organization."]
+    #[clap(long = "name", short = 'n', required = false)]
+    pub new_name: oxide_api::types::Name,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdOrganizationEdit {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let client = ctx.api_client("")?;
+        let result = client
+            .organizations()
+            .put(
+                &self.organization,
+                &oxide_api::types::OrganizationUpdate {
+                    description: self.new_description.clone(),
+                    name: self.new_name.clone(),
+                },
+            )
+            .await?;
         Ok(())
     }
 }

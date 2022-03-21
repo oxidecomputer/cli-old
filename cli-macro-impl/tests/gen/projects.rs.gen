@@ -5,6 +5,7 @@ enum SubCommand {
     Create(CmdProjectCreate),
     #[clap(alias = "get")]
     View(CmdProjectView),
+    Edit(CmdProjectEdit),
     Delete(CmdProjectDelete),
 }
 
@@ -16,7 +17,7 @@ pub struct CmdProjectList {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short = 's', default_value_t)]
+    #[clap(long = "sort-by", short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameOrIdSortMode,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -72,7 +73,7 @@ pub struct CmdProjectCreate {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The description for the project."]
-    #[clap(long, short = 'D', default_value_t)]
+    #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
 }
 
@@ -195,6 +196,43 @@ impl crate::cmd::Command for CmdProjectView {
             .with(tabled::Style::psql().header_off())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "Edit project settings."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdProjectEdit {
+    #[doc = "The project to edit. Can be an ID or name."]
+    #[clap(name = "project", required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "The new description for the project."]
+    #[clap(long = "description", short = 'D', required = false)]
+    pub new_description: String,
+    #[doc = "The new name for the project."]
+    #[clap(long = "name", short = 'n', required = false)]
+    pub new_name: oxide_api::types::Name,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdProjectEdit {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let client = ctx.api_client("")?;
+        let result = client
+            .projects()
+            .put(
+                &self.organization,
+                &self.project,
+                &oxide_api::types::ProjectUpdate {
+                    description: self.new_description.clone(),
+                    name: self.new_name.clone(),
+                },
+            )
+            .await?;
         Ok(())
     }
 }

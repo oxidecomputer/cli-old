@@ -23,7 +23,7 @@ pub struct CmdDiskList {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short = 's', default_value_t)]
+    #[clap(long = "sort-by", short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -88,13 +88,13 @@ pub struct CmdDiskCreate {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The description for the disk."]
-    #[clap(long, short = 'D', default_value_t)]
+    #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
     #[doc = "size of the Disk"]
-    #[clap(long, default_value_t)]
+    #[clap(long = "size", default_value_t)]
     pub size: oxide_api::types::ByteCount,
     #[doc = "id for snapshot from which the Disk should be created, if any"]
-    #[clap(long, short = 's', default_value_t)]
+    #[clap(long = "snapshot-id", short = 's', default_value_t)]
     pub snapshot: uuid::Uuid,
 }
 

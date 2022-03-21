@@ -55,6 +55,18 @@ pub fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
             // Clap with alphabetize the help text subcommands so it is fine to just shove
             // the variants on the end.
             variants.push(view_enum_item);
+        } else if op.is_root_level_operation(&params.tag) && op.method == "PUT" {
+            let (edit_cmd, edit_enum_item) = op.generate_edit_command(&params.tag)?;
+
+            commands = quote! {
+                #commands
+
+                #edit_cmd
+            };
+
+            // Clap with alphabetize the help text subcommands so it is fine to just shove
+            // the variants on the end.
+            variants.push(edit_enum_item);
         } else if op.is_root_create_operation(&params.tag) {
             let (create_cmd, create_enum_item) = op.generate_create_command(&params.tag)?;
 
@@ -634,6 +646,8 @@ impl Operation {
         };
 
         for (key, prop) in obj.properties.iter() {
+            let mut key = key.to_string();
+
             let s = match prop.item() {
                 Ok(s) => *s.clone(),
                 Err(e) => {
@@ -645,11 +659,17 @@ impl Operation {
                 }
             };
 
+            if self.method == "PUT" {
+                // We add the `new_` part onto the parameter since it will be
+                // overwriting an existing field.
+                key = format!("new_{}", key);
+            }
+
             properties.insert(
                 key.clone(),
                 Property {
                     schema: prop.clone().unbox(),
-                    required: obj.required.contains(key),
+                    required: obj.required.contains(&key),
                     description: s.schema_data.description,
                 },
             );
@@ -686,6 +706,8 @@ impl Operation {
         params.sort();
 
         for p in params {
+            let mut p = p.to_string();
+
             if p == "page_token" {
                 api_call_params.push(quote!(""));
                 continue;
@@ -696,7 +718,9 @@ impl Operation {
                 continue;
             }
 
-            let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
+            p = clean_param_name(&p);
+
+            let p = format_ident!("{}", p);
 
             if p == "sort_by" {
                 // Sort by is an enum so we don't want to "&" it
@@ -711,10 +735,19 @@ impl Operation {
         if !req_body_properties.is_empty() {
             let mut req_body_rendered = Vec::new();
             for (p, v) in req_body_properties {
-                let p_og = format_ident!("{}", p);
+                let mut n = p.to_string();
 
-                let new = if p == "name" { singular(tag) } else { p.to_string() };
-                let p_short = format_ident!("{}", new.trim_end_matches("_name").trim_end_matches("_id"));
+                if self.method == "PUT" {
+                    n = n.trim_start_matches("new_").to_string();
+                }
+
+                let p_og = format_ident!("{}", n);
+
+                let mut new = if p == "name" { singular(tag) } else { p.to_string() };
+
+                new = clean_param_name(&new);
+
+                let p_short = format_ident!("{}", new);
 
                 let rendered = get_text(&v.schema.render_type()?)?;
 
@@ -799,27 +832,35 @@ impl Operation {
             return Ok(quote!());
         }
 
-        let name_cleaned = name.trim_end_matches("_name").trim_end_matches("_id");
+        let name_cleaned = clean_param_name(&name);
+
         let name_ident = format_ident!("{}", name_cleaned);
+
+        let n = if name_cleaned == "vpc" {
+            name_cleaned.to_uppercase()
+        } else {
+            name_cleaned.to_string()
+        };
+
+        let singular_tag = singular(tag);
+        let prop = if singular_tag == "vpc" {
+            singular_tag.to_uppercase()
+        } else {
+            singular_tag
+        };
 
         let doc = if let Some(desc) = description {
             desc
         } else if name == "sort_by" {
             "The order in which to sort the results.".to_string()
+        } else if name.starts_with("new_") {
+            format!(
+                "The new {} for the {}.",
+                n.trim_start_matches("new_").replace('_', " "),
+                prop
+            )
+            .replace(" dns ", " DNS ")
         } else {
-            let n = if name_cleaned == "vpc" {
-                name_cleaned.to_uppercase()
-            } else {
-                name_cleaned.to_string()
-            };
-
-            let singular_tag = singular(tag);
-            let prop = if singular_tag == "vpc" {
-                singular_tag.to_uppercase()
-            } else {
-                singular_tag
-            };
-
             if name == "description" {
                 format!("The description for the {}.", prop)
             } else if self.is_root_list_operation(tag) {
@@ -835,24 +876,25 @@ impl Operation {
         let flags = get_flags(name)?;
 
         let short_flag = flags.get_short_token();
+        let long_flag = flags.get_long_token();
 
         let clap_line = if self.method == "POST" || name == "sort_by" {
             // On create, we want to set default values for the parameters.
             if rendered.starts_with("Option<") {
                 // A default value there is pretty much always going to be None.
                 quote! {
-                    #[clap(long, #short_flag)]
+                    #[clap(#long_flag, #short_flag)]
                 }
             } else {
                 quote! {
-                    #[clap(long, #short_flag default_value_t)]
+                    #[clap(#long_flag, #short_flag default_value_t)]
                 }
             }
         } else {
             let required = if required { quote!(true) } else { quote!(false) };
 
             quote! {
-                #[clap(long, #short_flag required = #required)]
+                #[clap(#long_flag, #short_flag required = #required)]
             }
         };
 
@@ -910,11 +952,14 @@ impl Operation {
 
         let mut mutable_variables: Vec<TokenStream> = Vec::new();
         for (p, _) in self.get_all_required_param_names_and_types()? {
-            let p = if p == "name" { singular(tag) } else { p };
-            let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
+            let mut p = if p == "name" { singular(tag) } else { p };
+
+            p = clean_param_name(&p);
+
+            let ident = format_ident!("{}", p);
 
             mutable_variables.push(quote!(
-                let mut #p = self.#p.clone();
+                let mut #ident = self.#ident.clone();
             ));
         }
 
@@ -923,14 +968,16 @@ impl Operation {
         let mut required_checks: Vec<TokenStream> = Vec::new();
         for (p, t) in self.get_all_required_param_names_and_types()? {
             let p = if p == "name" { singular(tag) } else { p };
-            let n = p.trim_end_matches("_name").trim_end_matches("_id");
+
+            let n = clean_param_name(&p);
+
             let p = format_ident!("{}", n);
 
             let formatted = if n == singular(tag) {
                 // Format like an argument not a flag.
                 format!("[{}]", n)
             } else {
-                let flags = get_flags(n)?;
+                let flags = get_flags(&n)?;
                 flags.format_help()
             };
 
@@ -1045,8 +1092,9 @@ impl Operation {
 
         let mut additional_prompts: Vec<TokenStream> = Vec::new();
         for (p, v) in self.get_all_required_param_names_and_types()? {
-            let n = p.trim_end_matches("_name").trim_end_matches("_id");
-            if skip_defaults(n, tag) {
+            let n = clean_param_name(&p);
+
+            if skip_defaults(&n, tag) {
                 // Skip the prompt.
                 continue;
             }
@@ -1174,6 +1222,84 @@ impl Operation {
         );
 
         let enum_item: syn::Variant = syn::parse2(quote!(Create(#struct_name)))?;
+
+        Ok((cmd, enum_item))
+    }
+
+    /// Generate the edit command.
+    fn generate_edit_command(&self, tag: &str) -> Result<(TokenStream, syn::Variant)> {
+        let tag_ident = format_ident!("{}", tag);
+        let singular_tag_str = if tag == "vpcs" {
+            singular(tag).to_uppercase()
+        } else {
+            singular(tag)
+        };
+        let singular_tag_lc = format_ident!("{}", singular(tag));
+        let struct_name = format_ident!("Cmd{}Edit", to_title_case(&singular(tag)));
+
+        let struct_doc = format!("Edit {} settings.", singular_tag_str,);
+        let struct_inner_project_doc = format!("The project that holds the {}.", singular_tag_str);
+
+        let struct_inner_name_doc = format!("The {} to edit. Can be an ID or name.", singular_tag_str);
+
+        let api_call_params = self.get_api_call_params(tag)?;
+
+        // We need to check if project is a parameter to this call.
+        let project_param = if self.is_parameter("project") && tag != "projects" {
+            quote! {
+                #[doc = #struct_inner_project_doc]
+                #[clap(long, short, required = true)]
+                pub project: String,
+            }
+        } else {
+            quote!()
+        };
+
+        // We need to check if organization is a parameter to this call.
+        let organization_param = if self.is_parameter("organization") && tag != "organizations" {
+            quote! {
+                /// The organization that holds the project.
+                #[clap(long, short, required = true, env = "OXIDE_ORG")]
+                pub organization: String,
+            }
+        } else {
+            quote!()
+        };
+
+        let additional_struct_params = self.get_additional_struct_params(tag)?;
+
+        let cmd = quote!(
+            #[doc = #struct_doc]
+            #[derive(clap::Parser, Debug, Clone)]
+            #[clap(verbatim_doc_comment)]
+            pub struct #struct_name {
+                #[doc = #struct_inner_name_doc]
+                #[clap(name = #singular_tag_str, required = true)]
+                pub #singular_tag_lc: String,
+
+                #project_param
+
+                #organization_param
+
+                #(#additional_struct_params)*
+            }
+
+            #[async_trait::async_trait]
+            impl crate::cmd::Command for #struct_name {
+                async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+
+                    let client = ctx.api_client("")?;
+
+                    let result = client.#tag_ident().put(#(#api_call_params),*).await?;
+
+                    Ok(())
+                }
+            }
+        );
+
+        let enum_item: syn::Variant = syn::parse2(quote!(
+                Edit(#struct_name)
+        ))?;
 
         Ok((cmd, enum_item))
     }
@@ -1323,8 +1449,10 @@ impl Operation {
                 continue;
             }
 
-            let p = format_ident!("{}", p.trim_end_matches("_name").trim_end_matches("_id"));
-            api_call_params_all.push(quote!(&self.#p));
+            let n = clean_param_name(&p);
+            let ident = format_ident!("{}", n);
+
+            api_call_params_all.push(quote!(&self.#ident));
         }
 
         // We need to check if project is a parameter to this call.
@@ -1639,9 +1767,9 @@ fn skip_defaults(n: &str, tag: &str) -> bool {
     n == singular(tag)
         || n == "project"
         || n == "organization"
-        || n == "name"
         || n == "project_name"
         || n == "organization_name"
+        || n == "name"
 }
 
 fn clean_text(s: &str) -> String {
@@ -1668,6 +1796,14 @@ pub fn get_text_fmt(output: &proc_macro2::TokenStream) -> Result<String> {
     Ok(clean_text(&content))
 }
 
+fn clean_param_name(p: &str) -> String {
+    if p != "new_name" && !p.ends_with("dns_name") {
+        p.trim_end_matches("_name").trim_end_matches("_id").to_string()
+    } else {
+        p.to_string()
+    }
+}
+
 struct Flags {
     short: char,
     long: String,
@@ -1690,12 +1826,26 @@ impl Flags {
             quote!()
         }
     }
+
+    fn get_long_token(&self) -> TokenStream {
+        let mut l = self.long.to_string();
+        if l == "ipv-6-prefix" {
+            l = "ipv6-prefix".to_string();
+        } else if l == "ipv-4-prefix" {
+            l = "ipv4-prefix".to_string();
+        }
+        quote!(long = #l)
+    }
 }
 
 fn get_flags(name: &str) -> Result<Flags> {
     if name.len() < 2 {
         anyhow::bail!("name must be at least 2 characters long");
     }
+
+    // Remove the new_prefix we added to the start of the name. Since not everything can
+    // have an 'n' short flag.
+    let name = name.trim_start_matches("new_");
 
     let mut flags = Flags {
         short: name.to_lowercase().chars().next().unwrap(),

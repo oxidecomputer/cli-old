@@ -5,6 +5,7 @@ enum SubCommand {
     Create(CmdRouteCreate),
     #[clap(alias = "get")]
     View(CmdRouteView),
+    Edit(CmdRouteEdit),
     Delete(CmdRouteDelete),
 }
 
@@ -19,13 +20,13 @@ pub struct CmdRouteList {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The router that holds the routes."]
-    #[clap(long, short = 'r', required = true)]
+    #[clap(long = "router-name", short = 'r', required = true)]
     pub router: oxide_api::types::Name,
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short = 's', default_value_t)]
+    #[clap(long = "sort-by", short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
     #[doc = "The VPC that holds the routes."]
-    #[clap(long, short = 'v', required = true)]
+    #[clap(long = "vpc-name", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -98,19 +99,19 @@ pub struct CmdRouteCreate {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The router that holds the route."]
-    #[clap(long, short = 'r', default_value_t)]
+    #[clap(long = "router-name", short = 'r', default_value_t)]
     pub router: oxide_api::types::Name,
     #[doc = "The VPC that holds the route."]
-    #[clap(long, short = 'v', default_value_t)]
+    #[clap(long = "vpc-name", short = 'v', default_value_t)]
     pub vpc: oxide_api::types::Name,
     #[doc = "The description for the route."]
-    #[clap(long, short = 'D', default_value_t)]
+    #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
     #[doc = "A `RouteDestination` is used to match traffic with a routing rule, on the destination of that traffic.\n\nWhen traffic is to be sent to a destination that is within a given `RouteDestination`, the corresponding [`RouterRoute`] applies, and traffic will be forward to the [`RouteTarget`] for that rule."]
-    #[clap(long)]
+    #[clap(long = "destination")]
     pub destination: Option<oxide_api::types::RouteDestination>,
     #[doc = "A `RouteTarget` describes the possible locations that traffic matching a route destination can be sent."]
-    #[clap(long, short = 't')]
+    #[clap(long = "target", short = 't')]
     pub target: Option<oxide_api::types::RouteTarget>,
 }
 
@@ -306,10 +307,10 @@ pub struct CmdRouteView {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The router that holds the route."]
-    #[clap(long, short = 'r', required = true)]
+    #[clap(long = "router-name", short = 'r', required = true)]
     pub router: oxide_api::types::Name,
     #[doc = "The VPC that holds the route."]
-    #[clap(long, short = 'v', required = true)]
+    #[clap(long = "vpc-name", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = "Open the route in the browser."]
     #[clap(short, long)]
@@ -358,6 +359,63 @@ impl crate::cmd::Command for CmdRouteView {
     }
 }
 
+#[doc = "Edit route settings."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdRouteEdit {
+    #[doc = "The route to edit. Can be an ID or name."]
+    #[clap(name = "route", required = true)]
+    pub route: String,
+    #[doc = "The project that holds the route."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "The router that holds the route."]
+    #[clap(long = "router-name", short = 'r', required = true)]
+    pub router: oxide_api::types::Name,
+    #[doc = "The VPC that holds the route."]
+    #[clap(long = "vpc-name", short = 'v', required = true)]
+    pub vpc: oxide_api::types::Name,
+    #[doc = "The new description for the route."]
+    #[clap(long = "description", short = 'D', required = false)]
+    pub new_description: String,
+    #[doc = "A `RouteDestination` is used to match traffic with a routing rule, on the destination of that traffic.\n\nWhen traffic is to be sent to a destination that is within a given `RouteDestination`, the corresponding [`RouterRoute`] applies, and traffic will be forward to the [`RouteTarget`] for that rule."]
+    #[clap(long = "destination", required = false)]
+    pub new_destination: Option<oxide_api::types::RouteDestination>,
+    #[doc = "The new name for the route."]
+    #[clap(long = "name", short = 'n', required = false)]
+    pub new_name: oxide_api::types::Name,
+    #[doc = "A `RouteTarget` describes the possible locations that traffic matching a route destination can be sent."]
+    #[clap(long = "target", short = 't', required = false)]
+    pub new_target: Option<oxide_api::types::RouteTarget>,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdRouteEdit {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let client = ctx.api_client("")?;
+        let result = client
+            .routes()
+            .put(
+                &self.organization,
+                &self.project,
+                &self.route,
+                &self.router,
+                &self.vpc,
+                &oxide_api::types::RouterRouteUpdateParams {
+                    description: self.new_description.clone(),
+                    destination: self.new_destination.clone(),
+                    name: self.new_name.clone(),
+                    target: self.new_target.clone(),
+                },
+            )
+            .await?;
+        Ok(())
+    }
+}
+
 #[doc = "Delete route."]
 #[derive(clap :: Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
@@ -372,10 +430,10 @@ pub struct CmdRouteDelete {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The router that holds the route."]
-    #[clap(long, short = 'r', required = true)]
+    #[clap(long = "router-name", short = 'r', required = true)]
     pub router: oxide_api::types::Name,
     #[doc = "The VPC that holds the route."]
-    #[clap(long, short = 'v', required = true)]
+    #[clap(long = "vpc-name", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = r" Confirm deletion without prompting."]
     #[clap(long)]

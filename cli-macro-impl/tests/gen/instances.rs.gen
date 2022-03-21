@@ -19,7 +19,7 @@ pub struct CmdInstanceList {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short = 's', default_value_t)]
+    #[clap(long = "sort-by", short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -84,19 +84,19 @@ pub struct CmdInstanceCreate {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The description for the instance."]
-    #[clap(long, short = 'D', default_value_t)]
+    #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
     #[doc = "The hostname that holds the instance."]
-    #[clap(long, default_value_t)]
+    #[clap(long = "hostname", default_value_t)]
     pub hostname: String,
     #[doc = "A count of bytes, typically used either for memory or storage capacity\n\nThe maximum supported byte count is [`i64::MAX`].  This makes it somewhat inconvenient to define constructors: a u32 constructor can be infallible, but an i64 constructor can fail (if the value is negative) and a u64 constructor can fail (if the value is larger than i64::MAX).  We provide all of these for consumers' convenience."]
-    #[clap(long, short = 'm', default_value_t)]
+    #[clap(long = "memory", short = 'm', default_value_t)]
     pub memory: oxide_api::types::ByteCount,
     #[doc = "The number of CPUs in an Instance"]
-    #[clap(long, short = 'c', default_value_t)]
+    #[clap(long = "ncpus", short = 'c', default_value_t)]
     pub ncpus: oxide_api::types::InstanceCpuCount,
     #[doc = "The network interfaces to be created for this instance."]
-    #[clap(long, short = 'n')]
+    #[clap(long = "network-interfaces", short = 'n')]
     pub network_interfaces: Option<oxide_api::types::InstanceNetworkInterfaceAttachment>,
 }
 

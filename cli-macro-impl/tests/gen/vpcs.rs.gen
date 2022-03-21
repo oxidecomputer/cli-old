@@ -5,6 +5,7 @@ enum SubCommand {
     Create(CmdVpcCreate),
     #[clap(alias = "get")]
     View(CmdVpcView),
+    Edit(CmdVpcEdit),
     Delete(CmdVpcDelete),
 }
 
@@ -19,7 +20,7 @@ pub struct CmdVpcList {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The order in which to sort the results."]
-    #[clap(long, short = 's', default_value_t)]
+    #[clap(long = "sort-by", short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -84,13 +85,13 @@ pub struct CmdVpcCreate {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The description for the VPC."]
-    #[clap(long, short = 'D', default_value_t)]
+    #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
     #[doc = "Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'."]
-    #[clap(long, default_value_t)]
-    pub dns: oxide_api::types::Name,
+    #[clap(long = "dns-name", default_value_t)]
+    pub dns_name: oxide_api::types::Name,
     #[doc = "The IPv6 prefix for this VPC.\n\nAll IPv6 subnets created from this VPC must be taken from this range, which sould be a Unique Local Address in the range `fd00::/48`. The default VPC Subnet will have the first `/64` range from this prefix."]
-    #[clap(long, short = 'i', default_value_t)]
+    #[clap(long = "ipv6-prefix", short = 'i', default_value_t)]
     pub ipv6_prefix: oxide_api::types::Ipv6Net,
 }
 
@@ -98,7 +99,7 @@ pub struct CmdVpcCreate {
 impl crate::cmd::Command for CmdVpcCreate {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
         let mut description = self.description.clone();
-        let mut dns = self.dns.clone();
+        let mut dns_name = self.dns_name.clone();
         let mut vpc = self.vpc.clone();
         let mut organization = self.organization.clone();
         let mut project = self.project.clone();
@@ -108,8 +109,10 @@ impl crate::cmd::Command for CmdVpcCreate {
             ));
         }
 
-        if dns.is_empty() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!("--dns required in non-interactive mode"));
+        if dns_name.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!(
+                "--dns-name required in non-interactive mode"
+            ));
         }
 
         if vpc.is_empty() && !ctx.io.can_prompt() {
@@ -198,12 +201,12 @@ impl crate::cmd::Command for CmdVpcCreate {
             }
         }
 
-        if dns.is_empty() {
+        if dns_name.is_empty() {
             match dialoguer::Input::<_>::new()
-                .with_prompt("VPC dns:")
+                .with_prompt("VPC dns_name:")
                 .interact_text()
             {
-                Ok(input) => dns = input,
+                Ok(input) => dns_name = input,
                 Err(err) => {
                     return Err(anyhow::anyhow!("prompt failed: {}", err));
                 }
@@ -217,7 +220,7 @@ impl crate::cmd::Command for CmdVpcCreate {
                 &self.project,
                 &oxide_api::types::VpcCreate {
                     description: description.clone(),
-                    dns_name: dns.clone(),
+                    dns_name: dns_name.clone(),
                     ipv6_prefix: self.ipv6_prefix.clone(),
                     name: vpc.clone(),
                 },
@@ -287,6 +290,51 @@ impl crate::cmd::Command for CmdVpcView {
             .with(tabled::Style::psql().header_off())
             .to_string();
         writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+}
+
+#[doc = "Edit VPC settings."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdVpcEdit {
+    #[doc = "The VPC to edit. Can be an ID or name."]
+    #[clap(name = "VPC", required = true)]
+    pub vpc: String,
+    #[doc = "The project that holds the VPC."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "The new description for the VPC."]
+    #[clap(long = "description", short = 'D', required = false)]
+    pub new_description: String,
+    #[doc = "The new DNS name for the VPC."]
+    #[clap(long = "dns-name", required = false)]
+    pub new_dns_name: oxide_api::types::Name,
+    #[doc = "The new name for the VPC."]
+    #[clap(long = "name", short = 'n', required = false)]
+    pub new_name: oxide_api::types::Name,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdVpcEdit {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let client = ctx.api_client("")?;
+        let result = client
+            .vpcs()
+            .put(
+                &self.organization,
+                &self.project,
+                &self.vpc,
+                &oxide_api::types::VpcUpdate {
+                    description: self.new_description.clone(),
+                    dns_name: self.new_dns_name.clone(),
+                    name: self.new_name.clone(),
+                },
+            )
+            .await?;
         Ok(())
     }
 }
