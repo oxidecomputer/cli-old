@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 
-use crate::{config::Config, config_file::get_env_var};
+use crate::{config::Config, config_file::get_env_var, types::FormatOutput};
 
 pub struct Context<'a> {
     pub config: &'a mut (dyn Config + Send + Sync + 'a),
@@ -107,6 +107,17 @@ impl Context<'_> {
         }
 
         Ok(())
+    }
+
+    /// Return the configured output format or override the default with the value passed in,
+    /// if it is some.
+    pub fn format(&self, format: Option<FormatOutput>) -> Result<FormatOutput> {
+        if let Some(format) = format {
+            Ok(format)
+        } else {
+            let value = self.config.get("", "format")?;
+            FormatOutput::from_str(&value)
+        }
     }
 }
 

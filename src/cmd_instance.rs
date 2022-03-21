@@ -59,13 +59,9 @@ pub struct CmdInstanceDisks {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
 
-    /// Open a project in the browser.
-    #[clap(short, long)]
-    pub web: bool,
-
-    /// Output JSON.
-    #[clap(long)]
-    pub json: bool,
+    #[doc = r" Output format."]
+    #[clap(long, short)]
+    pub format: Option<crate::types::FormatOutput>,
 }
 
 #[async_trait::async_trait]
@@ -73,7 +69,7 @@ impl crate::cmd::Command for CmdInstanceDisks {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let client = ctx.api_client("")?;
 
-        let disks = client
+        let results = client
             .instances()
             .disks_get_all(
                 &self.instance,
@@ -83,13 +79,8 @@ impl crate::cmd::Command for CmdInstanceDisks {
             )
             .await?;
 
-        if self.json {
-            // If they specified json, just dump the JSON.
-            ctx.io.write_output_json(&serde_json::json!(disks))?;
-            return Ok(());
-        }
-
-        ctx.io.write_output_table(&result, false)?;
+        let format = ctx.format(self.format)?;
+        ctx.io.write_output_for_vec(&format, &results)?;
         Ok(())
     }
 }

@@ -28,9 +28,9 @@ pub struct CmdVpcList {
     #[doc = r" Make additional HTTP requests to fetch all pages."]
     #[clap(long)]
     pub paginate: bool,
-    #[doc = r" Output JSON."]
-    #[clap(long)]
-    pub json: bool,
+    #[doc = r" Output format."]
+    #[clap(long, short)]
+    pub format: Option<crate::types::FormatOutput>,
 }
 
 #[async_trait::async_trait]
@@ -58,15 +58,8 @@ impl crate::cmd::Command for CmdVpcList {
                 )
                 .await?
         };
-        if self.json {
-            ctx.io.write_json(&serde_json::json!(results))?;
-            return Ok(());
-        }
-
-        let table = tabled::Table::new(results)
-            .with(tabled::Style::psql())
-            .to_string();
-        writeln!(ctx.io.out, "{}", table)?;
+        let format = ctx.format(self.format)?;
+        ctx.io.write_output_for_vec(&format, &results)?;
         Ok(())
     }
 }
@@ -256,9 +249,9 @@ pub struct CmdVpcView {
     #[doc = "Open the VPC in the browser."]
     #[clap(short, long)]
     pub web: bool,
-    #[doc = r" Output JSON."]
-    #[clap(long)]
-    pub json: bool,
+    #[doc = r" Output format."]
+    #[clap(long, short)]
+    pub format: Option<crate::types::FormatOutput>,
 }
 
 #[async_trait::async_trait]
@@ -275,21 +268,8 @@ impl crate::cmd::Command for CmdVpcView {
             .vpcs()
             .get(&self.organization, &self.project, &self.vpc)
             .await?;
-        if self.json {
-            ctx.io.write_json(&serde_json::json!(result))?;
-            return Ok(());
-        }
-
-        let table = tabled::Table::new(vec![result])
-            .with(tabled::Rotate::Left)
-            .with(
-                tabled::Modify::new(tabled::Full)
-                    .with(tabled::Alignment::left())
-                    .with(tabled::Alignment::top()),
-            )
-            .with(tabled::Style::psql().header_off())
-            .to_string();
-        writeln!(ctx.io.out, "{}", table)?;
+        let format = ctx.format(self.format)?;
+        ctx.io.write_output(&format, &result)?;
         Ok(())
     }
 }

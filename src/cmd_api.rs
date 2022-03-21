@@ -212,7 +212,7 @@ impl crate::cmd::Command for CmdApi {
             result = serde_json::Value::Array(page_results);
         }
 
-        ctx.io.write_json(&result)?;
+        ctx.io.write_output_json(&result)?;
 
         Ok(())
     }

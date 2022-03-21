@@ -86,8 +86,8 @@ pub fn config_options() -> Vec<ConfigOption> {
             key: "format".to_string(),
             description: "the formatting style for command output".to_string(),
             comment: "What formatting Oxide should use when printing text.".to_string(),
-            default_value: "table".to_string(),
-            allowed_values: vec!["table".to_string(), "json".to_string(), "yaml".to_string()],
+            default_value: crate::types::FormatOutput::default().to_string(),
+            allowed_values: crate::types::FormatOutput::variants(),
         },
     ]
 }

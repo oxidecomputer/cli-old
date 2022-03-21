@@ -1520,10 +1520,9 @@ impl Operation {
                 #[clap(short, long)]
                 pub web: bool,
 
-                // TODO: Change this to be format instead!
-                /// Output JSON.
-                #[clap(long)]
-                pub json: bool,
+                /// Output format.
+                #[clap(long, short)]
+                pub format: Option<crate::types::FormatOutput>,
             }
 
             #[async_trait::async_trait]
@@ -1545,13 +1544,8 @@ impl Operation {
 
                     let result = client.#tag_ident().get(#(#api_call_params),*).await?;
 
-                    if self.json {
-                        // If they specified json as the output format, just dump the JSON.
-                        ctx.io.write_output_json(&serde_json::json!(result))?;
-                        return Ok(());
-                    }
-
-                    ctx.io.write_output_table(&result, true)?;
+                    let format = ctx.format(self.format)?;
+                    ctx.io.write_output(&format, &result)?;
                     Ok(())
                 }
             }
@@ -1640,10 +1634,9 @@ impl Operation {
                 #[clap(long)]
                 pub paginate: bool,
 
-                // TODO: Change this to be format instead!
-                /// Output JSON.
-                #[clap(long)]
-                pub json: bool,
+                /// Output format.
+                #[clap(long, short)]
+                pub format: Option<crate::types::FormatOutput>,
             }
 
             #[async_trait::async_trait]
@@ -1671,13 +1664,8 @@ impl Operation {
                         .await?
                 };
 
-                if self.json {
-                    // If they specified json, just dump the JSON.
-                    ctx.io.write_output_json(&serde_json::json!(results))?;
-                    return Ok(());
-                }
-
-                ctx.io.write_output_table(&results, false)?;
+                let format = ctx.format(self.format)?;
+                ctx.io.write_output_for_vec(&format, &results)?;
                 Ok(())
             }
         }

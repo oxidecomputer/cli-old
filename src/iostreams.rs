@@ -276,6 +276,30 @@ impl IoStreams {
         crate::colors::ColorScheme::new(self.color_enabled(), self.color_support_256(), self.has_true_color())
     }
 
+    pub fn write_output_for_vec<T: serde::Serialize + tabled::Tabled>(
+        &mut self,
+        format: &crate::types::FormatOutput,
+        value: impl IntoIterator<Item = T> + serde::Serialize,
+    ) -> Result<()> {
+        match format {
+            crate::types::FormatOutput::Json => self.write_output_json(&serde_json::to_value(value)?),
+            crate::types::FormatOutput::Table => self.write_output_table_for_vec(value),
+            crate::types::FormatOutput::Yaml => self.write_output_yaml(&value),
+        }
+    }
+
+    pub fn write_output<T: serde::Serialize + tabled::Tabled>(
+        &mut self,
+        format: &crate::types::FormatOutput,
+        value: &T,
+    ) -> Result<()> {
+        match format {
+            crate::types::FormatOutput::Json => self.write_output_json(&serde_json::to_value(value)?),
+            crate::types::FormatOutput::Table => self.write_output_table(value),
+            crate::types::FormatOutput::Yaml => self.write_output_yaml(value),
+        }
+    }
+
     pub fn write_output_json(&mut self, json: &serde_json::Value) -> Result<()> {
         if self.color_enabled() {
             // Print the response body.
@@ -288,23 +312,33 @@ impl IoStreams {
         Ok(())
     }
 
-    pub fn write_output_table<T>(&mut self, value: &T, is_view: bool) -> Result<()> {
-        let table = if is_view {
-            // In view format we rotate the table since there is only one record.
-            tabled::Table::new(value).with(tabled::Style::psql()).to_string()
-        } else {
-            tabled::Table::new(vec![value])
-                .with(tabled::Rotate::Left)
-                .with(
-                    tabled::Modify::new(tabled::Full)
-                        .with(tabled::Alignment::left())
-                        .with(tabled::Alignment::top()),
-                )
-                .with(tabled::Style::psql().header_off())
-                .to_string()
-        };
+    pub fn write_output_yaml<Y: serde::Serialize>(&mut self, yaml: &Y) -> Result<()> {
+        // Print the response body.
+        writeln!(self.out, "{}", serde_yaml::to_string(yaml)?)?;
 
-        writeln!(ctx.io.out, "{}", table)?;
+        Ok(())
+    }
+
+    pub fn write_output_table_for_vec<T: tabled::Tabled>(&mut self, value: impl IntoIterator<Item = T>) -> Result<()> {
+        let table = tabled::Table::new(value).with(tabled::Style::psql()).to_string();
+
+        writeln!(self.out, "{}", table)?;
+
+        Ok(())
+    }
+
+    pub fn write_output_table<T: tabled::Tabled>(&mut self, value: &T) -> Result<()> {
+        let table = tabled::Table::new(vec![value])
+            .with(tabled::Rotate::Left)
+            .with(
+                tabled::Modify::new(tabled::Full)
+                    .with(tabled::Alignment::left())
+                    .with(tabled::Alignment::top()),
+            )
+            .with(tabled::Style::psql().header_off())
+            .to_string();
+
+        writeln!(self.out, "{}", table)?;
 
         Ok(())
     }
@@ -390,6 +424,10 @@ impl IoStreams {
             stderr_path.into_os_string().into_string().unwrap(),
         )
     }
+}
+
+fn type_of<T>(_: T) -> &'static str {
+    std::any::type_name::<T>()
 }
 
 #[cfg(test)]
