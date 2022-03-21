@@ -216,6 +216,7 @@ impl crate::cmd::Command for CmdOrganizationEdit {
                 },
             )
             .await?;
+        let cs = ctx.io.color_scheme();
         if !self.new_name.is_empty() {
             writeln!(
                 ctx.io.out,

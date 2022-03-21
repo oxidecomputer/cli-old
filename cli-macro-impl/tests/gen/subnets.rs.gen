@@ -389,6 +389,7 @@ impl crate::cmd::Command for CmdSubnetEdit {
                 },
             )
             .await?;
+        let cs = ctx.io.color_scheme();
         let full_name = format!("{}/{}", self.organization, self.project);
         if !self.new_name.is_empty() {
             writeln!(

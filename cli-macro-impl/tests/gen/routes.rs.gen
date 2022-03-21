@@ -382,13 +382,13 @@ pub struct CmdRouteEdit {
     #[clap(long = "description", short = 'D', required = false)]
     pub new_description: String,
     #[doc = "A `RouteDestination` is used to match traffic with a routing rule, on the destination of that traffic.\n\nWhen traffic is to be sent to a destination that is within a given `RouteDestination`, the corresponding [`RouterRoute`] applies, and traffic will be forward to the [`RouteTarget`] for that rule."]
-    #[clap(long = "destination", required = false)]
+    #[clap(long = "destination", required = true)]
     pub new_destination: Option<oxide_api::types::RouteDestination>,
     #[doc = "The new name for the route."]
     #[clap(long = "name", short = 'n', required = false)]
     pub new_name: oxide_api::types::Name,
     #[doc = "A `RouteTarget` describes the possible locations that traffic matching a route destination can be sent."]
-    #[clap(long = "target", short = 't', required = false)]
+    #[clap(long = "target", short = 't', required = true)]
     pub new_target: Option<oxide_api::types::RouteTarget>,
 }
 
@@ -419,12 +419,13 @@ impl crate::cmd::Command for CmdRouteEdit {
                 &self.vpc,
                 &oxide_api::types::RouterRouteUpdateParams {
                     description: self.new_description.clone(),
-                    destination: self.new_destination.clone(),
+                    destination: self.new_destination.as_ref().unwrap().clone(),
                     name: self.new_name.clone(),
-                    target: self.new_target.clone(),
+                    target: self.new_target.as_ref().unwrap().clone(),
                 },
             )
             .await?;
+        let cs = ctx.io.color_scheme();
         let full_name = format!("{}/{}", self.organization, self.project);
         if !self.new_name.is_empty() {
             writeln!(
