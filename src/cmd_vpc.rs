@@ -55,7 +55,7 @@ mod test {
                     organization: "foo".to_string(),
                     project: "bar".to_string(),
                     description: "".to_string(),
-                    dns: "".to_string(),
+                    dns_name: "".to_string(),
                     ipv6_prefix: Default::default(),
                 }),
 
@@ -70,7 +70,7 @@ mod test {
                     organization: "".to_string(),
                     project: "".to_string(),
                     description: "blah blah".to_string(),
-                    dns: "foo bar".to_string(),
+                    dns_name: "foo bar".to_string(),
                     ipv6_prefix: Default::default(),
                 }),
 
@@ -85,7 +85,7 @@ mod test {
                     organization: "".to_string(),
                     project: "".to_string(),
                     description: "blah blah".to_string(),
-                    dns: "blah".to_string(),
+                    dns_name: "blah".to_string(),
                     ipv6_prefix: Default::default(),
                 }),
 
@@ -100,7 +100,7 @@ mod test {
                     organization: "foo".to_string(),
                     project: "".to_string(),
                     description: "blah blah".to_string(),
-                    dns: "blah".to_string(),
+                    dns_name: "blah".to_string(),
                     ipv6_prefix: Default::default(),
                 }),
 
@@ -115,7 +115,7 @@ mod test {
                     organization: "foo".to_string(),
                     project: "bar".to_string(),
                     description: "blah blah".to_string(),
-                    dns: "".to_string(),
+                    dns_name: "".to_string(),
                     ipv6_prefix: Default::default(),
                 }),
 

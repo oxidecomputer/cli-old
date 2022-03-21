@@ -861,14 +861,14 @@ impl Operation {
             return Ok(quote!());
         }
 
-        let name_cleaned = clean_param_name(&name);
+        let name_cleaned = clean_param_name(name);
 
         let name_ident = format_ident!("{}", name_cleaned);
 
         let n = if name_cleaned == "vpc" {
             name_cleaned.to_uppercase()
         } else {
-            name_cleaned.to_string()
+            name_cleaned
         };
 
         let singular_tag = singular(tag);
@@ -889,14 +889,12 @@ impl Operation {
                 prop
             )
             .replace(" dns ", " DNS ")
+        } else if name == "description" {
+            format!("The description for the {}.", prop)
+        } else if self.is_root_list_operation(tag) {
+            format!("The {} that holds the {}.", n, plural(&prop))
         } else {
-            if name == "description" {
-                format!("The description for the {}.", prop)
-            } else if self.is_root_list_operation(tag) {
-                format!("The {} that holds the {}.", n, plural(&prop))
-            } else {
-                format!("The {} that holds the {}.", n, prop)
-            }
+            format!("The {} that holds the {}.", n, prop)
         };
 
         let type_name = schema.render_type()?;
@@ -1299,12 +1297,12 @@ impl Operation {
         let mut i = 0;
         let req_body_properties = self.get_request_body_properties()?;
         for (p, v) in &req_body_properties {
-            if skip_defaults(&p, tag) {
+            if skip_defaults(p, tag) {
                 // Skip the defaults.
                 continue;
             }
 
-            let n = clean_param_name(&p);
+            let n = clean_param_name(p);
             let p = format_ident!("{}", n);
 
             let is_check = v.schema.get_is_check_fn()?;
@@ -1326,7 +1324,7 @@ impl Operation {
                 };
             }
 
-            i = i + 1;
+            i += 1;
         }
 
         // We need to form the output back to the client.
