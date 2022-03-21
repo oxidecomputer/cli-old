@@ -669,7 +669,8 @@ impl Operation {
                 key.clone(),
                 Property {
                     schema: prop.clone().unbox(),
-                    required: obj.required.contains(&key),
+                    required: obj.required.contains(&key)
+                        || obj.required.contains(&key.trim_start_matches("new_").to_string()),
                     description: s.schema_data.description,
                 },
             );
@@ -755,7 +756,11 @@ impl Operation {
                 // sending the request since we were only doing that for the oneOf types.
                 // And we should only unwrap it if it is a required property.
                 if rendered.starts_with("Option<") && v.required {
-                    req_body_rendered.push(quote!(#p_og: #p_short.unwrap()));
+                    if self.method == "PUT" {
+                        req_body_rendered.push(quote!(#p_og: self.#p_short.as_ref().unwrap().clone()));
+                    } else {
+                        req_body_rendered.push(quote!(#p_og: #p_short.unwrap()));
+                    }
                 } else if rendered == "uuid::Uuid" {
                     if v.required {
                         req_body_rendered.push(quote!(#p_og: #p_short.to_string()));
