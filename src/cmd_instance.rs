@@ -140,6 +140,18 @@ impl crate::cmd::Command for CmdInstanceStart {
             .start(&self.instance, &self.organization, &self.project)
             .await?;
 
+        // Wait for the instance to be started.
+        let instance_state = InstanceDetails {
+            host: "".to_string(),
+            instance: self.instance.to_string(),
+            organization: self.organization.to_string(),
+            project: self.project.to_string(),
+        };
+
+        instance_state
+            .wait_for_state(ctx, oxide_api::types::InstanceState::Running)
+            .await?;
+
         let cs = ctx.io.color_scheme();
         writeln!(
             ctx.io.out,
@@ -207,6 +219,18 @@ impl crate::cmd::Command for CmdInstanceStop {
         client
             .instances()
             .stop(&self.instance, &self.organization, &self.project)
+            .await?;
+
+        // Wait for the instance to be stopped.
+        let instance_state = InstanceDetails {
+            host: "".to_string(),
+            instance: self.instance.to_string(),
+            organization: self.organization.to_string(),
+            project: self.project.to_string(),
+        };
+
+        instance_state
+            .wait_for_state(ctx, oxide_api::types::InstanceState::Stopped)
             .await?;
 
         let cs = ctx.io.color_scheme();
@@ -278,6 +302,18 @@ impl crate::cmd::Command for CmdInstanceReboot {
             .reboot(&self.instance, &self.organization, &self.project)
             .await?;
 
+        // Wait for the instance to be started.
+        let instance_state = InstanceDetails {
+            host: "".to_string(),
+            instance: self.instance.to_string(),
+            organization: self.organization.to_string(),
+            project: self.project.to_string(),
+        };
+
+        instance_state
+            .wait_for_state(ctx, oxide_api::types::InstanceState::Running)
+            .await?;
+
         let cs = ctx.io.color_scheme();
         writeln!(
             ctx.io.out,
@@ -286,6 +322,51 @@ impl crate::cmd::Command for CmdInstanceReboot {
             self.instance,
             full_name
         )?;
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct InstanceDetails {
+    host: String,
+    organization: String,
+    project: String,
+    instance: String,
+}
+
+impl InstanceDetails {
+    async fn wait_for_state(
+        &self,
+        ctx: &mut crate::context::Context<'_>,
+        status: oxide_api::types::InstanceState,
+    ) -> Result<()> {
+        // Start the progress bar.
+        let handle = ctx
+            .io
+            .start_process_indicator_with_label(&format!("Waiting for instance status to be {}", status));
+
+        let client = ctx.api_client(&self.host)?;
+
+        // TODO: we should probably time out here eventually with an error.
+        loop {
+            // Get the instance.
+            let instance = client
+                .instances()
+                .get(&self.instance, &self.organization, &self.project)
+                .await?;
+            if status == instance.run_state {
+                break;
+            }
+
+            // Back off a bit.
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+
+        // End the progress bar.
+        if let Some(handle) = handle {
+            handle.done();
+        }
 
         Ok(())
     }

@@ -225,7 +225,6 @@ impl IoStreams {
         self.start_process_indicator_with_label("")
     }
 
-    #[allow(dead_code)]
     /// This returns a handle to a spinner. To stop the spinner, call `.stop()` on it.
     pub fn start_process_indicator_with_label(&mut self, label: &str) -> Option<terminal_spinners::SpinnerHandle> {
         if !self.progress_indicator_enabled {
