@@ -121,7 +121,7 @@ mod test {
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
-                want_err: "dns required in non-interactive mode".to_string(),
+                want_err: "--dns-name required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "delete no --confirm non-interactive".to_string(),

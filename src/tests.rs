@@ -382,7 +382,7 @@ date:"#
                 "--name".to_string(),
                 "zoo-2".to_string(),
             ],
-            want_out: r#"✔ Successfully edited organization zoo -> zoo-2"#.to_string(),
+            want_out: r#"✔ Edited organization zoo -> zoo-2"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -412,7 +412,7 @@ date:"#
                 "-D".to_string(),
                 "The dune game organization that is in the desert".to_string(),
             ],
-            want_out: r#"✔ Successfully edited organization dune"#.to_string(),
+            want_out: r#"✔ Edited organization dune"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -559,7 +559,7 @@ date:"#
                 "--name".to_string(),
                 "prod-for-reals".to_string(),
             ],
-            want_out: r#"✔ Successfully edited project maze-war/production -> maze-war/prod-for-reals"#.to_string(),
+            want_out: r#"✔ Edited project maze-war/production -> maze-war/prod-for-reals"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -595,7 +595,7 @@ date:"#
                 "-D".to_string(),
                 "The realest of deals prod env".to_string(),
             ],
-            want_out: r#"✔ Successfully edited project maze-war/prod-for-reals"#.to_string(),
+            want_out: r#"✔ Edited project maze-war/prod-for-reals"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -1109,7 +1109,7 @@ date:"#
                 "--name".to_string(),
                 "netns2".to_string(),
             ],
-            want_out: "✔ Successfully edited VPC netns -> netns2 in maze-war/development".to_string(),
+            want_out: "✔ Edited VPC netns -> netns2 in maze-war/development".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -1146,7 +1146,7 @@ date:"#
                 "-D".to_string(),
                 "The realest of  deals netns".to_string(),
             ],
-            want_out: "✔ Successfully edited VPC netns2 in maze-war/development".to_string(),
+            want_out: "✔ Edited VPC netns2 in maze-war/development".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()

@@ -78,9 +78,16 @@ pub fn config_options() -> Vec<ConfigOption> {
         ConfigOption {
             key: "browser".to_string(),
             description: "the web browser to use for opening URLs".to_string(),
-            comment: "What web browser gh should use when opening URLs. If blank, will refer to environment.".to_string(),
+            comment: "What web browser oxide should use when opening URLs. If blank, will refer to environment.".to_string(),
             default_value: "".to_string(),
             allowed_values: vec![],
+        },
+        ConfigOption {
+            key: "format".to_string(),
+            description: "the formatting style for command output".to_string(),
+            comment: "What formatting Oxide should use when outputting text.".to_string(),
+            default_value: "table".to_string(),
+            allowed_values: vec!["table".to_string(), "json".to_string(), "yaml".to_string()],
         },
     ]
 }
@@ -174,12 +181,14 @@ mod test {
         assert!(c.set("", "prompt", "disabled").is_ok());
         assert!(c.set("", "pager", "less").is_ok());
         assert!(c.set("", "browser", "firefox").is_ok());
+        assert!(c.set("", "format", "table").is_ok());
 
         let doc = c.config_to_string().unwrap();
         assert!(doc.contains("editor = \"vim\""));
         assert!(doc.contains("prompt = \"disabled\""));
         assert!(doc.contains("pager = \"less\""));
         assert!(doc.contains("browser = \"firefox\""));
+        assert!(doc.contains("format = \"table\""));
     }
 
     #[test]
@@ -198,6 +207,7 @@ editor = "vim"
 prompt = "disabled"
 pager = "less"
 browser = "firefox"
+format = "table"
 
 ["oxide.computer"]
 browser = "chrome""#;
@@ -224,7 +234,7 @@ prompt = "enabled"
 # A pager program to send command output to, e.g. "less". Set the value to "cat" to disable the pager.
 pager = ""
 
-# What web browser gh should use when opening URLs. If blank, will refer to environment.
+# What web browser oxide should use when opening URLs. If blank, will refer to environment.
 browser = """#;
         assert_eq!(doc_config, expected);
 
