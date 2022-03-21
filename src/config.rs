@@ -85,7 +85,7 @@ pub fn config_options() -> Vec<ConfigOption> {
         ConfigOption {
             key: "format".to_string(),
             description: "the formatting style for command output".to_string(),
-            comment: "What formatting Oxide should use when outputting text.".to_string(),
+            comment: "What formatting Oxide should use when printing text.".to_string(),
             default_value: "table".to_string(),
             allowed_values: vec!["table".to_string(), "json".to_string(), "yaml".to_string()],
         },
@@ -207,7 +207,6 @@ editor = "vim"
 prompt = "disabled"
 pager = "less"
 browser = "firefox"
-format = "table"
 
 ["oxide.computer"]
 browser = "chrome""#;
@@ -235,7 +234,11 @@ prompt = "enabled"
 pager = ""
 
 # What web browser oxide should use when opening URLs. If blank, will refer to environment.
-browser = """#;
+browser = ""
+
+# What formatting Oxide should use when printing text.
+# Supported values: table, json, yaml
+format = "table""#;
         assert_eq!(doc_config, expected);
 
         let doc_hosts = c.hosts_to_string().unwrap();

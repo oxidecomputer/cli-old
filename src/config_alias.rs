@@ -98,8 +98,12 @@ prompt = "enabled"
 # A pager program to send command output to, e.g. "less". Set the value to "cat" to disable the pager.
 pager = ""
 
-# What web browser gh should use when opening URLs. If blank, will refer to environment.
+# What web browser oxide should use when opening URLs. If blank, will refer to environment.
 browser = ""
+
+# What formatting Oxide should use when printing text.
+# Supported values: table, json, yaml
+format = "table"
 
 [aliases]
 alias1 = "value1 thing foo"

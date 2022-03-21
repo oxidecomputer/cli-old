@@ -171,7 +171,7 @@ mod test {
             TestItem {
                 name: "list empty".to_string(),
                 cmd: crate::cmd_config::SubCommand::List(crate::cmd_config::CmdConfigList { host: "".to_string() }),
-                want_out: "editor=\nprompt=enabled\npager=\nbrowser=\n".to_string(),
+                want_out: "editor=\nprompt=enabled\npager=\nbrowser=\nformat=table\n".to_string(),
                 want_err: "".to_string(),
             },
             TestItem {
