@@ -14,20 +14,46 @@ pub struct TestItem {
 struct MainContext {
     test_host: String,
     test_token: String,
+    test_rack_id: uuid::Uuid,
+    test_sled_id: uuid::Uuid,
+    client: oxide_api::Client,
 }
 
 #[async_trait::async_trait]
 impl AsyncTestContext for MainContext {
     async fn setup() -> Self {
+        let test_host =
+            std::env::var("OXIDE_TEST_HOST").expect("you need to set OXIDE_TEST_HOST to where the api is running");
+        let test_token = std::env::var("OXIDE_TEST_TOKEN").expect("OXIDE_TEST_TOKEN is required");
+
+        let oxide = oxide_api::Client::new(&test_token, format!("http://{}", &test_host));
+
+        let racks = oxide
+            .racks()
+            .get_all(oxide_api::types::IdSortMode::IdAscending)
+            .await
+            .expect("failed to get racks");
+        let test_rack_id =
+            uuid::Uuid::parse_str(racks.first().unwrap().id.as_str()).expect("failed to parse test rack id");
+        let sleds = oxide
+            .sleds()
+            .get_all(oxide_api::types::IdSortMode::IdAscending)
+            .await
+            .expect("failed to get all sleds");
+        let test_sled_id =
+            uuid::Uuid::parse_str(sleds.first().unwrap().id.as_str()).expect("failed to parse test sled id");
+
         Self {
-            test_host: std::env::var("OXIDE_TEST_HOST")
-                .expect("you need to set OXIDE_TEST_HOST to where the api is running"),
-            test_token: std::env::var("OXIDE_TEST_TOKEN").expect("OXIDE_TEST_TOKEN is required"),
+            test_host,
+            test_token,
+            client: oxide,
+            test_rack_id,
+            test_sled_id,
         }
     }
 
     async fn teardown(self) {
-        let oxide = oxide_api::Client::new(&self.test_token, format!("http://{}", &self.test_host));
+        let oxide = self.client;
 
         // Get all the orgs.
         let orgs = oxide
@@ -281,6 +307,51 @@ date:"#
             want_out: "".to_string(),
             want_err: "the `--paginate` option is not supported for non-GET request".to_string(),
             want_code: 1,
+            ..Default::default()
+        },
+        TestItem {
+            name: "list racks".to_string(),
+            args: vec!["oxide".to_string(), "racks".to_string(), "list".to_string()],
+            want_out: "| no-name | no description |"
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "get rack".to_string(),
+            args: vec!["oxide".to_string(), "rack".to_string(), "view".to_string(), ctx.test_rack_id.to_string()],
+            want_out: "description   | no description"
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "list sleds".to_string(),
+            args: vec!["oxide".to_string(), "sleds".to_string(), "list".to_string()],
+            want_out: "| no-name | no description | 127.0.0.1:12345 |"
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "get sled".to_string(),
+            args: vec!["oxide".to_string(), "sleds".to_string(), "get".to_string(), ctx.test_sled_id.to_string()],
+            want_out: "name            | no-name"
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
+            name: "list roles".to_string(),
+            args: vec!["oxide".to_string(), "roles".to_string(), "list".to_string()],
+            want_out: r#"fleet.admin        |    Fleet Administrator"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
             ..Default::default()
         },
         TestItem {
