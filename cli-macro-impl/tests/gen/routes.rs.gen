@@ -125,12 +125,6 @@ impl crate::cmd::Command for CmdRouteCreate {
             ));
         }
 
-        if destination.is_none() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!(
-                "--destination required in non-interactive mode"
-            ));
-        }
-
         if route.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!("[route] required in non-interactive mode"));
         }
@@ -150,12 +144,6 @@ impl crate::cmd::Command for CmdRouteCreate {
         if router.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
                 "-r|--router required in non-interactive mode"
-            ));
-        }
-
-        if target.is_none() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!(
-                "-t|--target required in non-interactive mode"
             ));
         }
 

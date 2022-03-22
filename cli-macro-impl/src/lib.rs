@@ -752,10 +752,16 @@ impl Operation {
 
                 let rendered = get_text(&v.schema.render_type()?)?;
 
-                // If the rendered property is an option, we want to unwrap it before
-                // sending the request since we were only doing that for the oneOf types.
-                // And we should only unwrap it if it is a required property.
-                if rendered.starts_with("Option<") && v.required {
+                if rendered.contains("Ipv6Net") || rendered.contains("Ipv4Net") {
+                    if v.required {
+                        req_body_rendered.push(quote!(#p_og: #p_short.to_string()));
+                    } else {
+                        req_body_rendered.push(quote!(#p_og: self.#p_short.to_string()));
+                    }
+                } else if rendered.starts_with("Option<") && v.required {
+                    // If the rendered property is an option, we want to unwrap it before
+                    // sending the request since we were only doing that for the oneOf types.
+                    // And we should only unwrap it if it is a required property.
                     if self.method == "PUT" {
                         req_body_rendered.push(quote!(#p_og: self.#p_short.as_ref().unwrap().clone()));
                     } else {
@@ -905,29 +911,34 @@ impl Operation {
         let short_flag = flags.get_short_token();
         let long_flag = flags.get_long_token();
 
-        let clap_line = if self.method == "POST" || name == "sort_by" {
-            // On create, we want to set default values for the parameters.
-            if rendered.starts_with("Option<") {
-                // A default value there is pretty much always going to be None.
+        let clap_line =
+            if (rendered.contains("Ipv6Net") || rendered.contains("Ipv4Net")) && !rendered.starts_with("Option<") {
                 quote! {
                     #[clap(#long_flag, #short_flag)]
                 }
-            } else {
-                quote! {
-                    #[clap(#long_flag, #short_flag default_value_t)]
+            } else if self.method == "POST" || name == "sort_by" {
+                // On create, we want to set default values for the parameters.
+                if rendered.starts_with("Option<") {
+                    // A default value there is pretty much always going to be None.
+                    quote! {
+                        #[clap(#long_flag, #short_flag)]
+                    }
+                } else {
+                    quote! {
+                        #[clap(#long_flag, #short_flag default_value_t)]
+                    }
                 }
-            }
-        } else {
-            let required = if required {
-                quote!(true)
             } else {
-                quote!(false, default_value_t)
-            };
+                let required = if required {
+                    quote!(true)
+                } else {
+                    quote!(false, default_value_t)
+                };
 
-            quote! {
-                #[clap(#long_flag, #short_flag required = #required)]
-            }
-        };
+                quote! {
+                    #[clap(#long_flag, #short_flag required = #required)]
+                }
+            };
 
         Ok(quote! {
             #[doc = #doc]
@@ -1001,6 +1012,10 @@ impl Operation {
             let p = if p == "name" { singular(tag) } else { p };
 
             let n = clean_param_name(&p);
+
+            if n == "target" || n == "destination" || n == "ipv6_prefix" || n == "ipv4_block" || n == "ipv6_block" {
+                continue;
+            }
 
             let p = format_ident!("{}", n);
 
@@ -1134,7 +1149,7 @@ impl Operation {
             // WE NEED TO FIX THIS
             // Likely its one prompt for the type then another prompt for whatever the field
             // requires.
-            if n == "target" || n == "destination" {
+            if n == "target" || n == "destination" || n == "ipv6_prefix" || n == "ipv4_block" || n == "ipv6_block" {
                 continue;
             }
 
@@ -1307,6 +1322,17 @@ impl Operation {
             }
 
             let n = clean_param_name(p);
+
+            if n == "new_target"
+                || n == "new_destination"
+                || n == "new_ipv6_prefix"
+                || n == "new_ipv4_block"
+                || n == "ipv6_block"
+            {
+                i += 1;
+                continue;
+            }
+
             let p = format_ident!("{}", n);
 
             let is_check = v.schema.get_is_check_fn()?;
@@ -1975,9 +2001,14 @@ fn get_flags(name: &str) -> Result<Flags> {
     // have an 'n' short flag.
     let name = name.trim_start_matches("new_");
 
+    let long = to_kebab_case(name)
+        .replace("ipv-4", "ipv4")
+        .replace("ipv-6", "ipv6")
+        .to_string();
+
     let mut flags = Flags {
         short: name.to_lowercase().chars().next().unwrap(),
-        long: to_kebab_case(name),
+        long,
     };
 
     // TODO: we should smartly parse the flags and make sure there is no overlap.
