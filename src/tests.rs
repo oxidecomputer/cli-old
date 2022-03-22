@@ -355,6 +355,15 @@ date:"#
             ..Default::default()
         },
         TestItem {
+            name: "view role".to_string(),
+            args: vec!["oxide".to_string(), "role".to_string(), "view".to_string(), "fleet.admin".to_string()],
+            want_out: r#"description | Fleet Administrator"#
+                .to_string(),
+            want_err: "".to_string(),
+            want_code: 0,
+            ..Default::default()
+        },
+        TestItem {
             name: "list orgs empty".to_string(),
             args: vec!["oxide".to_string(), "org".to_string(), "list".to_string()],
             want_out: "id | name | description | time_created | time_modified |
