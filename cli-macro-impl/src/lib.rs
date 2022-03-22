@@ -1024,7 +1024,7 @@ impl Operation {
 
             let n = clean_param_name(&p);
 
-            if n == "target" || n == "destination" || n == "ipv4_block" {
+            if n == "ipv4_block" {
                 continue;
             }
 

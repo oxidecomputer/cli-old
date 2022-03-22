@@ -330,7 +330,7 @@ date:"#
         TestItem {
             name: "list sleds".to_string(),
             args: vec!["oxide".to_string(), "sleds".to_string(), "list".to_string()],
-            want_out: "| no-name | no description | 127.0.0.1:12345 |"
+            want_out: "| no-name | no description |"
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
