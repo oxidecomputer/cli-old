@@ -84,8 +84,8 @@ pub struct CmdVpcCreate {
     #[clap(long = "dns-name", default_value_t)]
     pub dns_name: oxide_api::types::Name,
     #[doc = "The IPv6 prefix for this VPC.\n\nAll IPv6 subnets created from this VPC must be taken from this range, which sould be a Unique Local Address in the range `fd00::/48`. The default VPC Subnet will have the first `/64` range from this prefix."]
-    #[clap(long = "ipv6-prefix", short = 'i')]
-    pub ipv6_prefix: oxide_api::types::Ipv6Net,
+    #[clap(long = "ipv6-prefix", short = 'i', required = false)]
+    pub ipv6_prefix: Option<oxide_api::types::Ipv6Net>,
 }
 
 #[async_trait::async_trait]
@@ -214,7 +214,7 @@ impl crate::cmd::Command for CmdVpcCreate {
                 &oxide_api::types::VpcCreate {
                     description: description.clone(),
                     dns_name: dns_name.clone(),
-                    ipv6_prefix: self.ipv6_prefix.to_string(),
+                    ipv6_prefix: self.ipv6_prefix.unwrap().to_string(),
                     name: vpc.clone(),
                 },
             )

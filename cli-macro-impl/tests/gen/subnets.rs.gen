@@ -93,11 +93,11 @@ pub struct CmdSubnetCreate {
     #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
     #[doc = "The IPv4 address range for this subnet.\n\nIt must be allocated from an RFC 1918 private address range, and must not overlap with any other existing subnet in the VPC."]
-    #[clap(long = "ipv4-block", short = 'i')]
+    #[clap(long = "ipv4-block", short = 'i', required = true)]
     pub ipv4_block: oxide_api::types::Ipv4Net,
     #[doc = "The IPv6 address range for this subnet.\n\nIt must be allocated from the RFC 4193 Unique Local Address range, with the prefix equal to the parent VPC's prefix. A random `/64` block will be assigned if one is not provided. It must not overlap with any existing subnet in the VPC."]
-    #[clap(long = "ipv6-block", short = 'i')]
-    pub ipv6_block: oxide_api::types::Ipv6Net,
+    #[clap(long = "ipv6-block", short = 'i', required = false)]
+    pub ipv6_block: Option<oxide_api::types::Ipv6Net>,
 }
 
 #[async_trait::async_trait]
@@ -226,7 +226,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
                 &oxide_api::types::VpcSubnetCreate {
                     description: description.clone(),
                     ipv4_block: ipv4_block.to_string(),
-                    ipv6_block: self.ipv6_block.to_string(),
+                    ipv6_block: self.ipv6_block.unwrap().to_string(),
                     name: subnet.clone(),
                 },
             )
@@ -309,11 +309,11 @@ pub struct CmdSubnetEdit {
     #[clap(long = "description", short = 'D', required = false, default_value_t)]
     pub new_description: String,
     #[doc = "The new ipv4 block for the subnet."]
-    #[clap(long = "ipv4-block", short = 'i')]
-    pub new_ipv4_block: oxide_api::types::Ipv4Net,
+    #[clap(long = "ipv4-block", short = 'i', required = false)]
+    pub new_ipv4_block: Option<oxide_api::types::Ipv4Net>,
     #[doc = "The new ipv6 block for the subnet."]
-    #[clap(long = "ipv6-block", short = 'i')]
-    pub new_ipv6_block: oxide_api::types::Ipv6Net,
+    #[clap(long = "ipv6-block", short = 'i', required = false)]
+    pub new_ipv6_block: Option<oxide_api::types::Ipv6Net>,
     #[doc = "The new name for the subnet."]
     #[clap(long = "name", short = 'n', required = false, default_value_t)]
     pub new_name: oxide_api::types::Name,
@@ -322,7 +322,11 @@ pub struct CmdSubnetEdit {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSubnetEdit {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
-        if self.new_description.is_empty() && self.new_name.is_empty() {
+        if self.new_description.is_empty()
+            && self.new_ipv4_block.is_none()
+            && self.new_ipv6_block.is_none()
+            && self.new_name.is_empty()
+        {
             return Err(anyhow::anyhow!("nothing to edit"));
         }
 
@@ -341,8 +345,8 @@ impl crate::cmd::Command for CmdSubnetEdit {
                 &self.vpc,
                 &oxide_api::types::VpcSubnetUpdate {
                     description: self.new_description.clone(),
-                    ipv4_block: self.new_ipv4_block.to_string(),
-                    ipv6_block: self.new_ipv6_block.to_string(),
+                    ipv4_block: self.new_ipv4_block.unwrap().to_string(),
+                    ipv6_block: self.new_ipv6_block.unwrap().to_string(),
                     name: self.new_name.clone(),
                 },
             )

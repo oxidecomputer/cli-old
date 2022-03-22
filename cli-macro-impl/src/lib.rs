@@ -121,20 +121,20 @@ trait ReferenceOrExt<T> {
     fn reference(&self) -> Result<String>;
     fn reference_render_type(&self) -> Result<TokenStream>;
     fn get_schema_from_reference(&self, recursive: bool) -> Result<openapiv3::Schema>;
-    fn render_type(&self) -> Result<TokenStream>;
-    fn get_is_check_fn(&self) -> Result<proc_macro2::Ident>;
+    fn render_type(&self, required: bool) -> Result<TokenStream>;
+    fn get_is_check_fn(&self, required: bool) -> Result<proc_macro2::Ident>;
 }
 
 impl<T: SchemaExt> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
     /// Returns the respective `is_zero`, `is_empty`, `is_none` function for the specific type.
-    fn get_is_check_fn(&self) -> Result<proc_macro2::Ident> {
-        let mut rendered = get_text(&self.render_type()?)?;
+    fn get_is_check_fn(&self, required: bool) -> Result<proc_macro2::Ident> {
+        let mut rendered = get_text(&self.render_type(required)?)?;
 
         let ident = if rendered.starts_with("Option<") {
             format_ident!("{}", "is_none")
         } else {
             rendered = match self.get_schema_from_reference(true) {
-                Ok(s) => get_text(&s.render_type()?)?,
+                Ok(s) => get_text(&s.render_type(required)?)?,
                 Err(_) => rendered.to_string(),
             };
 
@@ -224,14 +224,22 @@ impl<T: SchemaExt> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
         }
     }
 
-    fn render_type(&self) -> Result<TokenStream> {
-        if let Ok(t) = self.reference_render_type() {
-            Ok(t)
+    fn render_type(&self, required: bool) -> Result<TokenStream> {
+        let type_name = if let Ok(t) = self.reference_render_type() {
+            t
         } else {
             let schema = self.item()?;
 
-            schema.render_type()
+            schema.render_type(required)?
+        };
+
+        let rendered = get_text(&type_name)?;
+
+        if (rendered.ends_with("Ipv6Net") || rendered.ends_with("Ipv4Net")) && !required {
+            return Ok(quote!(Option<#type_name>));
         }
+
+        Ok(type_name)
     }
 }
 
@@ -288,7 +296,7 @@ trait SchemaExt {
     fn recurse(&self) -> Result<openapiv3::Schema>
     where
         Self: Sized;
-    fn render_type(&self) -> Result<TokenStream>;
+    fn render_type(&self, required: bool) -> Result<TokenStream>;
 }
 
 impl SchemaExt for openapiv3::Schema {
@@ -310,7 +318,7 @@ impl SchemaExt for openapiv3::Schema {
         Ok(self.clone())
     }
 
-    fn render_type(&self) -> Result<TokenStream> {
+    fn render_type(&self, required: bool) -> Result<TokenStream> {
         match &self.schema_kind {
             openapiv3::SchemaKind::Type(openapiv3::Type::Boolean {}) => Ok(quote!(bool)),
             openapiv3::SchemaKind::Type(openapiv3::Type::Array(a)) => {
@@ -319,7 +327,7 @@ impl SchemaExt for openapiv3::Schema {
                     .as_ref()
                     .ok_or_else(|| anyhow::anyhow!("no items in array `{:#?}`", a))?;
 
-                schema.render_type()
+                schema.render_type(required)
             }
             openapiv3::SchemaKind::Type(openapiv3::Type::String(st)) => {
                 if !st.enumeration.is_empty() {
@@ -451,7 +459,7 @@ impl SchemaExt for openapiv3::Schema {
 
                 let schema = all_of.get(0).unwrap();
 
-                schema.render_type()
+                schema.render_type(required)
             }
             x => anyhow::bail!("unexpected type {:#?}", x),
         }
@@ -463,7 +471,7 @@ impl SchemaExt for Box<openapiv3::Schema> {
         anyhow::bail!("`recurse` not implemented for `Box<openapiv3::Schema>`")
     }
 
-    fn render_type(&self) -> Result<TokenStream> {
+    fn render_type(&self, _required: bool) -> Result<TokenStream> {
         anyhow::bail!("`render_type` not implemented for `Box<openapiv3::Schema>`")
     }
 }
@@ -473,7 +481,7 @@ impl SchemaExt for openapiv3::PathItem {
         anyhow::bail!("`recurse` not implemented for `PathItem`")
     }
 
-    fn render_type(&self) -> Result<TokenStream> {
+    fn render_type(&self, _required: bool) -> Result<TokenStream> {
         anyhow::bail!("`render_type` not implemented for `PathItem`")
     }
 }
@@ -483,7 +491,7 @@ impl SchemaExt for openapiv3::RequestBody {
         anyhow::bail!("`recurse` not implemented for `RequestBody`")
     }
 
-    fn render_type(&self) -> Result<TokenStream> {
+    fn render_type(&self, _required: bool) -> Result<TokenStream> {
         anyhow::bail!("`render_type` not implemented for `RequestBody`")
     }
 }
@@ -493,7 +501,7 @@ impl SchemaExt for openapiv3::Parameter {
         anyhow::bail!("`recurse` not implemented for `RequestBody`")
     }
 
-    fn render_type(&self) -> Result<TokenStream> {
+    fn render_type(&self, _required: bool) -> Result<TokenStream> {
         anyhow::bail!("`render_type` not implemented for `Parameter`")
     }
 }
@@ -750,13 +758,13 @@ impl Operation {
 
                 let p_short = format_ident!("{}", new);
 
-                let rendered = get_text(&v.schema.render_type()?)?;
+                let rendered = get_text(&v.schema.render_type(v.required)?)?;
 
                 if rendered.contains("Ipv6Net") || rendered.contains("Ipv4Net") {
                     if v.required {
                         req_body_rendered.push(quote!(#p_og: #p_short.to_string()));
                     } else {
-                        req_body_rendered.push(quote!(#p_og: self.#p_short.to_string()));
+                        req_body_rendered.push(quote!(#p_og: self.#p_short.unwrap().to_string()));
                     }
                 } else if rendered.starts_with("Option<") && v.required {
                     // If the rendered property is an option, we want to unwrap it before
@@ -903,7 +911,8 @@ impl Operation {
             format!("The {} that holds the {}.", n, prop)
         };
 
-        let type_name = schema.render_type()?;
+        let type_name = schema.render_type(required)?;
+
         let rendered = get_text(&type_name)?;
 
         let flags = get_flags(name)?;
@@ -911,34 +920,35 @@ impl Operation {
         let short_flag = flags.get_short_token();
         let long_flag = flags.get_long_token();
 
-        let clap_line =
-            if (rendered.contains("Ipv6Net") || rendered.contains("Ipv4Net")) && !rendered.starts_with("Option<") {
+        let requiredq = if required {
+            quote!(true)
+        } else if !rendered.starts_with("Option<") {
+            // Default value is meaningless for Option types.
+            quote!(false, default_value_t)
+        } else {
+            quote!(false)
+        };
+
+        let clap_line = if (self.method == "POST" || name == "sort_by")
+            && !rendered.contains("Ipv6Net")
+            && !rendered.contains("Ipv4Net")
+        {
+            // On create, we want to set default values for the parameters.
+            if rendered.starts_with("Option<") {
+                // A default value there is pretty much always going to be None.
                 quote! {
                     #[clap(#long_flag, #short_flag)]
                 }
-            } else if self.method == "POST" || name == "sort_by" {
-                // On create, we want to set default values for the parameters.
-                if rendered.starts_with("Option<") {
-                    // A default value there is pretty much always going to be None.
-                    quote! {
-                        #[clap(#long_flag, #short_flag)]
-                    }
-                } else {
-                    quote! {
-                        #[clap(#long_flag, #short_flag default_value_t)]
-                    }
-                }
             } else {
-                let required = if required {
-                    quote!(true)
-                } else {
-                    quote!(false, default_value_t)
-                };
-
                 quote! {
-                    #[clap(#long_flag, #short_flag required = #required)]
+                    #[clap(#long_flag, #short_flag default_value_t)]
                 }
-            };
+            }
+        } else {
+            quote! {
+                #[clap(#long_flag, #short_flag required = #requiredq)]
+            }
+        };
 
         Ok(quote! {
             #[doc = #doc]
@@ -1029,7 +1039,7 @@ impl Operation {
 
             let error_msg = format!("{} required in non-interactive mode", formatted);
 
-            let is_check = t.get_is_check_fn()?;
+            let is_check = t.get_is_check_fn(true)?;
 
             required_checks.push(quote!(
                 if #p.#is_check() && !ctx.io.can_prompt() {
@@ -1157,7 +1167,7 @@ impl Operation {
 
             let title = format!("{} {}:", singular_tag_str, n);
 
-            let is_check = v.get_is_check_fn()?;
+            let is_check = v.get_is_check_fn(true)?;
 
             additional_prompts.push(quote! {
                 // Propmt if they didn't provide the value.
@@ -1314,9 +1324,7 @@ impl Operation {
 
         let mut check_nothing_to_edit = quote!(if);
         let mut i = 0;
-        let mut req_body_properties = self.get_request_body_properties()?;
-        req_body_properties.remove("new_ipv4_block");
-        req_body_properties.remove("new_ipv6_block");
+        let req_body_properties = self.get_request_body_properties()?;
         for (p, v) in &req_body_properties {
             if skip_defaults(p, tag) {
                 // Skip the defaults.
@@ -1327,7 +1335,7 @@ impl Operation {
 
             let p = format_ident!("{}", n);
 
-            let is_check = v.schema.get_is_check_fn()?;
+            let is_check = v.schema.get_is_check_fn(v.required)?;
 
             check_nothing_to_edit = quote! {
                 #check_nothing_to_edit self.#p.#is_check()
@@ -1993,10 +2001,7 @@ fn get_flags(name: &str) -> Result<Flags> {
     // have an 'n' short flag.
     let name = name.trim_start_matches("new_");
 
-    let long = to_kebab_case(name)
-        .replace("ipv-4", "ipv4")
-        .replace("ipv-6", "ipv6")
-        .to_string();
+    let long = to_kebab_case(name).replace("ipv-4", "ipv4").replace("ipv-6", "ipv6");
 
     let mut flags = Flags {
         short: name.to_lowercase().chars().next().unwrap(),
