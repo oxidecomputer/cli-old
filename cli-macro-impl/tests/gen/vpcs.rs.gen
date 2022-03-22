@@ -214,7 +214,9 @@ impl crate::cmd::Command for CmdVpcCreate {
                 &oxide_api::types::VpcCreate {
                     description: description.clone(),
                     dns_name: dns_name.clone(),
-                    ipv6_prefix: self.ipv6_prefix.unwrap().to_string(),
+                    ipv6_prefix: self
+                        .ipv6_prefix
+                        .map_or_else(|| String::new(), |v| v.to_string()),
                     name: vpc.clone(),
                 },
             )

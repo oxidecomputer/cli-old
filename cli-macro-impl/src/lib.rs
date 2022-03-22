@@ -764,7 +764,8 @@ impl Operation {
                     if v.required {
                         req_body_rendered.push(quote!(#p_og: #p_short.to_string()));
                     } else {
-                        req_body_rendered.push(quote!(#p_og: self.#p_short.unwrap().to_string()));
+                        req_body_rendered
+                            .push(quote!(#p_og: self.#p_short.map_or_else(|| String::new(), |v| v.to_string())));
                     }
                 } else if rendered.starts_with("Option<") && v.required {
                     // If the rendered property is an option, we want to unwrap it before
