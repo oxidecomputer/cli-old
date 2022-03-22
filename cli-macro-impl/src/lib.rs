@@ -1314,7 +1314,9 @@ impl Operation {
 
         let mut check_nothing_to_edit = quote!(if);
         let mut i = 0;
-        let req_body_properties = self.get_request_body_properties()?;
+        let mut req_body_properties = self.get_request_body_properties()?;
+        req_body_properties.remove("new_ipv4_block");
+        req_body_properties.remove("new_ipv6_block");
         for (p, v) in &req_body_properties {
             if skip_defaults(p, tag) {
                 // Skip the defaults.
@@ -1322,16 +1324,6 @@ impl Operation {
             }
 
             let n = clean_param_name(p);
-
-            if n == "new_target"
-                || n == "new_destination"
-                || n == "new_ipv6_prefix"
-                || n == "new_ipv4_block"
-                || n == "ipv6_block"
-            {
-                i += 1;
-                continue;
-            }
 
             let p = format_ident!("{}", n);
 

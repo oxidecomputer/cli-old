@@ -322,11 +322,7 @@ pub struct CmdSubnetEdit {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSubnetEdit {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
-        if self.new_description.is_empty()
-            && self.new_ipv4_block.is_empty()
-            && self.new_ipv6_block.is_empty()
-            && self.new_name.is_empty()
-        {
+        if self.new_description.is_empty() && self.new_name.is_empty() {
             return Err(anyhow::anyhow!("nothing to edit"));
         }
 
