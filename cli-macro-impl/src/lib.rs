@@ -1024,7 +1024,7 @@ impl Operation {
 
             let n = clean_param_name(&p);
 
-            if n == "target" || n == "destination" || n == "ipv6_prefix" || n == "ipv4_block" || n == "ipv6_block" {
+            if n == "target" || n == "destination" || n == "ipv4_block" {
                 continue;
             }
 
@@ -1160,7 +1160,7 @@ impl Operation {
             // WE NEED TO FIX THIS
             // Likely its one prompt for the type then another prompt for whatever the field
             // requires.
-            if n == "target" || n == "destination" || n == "ipv6_prefix" || n == "ipv4_block" || n == "ipv6_block" {
+            if n == "target" || n == "destination" || n == "ipv4_block" {
                 continue;
             }
 
