@@ -1010,6 +1010,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35e70ee094dc02fd9c13fdad4940090f22dbd6ac7c9e7094a46cf0232a50bc7c"
 
 [[package]]
+name = "ipnetwork"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4088d739b183546b239688ddbc79891831df421773df95e236daf7867866d355"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "itertools"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1322,9 +1331,9 @@ dependencies = [
 
 [[package]]
 name = "oxide-api"
-version = "0.1.0-rc.24"
+version = "0.1.0-rc.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa5313fdc71793c88548e65c6be0615f0ee73d0e72759b101c7f37722d74207e"
+checksum = "f61195a711f6a395abf1829f23ba128ed88890f3de4d4854abdfcdb6dcd6d7b0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -1332,6 +1341,7 @@ dependencies = [
  "chrono-humanize",
  "http",
  "hyperx",
+ "ipnetwork",
  "log",
  "mime",
  "percent-encoding",
