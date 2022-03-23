@@ -1966,7 +1966,7 @@ struct Flags {
 
 impl Flags {
     fn format_help(&self) -> String {
-        if self.short.is_ascii_alphabetic() {
+        if self.short != '0' {
             format!("-{}|--{}", self.short, self.long)
         } else {
             format!("--{}", self.long)
@@ -1974,7 +1974,7 @@ impl Flags {
     }
 
     fn get_short_token(&self) -> TokenStream {
-        if self.short.is_ascii_alphabetic() {
+        if self.short != '0' {
             let c = self.short;
             quote!(short = #c,)
         } else {
@@ -2002,7 +2002,11 @@ fn get_flags(name: &str) -> Result<Flags> {
     // have an 'n' short flag.
     let name = name.trim_start_matches("new_");
 
-    let long = to_kebab_case(name).replace("ipv-4", "ipv4").replace("ipv-6", "ipv6");
+    let mut long = to_kebab_case(name).replace("ipv-4", "ipv4").replace("ipv-6", "ipv6");
+
+    if long == "vpc-name" || long == "router-name" {
+        long = long.trim_end_matches("-name").to_string();
+    }
 
     let mut flags = Flags {
         short: name.to_lowercase().chars().next().unwrap(),
@@ -2017,6 +2021,10 @@ fn get_flags(name: &str) -> Result<Flags> {
         flags.short = '0';
     } else if name == "ncpus" {
         flags.short = 'c';
+    } else if flags.long == "ipv4-block" {
+        flags.short = '4';
+    } else if flags.long == "ipv6-block" {
+        flags.short = '6';
     }
 
     Ok(flags)

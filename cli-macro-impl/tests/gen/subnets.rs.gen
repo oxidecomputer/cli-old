@@ -23,7 +23,7 @@ pub struct CmdSubnetList {
     #[clap(long = "sort-by", short = 's', default_value_t)]
     pub sort_by: oxide_api::types::NameSortMode,
     #[doc = "The VPC that holds the subnets."]
-    #[clap(long = "vpc-name", short = 'v', required = true)]
+    #[clap(long = "vpc", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = r" Maximum number of items to list."]
     #[clap(long, short, default_value = "30")]
@@ -87,16 +87,16 @@ pub struct CmdSubnetCreate {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The VPC that holds the subnet."]
-    #[clap(long = "vpc-name", short = 'v', default_value_t)]
+    #[clap(long = "vpc", short = 'v', default_value_t)]
     pub vpc: oxide_api::types::Name,
     #[doc = "The description for the subnet."]
     #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
     #[doc = "The IPv4 address range for this subnet.\n\nIt must be allocated from an RFC 1918 private address range, and must not overlap with any other existing subnet in the VPC."]
-    #[clap(long = "ipv4-block", short = 'i', required = true)]
+    #[clap(long = "ipv4-block", short = '4', required = true)]
     pub ipv4_block: oxide_api::types::Ipv4Net,
     #[doc = "The IPv6 address range for this subnet.\n\nIt must be allocated from the RFC 4193 Unique Local Address range, with the prefix equal to the parent VPC's prefix. A random `/64` block will be assigned if one is not provided. It must not overlap with any existing subnet in the VPC."]
-    #[clap(long = "ipv6-block", short = 'i', required = false)]
+    #[clap(long = "ipv6-block", short = '6', required = false)]
     pub ipv6_block: Option<oxide_api::types::Ipv6Net>,
 }
 
@@ -261,7 +261,7 @@ pub struct CmdSubnetView {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The VPC that holds the subnet."]
-    #[clap(long = "vpc-name", short = 'v', required = true)]
+    #[clap(long = "vpc", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = "Open the subnet in the browser."]
     #[clap(short, long)]
@@ -305,16 +305,16 @@ pub struct CmdSubnetEdit {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The VPC that holds the subnet."]
-    #[clap(long = "vpc-name", short = 'v', required = true)]
+    #[clap(long = "vpc", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = "The new description for the subnet."]
     #[clap(long = "description", short = 'D', required = false, default_value_t)]
     pub new_description: String,
     #[doc = "The new ipv4 block for the subnet."]
-    #[clap(long = "ipv4-block", short = 'i', required = false)]
+    #[clap(long = "ipv4-block", short = '4', required = false)]
     pub new_ipv4_block: Option<oxide_api::types::Ipv4Net>,
     #[doc = "The new ipv6 block for the subnet."]
-    #[clap(long = "ipv6-block", short = 'i', required = false)]
+    #[clap(long = "ipv6-block", short = '6', required = false)]
     pub new_ipv6_block: Option<oxide_api::types::Ipv6Net>,
     #[doc = "The new name for the subnet."]
     #[clap(long = "name", short = 'n', required = false, default_value_t)]
@@ -398,7 +398,7 @@ pub struct CmdSubnetDelete {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
     #[doc = "The VPC that holds the subnet."]
-    #[clap(long = "vpc-name", short = 'v', required = true)]
+    #[clap(long = "vpc", short = 'v', required = true)]
     pub vpc: oxide_api::types::Name,
     #[doc = r" Confirm deletion without prompting."]
     #[clap(long)]
