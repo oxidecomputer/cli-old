@@ -1278,7 +1278,7 @@ dependencies = [
 
 [[package]]
 name = "oxide"
-version = "0.1.0-pre.10"
+version = "0.1.0-pre.11"
 dependencies = [
  "ansi_term",
  "anyhow",
