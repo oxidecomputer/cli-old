@@ -12,7 +12,7 @@ Updating the API spec is as simple as updating the [`spec.json`](spec.json) file
 you `cargo build`. It likely might need some tender love and care to make it a nice command like the other generated ones
 if it is out of the ordinary.
 
-Only `create`, `edit`, `view/get`, `delete` commands are generated. The rest are bespoke and any generation lead to something
+Only `create`, `edit`, `view/get`, `list`, `delete` commands are generated. The rest are bespoke and any generation lead to something
 that seemed harder to maintain over time. But if you are brave you can try.
 
 For examples of the macro formatting, checkout some of the commands under `src/` like `cmd_disk` or `cmd_org`.
