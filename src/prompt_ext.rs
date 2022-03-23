@@ -24,7 +24,7 @@ impl PromptExt for oxide_api::types::RouteDestination {
 
         Ok(match route_destination_type {
             oxide_api::types::RouteDestinationType::Ip => oxide_api::types::RouteDestination::Ip(value),
-            oxide_api::types::RouteDestinationType::Ipnet => {
+            oxide_api::types::RouteDestinationType::IpNet => {
                 let ipnet = oxide_api::types::IpNet::from_str(&value)
                     .map_err(|e| anyhow::anyhow!("invalid ipnet {}: {}", value, e));
 
@@ -75,7 +75,7 @@ impl PromptExt for oxide_api::types::RouteTarget {
             oxide_api::types::RouteTargetType::Vpc => oxide_api::types::RouteTarget::Vpc(value),
             oxide_api::types::RouteTargetType::Subnet => oxide_api::types::RouteTarget::Subnet(value),
             oxide_api::types::RouteTargetType::Instance => oxide_api::types::RouteTarget::Instance(value),
-            oxide_api::types::RouteTargetType::Internetgateway => oxide_api::types::RouteTarget::InternetGateway(value),
+            oxide_api::types::RouteTargetType::InternetGateway => oxide_api::types::RouteTarget::InternetGateway(value),
         })
     }
 }
