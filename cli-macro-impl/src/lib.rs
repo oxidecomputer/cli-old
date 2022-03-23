@@ -1255,13 +1255,15 @@ impl Operation {
                     let client = ctx.api_client("")?;
 
                     // Prompt for various parameters if we can, and the user passed them as empty.
-                    #org_prompt
+                    if ctx.io.can_prompt() {
+                        #org_prompt
 
-                    #project_prompt
+                        #project_prompt
 
-                    #name_prompt
+                        #name_prompt
 
-                    #(#additional_prompts)*
+                        #(#additional_prompts)*
+                    }
 
                     client
                         .#tag_ident()

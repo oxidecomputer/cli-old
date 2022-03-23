@@ -95,26 +95,27 @@ impl crate::cmd::Command for CmdProjectCreate {
         }
 
         let client = ctx.api_client("")?;
-        if project.is_empty() {
-            match dialoguer::Input::<String>::new()
-                .with_prompt(&format!("{} name:", "project"))
-                .interact_text()
-            {
-                Ok(name) => project = name,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+        if ctx.io.can_prompt() {
+            if project.is_empty() {
+                match dialoguer::Input::<String>::new()
+                    .with_prompt(&format!("{} name:", "project"))
+                    .interact_text()
+                {
+                    Ok(name) => project = name,
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
                 }
             }
-        }
-
-        if description.is_empty() {
-            match dialoguer::Input::<_>::new()
-                .with_prompt("project description:")
-                .interact_text()
-            {
-                Ok(input) => description = input,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+            if description.is_empty() {
+                match dialoguer::Input::<_>::new()
+                    .with_prompt("project description:")
+                    .interact_text()
+                {
+                    Ok(input) => description = input,
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
                 }
             }
         }

@@ -136,83 +136,81 @@ impl crate::cmd::Command for CmdSubnetCreate {
         }
 
         let client = ctx.api_client("")?;
-        if organization.is_empty() {
-            let mut orgs: Vec<String> = Vec::new();
-            let resp = client
-                .organizations()
-                .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
-                .await?;
-            for org in resp {
-                orgs.push(org.name.to_string());
-            }
-            match dialoguer::Select::new()
-                .with_prompt("Project organization:")
-                .items(&orgs)
-                .interact()
-            {
-                Ok(index) => organization = orgs[index].to_string(),
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+        if ctx.io.can_prompt() {
+            if organization.is_empty() {
+                let mut orgs: Vec<String> = Vec::new();
+                let resp = client
+                    .organizations()
+                    .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
+                    .await?;
+                for org in resp {
+                    orgs.push(org.name.to_string());
+                }
+                match dialoguer::Select::new()
+                    .with_prompt("Project organization:")
+                    .items(&orgs)
+                    .interact()
+                {
+                    Ok(index) => organization = orgs[index].to_string(),
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
                 }
             }
-        }
-
-        if project.is_empty() {
-            let mut org_projects: Vec<String> = Vec::new();
-            let projects = client
-                .projects()
-                .get_all(
-                    &organization,
-                    oxide_api::types::NameOrIdSortMode::NameAscending,
-                )
-                .await?;
-            for project in projects {
-                org_projects.push(project.name.to_string());
-            }
-            match dialoguer::Select::new()
-                .with_prompt("Select project:")
-                .items(&org_projects)
-                .interact()
-            {
-                Ok(index) => project = org_projects[index].to_string(),
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+            if project.is_empty() {
+                let mut org_projects: Vec<String> = Vec::new();
+                let projects = client
+                    .projects()
+                    .get_all(
+                        &organization,
+                        oxide_api::types::NameOrIdSortMode::NameAscending,
+                    )
+                    .await?;
+                for project in projects {
+                    org_projects.push(project.name.to_string());
+                }
+                match dialoguer::Select::new()
+                    .with_prompt("Select project:")
+                    .items(&org_projects)
+                    .interact()
+                {
+                    Ok(index) => project = org_projects[index].to_string(),
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
                 }
             }
-        }
-
-        if subnet.is_empty() {
-            match dialoguer::Input::<String>::new()
-                .with_prompt(&format!("{} name:", "subnet"))
-                .interact_text()
-            {
-                Ok(name) => subnet = name,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+            if subnet.is_empty() {
+                match dialoguer::Input::<String>::new()
+                    .with_prompt(&format!("{} name:", "subnet"))
+                    .interact_text()
+                {
+                    Ok(name) => subnet = name,
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
                 }
             }
-        }
-
-        if description.is_empty() {
-            match dialoguer::Input::<_>::new()
-                .with_prompt("subnet description:")
-                .interact_text()
-            {
-                Ok(input) => description = input,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+            if description.is_empty() {
+                match dialoguer::Input::<_>::new()
+                    .with_prompt("subnet description:")
+                    .interact_text()
+                {
+                    Ok(input) => description = input,
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
                 }
             }
-        }
-
-        if vpc.is_empty() {
-            match dialoguer::Input::<_>::new()
-                .with_prompt("subnet vpc:")
-                .interact_text()
-            {
-                Ok(input) => vpc = input,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+            if vpc.is_empty() {
+                match dialoguer::Input::<_>::new()
+                    .with_prompt("subnet vpc:")
+                    .interact_text()
+                {
+                    Ok(input) => vpc = input,
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
                 }
             }
         }

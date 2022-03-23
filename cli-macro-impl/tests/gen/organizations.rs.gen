@@ -79,26 +79,27 @@ impl crate::cmd::Command for CmdOrganizationCreate {
         }
 
         let client = ctx.api_client("")?;
-        if organization.is_empty() {
-            match dialoguer::Input::<String>::new()
-                .with_prompt(&format!("{} name:", "organization"))
-                .interact_text()
-            {
-                Ok(name) => organization = name,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+        if ctx.io.can_prompt() {
+            if organization.is_empty() {
+                match dialoguer::Input::<String>::new()
+                    .with_prompt(&format!("{} name:", "organization"))
+                    .interact_text()
+                {
+                    Ok(name) => organization = name,
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
                 }
             }
-        }
-
-        if description.is_empty() {
-            match dialoguer::Input::<_>::new()
-                .with_prompt("organization description:")
-                .interact_text()
-            {
-                Ok(input) => description = input,
-                Err(err) => {
-                    return Err(anyhow::anyhow!("prompt failed: {}", err));
+            if description.is_empty() {
+                match dialoguer::Input::<_>::new()
+                    .with_prompt("organization description:")
+                    .interact_text()
+                {
+                    Ok(input) => description = input,
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
                 }
             }
         }
