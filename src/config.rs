@@ -162,6 +162,12 @@ pub fn new_blank_root() -> Result<toml_edit::Document> {
     Ok(s.parse::<toml_edit::Document>()?)
 }
 
+pub fn clean_hostname(host: &str) -> String {
+    host.trim_start_matches("https://")
+        .trim_start_matches("http://")
+        .to_string()
+}
+
 #[cfg(test)]
 pub fn new_blank_config() -> Result<impl Config> {
     let root = new_blank_root()?;

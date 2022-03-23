@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 
+use crate::config::clean_hostname;
+
 /// Login, logout, and get the status of your authentication.
 ///
 /// Manage `oxide`'s authentication state.
@@ -429,12 +431,6 @@ impl crate::cmd::Command for CmdAuthStatus {
 
         Ok(())
     }
-}
-
-fn clean_hostname(host: &str) -> String {
-    host.trim_start_matches("https://")
-        .trim_start_matches("http://")
-        .to_string()
 }
 
 #[cfg(test)]
