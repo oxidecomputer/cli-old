@@ -42,8 +42,8 @@ endif
 
 define buildrelease
 rustup target add $(1)
-cargo build --target $(1) || cross build --target $(1)
-mv $(CURDIR)/target/$(1)/debug/$(NAME) $(BUILDDIR)/$(NAME)-$(1) || mv $(CURDIR)/target/$(1)/debug/$(NAME).exe $(BUILDDIR)/$(NAME)-$(1)
+cargo build --release --target $(1) || cross build --release --target $(1)
+mv $(CURDIR)/target/$(1)/release/$(NAME) $(BUILDDIR)/$(NAME)-$(1) || mv $(CURDIR)/target/$(1)/release/$(NAME).exe $(BUILDDIR)/$(NAME)-$(1)
 md5sum $(BUILDDIR)/$(NAME)-$(1) > $(BUILDDIR)/$(NAME)-$(1).md5;
 sha256sum $(BUILDDIR)/$(NAME)-$(1) > $(BUILDDIR)/$(NAME)-$(1).sha256;
 echo -e "### $(1)\n\n" >> $(BUILDDIR)/README.md;

@@ -65,3 +65,6 @@ members = [
   "cli-macro",
   "cli-macro-impl",
 ]
+
+[profile.release]
+debug = true
