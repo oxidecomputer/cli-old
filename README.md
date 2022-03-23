@@ -23,4 +23,4 @@ repo as well since that is where the API client comes from.
 ### Running the tests
 
 The tests require a nexus server. The tests use the `OXIDE_TEST_API_TOKEN` and `OXIDE_TEST_API_HOST` variables for knowing where to look and authenticate.
-Note you likely don't want to run the tests against your production account, since it will create a bunch of stuff and then destroy what it created.
+Note you likely don't want to run the tests against your production account, since it will create a bunch of stuff and then destroy what it created (and likely everything else).
