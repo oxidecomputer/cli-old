@@ -941,7 +941,7 @@ date:"#
             want_code: 0,
             ..Default::default()
         },
-        /*TestItem {
+        TestItem {
             name: "create disk".to_string(),
             args: vec![
                 "oxide".to_string(),
@@ -1124,7 +1124,7 @@ date:"#
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
-        },*/
+        },
         TestItem {
             name: "list vpcs default".to_string(),
             args: vec![

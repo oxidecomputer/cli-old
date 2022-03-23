@@ -214,7 +214,7 @@ impl crate::cmd::Command for CmdDiskCreate {
                     description: description.clone(),
                     name: disk.clone(),
                     size: size.clone(),
-                    snapshot_id: self.snapshot.to_string(),
+                    snapshot_id: "".to_string(),
                 },
             )
             .await?;

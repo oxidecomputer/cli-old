@@ -777,11 +777,14 @@ impl Operation {
                         req_body_rendered.push(quote!(#p_og: #p_short.unwrap()));
                     }
                 } else if rendered == "uuid::Uuid" {
-                    if v.required {
-                        req_body_rendered.push(quote!(#p_og: #p_short.to_string()));
-                    } else {
-                        req_body_rendered.push(quote!(#p_og: self.#p_short.to_string()));
-                    }
+                    //if v.required {
+                    req_body_rendered.push(quote!(#p_og: "".to_string()));
+                    // TODO TODO FIX ONCE SNAPSHOTS WORK.
+                    //req_body_rendered.push(quote!(#p_og: #p_short.to_string()));
+                    //} else {
+                    // TODO TODO FIX ONCE SNAPSHOTS WORK.
+                    //req_body_rendered.push(quote!(#p_og: self.#p_short.to_string()));
+                    // }
                 } else if v.required {
                     req_body_rendered.push(quote!(#p_og: #p_short.clone()));
                 } else {
