@@ -16,3 +16,6 @@ Only `create`, `edit`, `view/get`, `list`, `delete` commands are generated. The 
 that seemed harder to maintain over time. But if you are brave you can try.
 
 For examples of the macro formatting, checkout some of the commands under `src/` like `cmd_disk` or `cmd_org`.
+
+**Note:** If you update the API spec here, you will likely want to bump the spec for the [oxide.rs](https://github.com/oxidecomputer/oxide.rs)
+repo as well since that is where the API client comes from.
