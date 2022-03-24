@@ -82,7 +82,6 @@ jobs:
           path: ${{github.workspace}}/cross/${{matrix.os}}-${{github.ref_name}}-README.md
   illumos:
     runs-on: ubuntu-latest
-    needs: makerelease
     name: illumos
     steps:
       - uses: actions/checkout@v2
@@ -127,7 +126,7 @@ jobs:
           path: ${{github.workspace}}/cross/${{matrix.os}}-illumos-README.md
   createrelease:
     runs-on: ubuntu-latest
-    needs: illumos
+    needs: [illumos, makerelease]
     name: createrelease
     steps:
       - uses: actions/checkout@v2
