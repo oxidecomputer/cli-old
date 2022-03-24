@@ -2,6 +2,10 @@
 
 The Oxide command line tool.
 
+The instructions below refer to instructions for contributing to the repo.
+
+For the CLI docs for end users refer to: https://docs.oxide.computer/cli/manual
+
 ### Installing
 
 Instructions for installing are on the [latest release](https://github.com/oxidecomputer/cli/releases).
