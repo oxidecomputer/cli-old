@@ -8,6 +8,11 @@ For the CLI docs for end users refer to: https://docs.oxide.computer/cli/manual
 
 To authenticate today, use the spoof method token: `oxide-spoof-001de000-05e4-4000-8000-000000004007`
 
+If you are running nexus locally without `https://` I'd recommend not using the
+prompt to authenticate but using the env variables `OXIDE_HOST` and
+`OXIDE_TOKEN`. The `OXIDE_HOST` can be anything like `http://{my_ip}:{port}`.
+It's essentially a URL.
+
 ### Installing
 
 Instructions for installing are on the [latest release](https://github.com/oxidecomputer/cli/releases).
