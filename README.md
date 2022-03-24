@@ -6,6 +6,8 @@ The instructions below refer to instructions for contributing to the repo.
 
 For the CLI docs for end users refer to: https://docs.oxide.computer/cli/manual
 
+To authenticate today, use the spoof method token: `oxide-spoof-001de000-05e4-4000-8000-000000004007`
+
 ### Installing
 
 Instructions for installing are on the [latest release](https://github.com/oxidecomputer/cli/releases).
