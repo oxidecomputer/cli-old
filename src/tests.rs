@@ -76,7 +76,7 @@ impl AsyncTestContext for MainContext {
                 match oxide.projects().delete(&org.name, &project.name).await {
                     Ok(_) => (),
                     Err(e) => {
-                        if e.to_string().contains("404") {
+                        if e.to_string().contains("Not Found") {
                             continue;
                         }
 
@@ -89,7 +89,7 @@ impl AsyncTestContext for MainContext {
             match oxide.organizations().delete(&org.name).await {
                 Ok(_) => (),
                 Err(e) => {
-                    if e.to_string().contains("404") {
+                    if e.to_string().contains("Not Found") {
                         continue;
                     }
 
