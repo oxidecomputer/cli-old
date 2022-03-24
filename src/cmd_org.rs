@@ -60,8 +60,10 @@ mod test {
             };
 
             // Set our test values.
-            let test_host = std::env::var("OXIDE_TEST_HOST").unwrap_or_default();
-            let test_token = std::env::var("OXIDE_TEST_TOKEN").unwrap_or_default();
+            let test_host =
+                std::env::var("OXIDE_TEST_HOST").expect("you need to set OXIDE_TEST_HOST to where the api is running");
+
+            let test_token = std::env::var("OXIDE_TEST_TOKEN").expect("OXIDE_TEST_TOKEN is required");
             std::env::set_var("OXIDE_HOST", test_host);
             std::env::set_var("OXIDE_TOKEN", test_token);
 

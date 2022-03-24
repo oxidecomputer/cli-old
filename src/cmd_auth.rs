@@ -450,8 +450,10 @@ mod test {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_cmd_auth() {
-        let test_host = std::env::var("OXIDE_TEST_HOST").unwrap_or_default().to_string();
-        let test_token = std::env::var("OXIDE_TEST_TOKEN").unwrap_or_default().to_string();
+        let test_host =
+            std::env::var("OXIDE_TEST_HOST").expect("you need to set OXIDE_TEST_HOST to where the api is running");
+
+        let test_token = std::env::var("OXIDE_TEST_TOKEN").expect("OXIDE_TEST_TOKEN is required");
 
         let tests: Vec<TestItem> = vec![
             TestItem {
