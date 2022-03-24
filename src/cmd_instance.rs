@@ -399,6 +399,8 @@ pub struct CmdInstanceSsh {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceSsh {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let client = ctx.api_client("")?;
+
         // Generate a key to use for ssh-ing into the instance.
         // We default to ed25519 here, since its a nice thing.
         writeln!(ctx.io.out, "Generating a temporary ssh key...")?;
@@ -429,13 +431,20 @@ impl crate::cmd::Command for CmdInstanceSsh {
             return Ok(());
         }
 
-        let mut ssh = crate::ssh_client::SshSession::connect(&key, &self.user, "34.69.170.43:22").await?;
+        // TODO: We need to get the instance IP address.
+        let _instance = client
+            .instances()
+            .get(&self.instance, &self.organization, &self.project)
+            .await?;
 
-        // Do the command.
-        let r = ssh.call(&self.args.join(" ")).await?;
-        assert!(r.success());
-        write!(ctx.io.out, "{}", r.output())?;
-        ssh.close().await?;
+        // Wrap the ssh command in a shell.
+        std::process::Command::new("ssh")
+            //.arg(host)
+            .args(&self.args)
+            .stdout(std::process::Stdio::inherit())
+            .stdin(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .output()?;
 
         // TODO: When we are done, we need to remove our key from our Oxide user's authorized keys.
         // This makes it act as a temporary key.
