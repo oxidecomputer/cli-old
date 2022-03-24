@@ -13,7 +13,7 @@ on:
       - Cargo.toml
       - Cargo.lock
       - .github/workflows/cargo-build.yml
-name: cargo build
+name: cargo build (nightly)
 jobs:
   cargobuild:
     name: cargo build (nightly)
