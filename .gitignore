@@ -6,3 +6,5 @@ cross
 osxcross
 # Where our generated docs will go.
 generated_docs
+# While running release github actions.
+releases
