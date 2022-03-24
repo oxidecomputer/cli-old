@@ -291,8 +291,74 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
 }
 
 async fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context<'_>) -> Result<i32> {
+    let cs = ctx.io.color_scheme();
+
     if let Err(err) = cmd.run(ctx).await {
-        writeln!(ctx.io.err_out, "{}", err).unwrap();
+        // If the error was from the API, let's handle it better for each type of error.
+        // These are defined here: https://github.com/oxidecomputer/omicron/blob/main/common/src/api/external/error.rs#L28
+        match err.downcast_ref::<oxide_api::types::Error>() {
+            Some(oxide_api::types::Error::ObjectNotFound { message }) => {
+                writeln!(ctx.io.err_out, "{} Object not found: {}", cs.failure_icon(), message,)?;
+            }
+            Some(oxide_api::types::Error::ObjectAlreadyExists { message }) => {
+                writeln!(
+                    ctx.io.err_out,
+                    "{} Object already exists: {}",
+                    cs.failure_icon(),
+                    message,
+                )?;
+            }
+            Some(oxide_api::types::Error::InvalidRequest { message }) => {
+                writeln!(ctx.io.err_out, "{} Invalid request: {}", cs.failure_icon(), message,)?;
+            }
+            Some(oxide_api::types::Error::Unauthenticated { internal_message }) => {
+                writeln!(
+                    ctx.io.err_out,
+                    "{} You are not authenticated: {}",
+                    cs.failure_icon(),
+                    internal_message
+                )?;
+
+                writeln!(ctx.io.err_out, "Try authenticating with: `oxide auth login`")?;
+            }
+            Some(oxide_api::types::Error::InvalidValue { message }) => {
+                writeln!(ctx.io.err_out, "{} Invalid value: {}", cs.failure_icon(), message)?;
+            }
+            Some(oxide_api::types::Error::Forbidden) => {
+                writeln!(
+                    ctx.io.err_out,
+                    "{} You are not authorized to perform this action",
+                    cs.failure_icon(),
+                )?;
+            }
+            Some(oxide_api::types::Error::InternalError { internal_message }) => {
+                writeln!(
+                    ctx.io.err_out,
+                    "{} Oxide API internal error: {}",
+                    cs.failure_icon(),
+                    internal_message
+                )?;
+            }
+            Some(oxide_api::types::Error::ServiceUnavailable { internal_message }) => {
+                writeln!(
+                    ctx.io.err_out,
+                    "{} Oxide API service unavailable: {}",
+                    cs.failure_icon(),
+                    internal_message
+                )?;
+            }
+            Some(oxide_api::types::Error::MethodNotAllowed { internal_message }) => {
+                writeln!(
+                    ctx.io.err_out,
+                    "{} Oxide API method not allowed: {}",
+                    cs.failure_icon(),
+                    internal_message
+                )?;
+            }
+            None => {
+                writeln!(ctx.io.err_out, "{}", err)?;
+            }
+        }
         return Ok(1);
     }
 

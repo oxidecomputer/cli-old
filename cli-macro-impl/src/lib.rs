@@ -488,21 +488,61 @@ impl SchemaExt for openapiv3::PathItem {
 
 impl SchemaExt for openapiv3::RequestBody {
     fn recurse(&self) -> Result<openapiv3::Schema> {
-        anyhow::bail!("`recurse` not implemented for `RequestBody`")
+        // Get the content type.
+        let content = self
+            .content
+            .get("application/json")
+            .ok_or_else(|| anyhow::anyhow!("RequestBody does not have a content type of `application/json`"))?;
+
+        if content.schema.is_none() {
+            anyhow::bail!("RequestBody does not have a schema")
+        }
+
+        let schema = content.schema.as_ref().unwrap();
+
+        // Recurse the schema.
+        schema.recurse()
     }
 
-    fn render_type(&self, _required: bool) -> Result<TokenStream> {
-        anyhow::bail!("`render_type` not implemented for `RequestBody`")
+    fn render_type(&self, required: bool) -> Result<TokenStream> {
+        // Get the content type.
+        let content = self
+            .content
+            .get("application/json")
+            .ok_or_else(|| anyhow::anyhow!("RequestBody does not have a content type of `application/json`"))?;
+
+        if content.schema.is_none() {
+            anyhow::bail!("RequestBody does not have a schema")
+        }
+
+        let schema = content.schema.as_ref().unwrap();
+
+        // Return the type for the schema.
+        schema.render_type(required || self.required)
     }
 }
 
 impl SchemaExt for openapiv3::Parameter {
     fn recurse(&self) -> Result<openapiv3::Schema> {
-        anyhow::bail!("`recurse` not implemented for `RequestBody`")
+        // Get the parameter data.
+        let data = self
+            .data()
+            .ok_or_else(|| anyhow::anyhow!("Parameter does not have data"))?;
+        // Get the parameter schema.
+        let schema = data.format.schema()?;
+        // Recurse the schema.
+        schema.recurse()
     }
 
-    fn render_type(&self, _required: bool) -> Result<TokenStream> {
-        anyhow::bail!("`render_type` not implemented for `Parameter`")
+    fn render_type(&self, required: bool) -> Result<TokenStream> {
+        // Get the parameter data.
+        let data = self
+            .data()
+            .ok_or_else(|| anyhow::anyhow!("Parameter does not have data"))?;
+        // Get the parameter schema.
+        let schema = data.format.schema()?;
+        // Return the type for the schema.
+        schema.render_type(required || data.required)
     }
 }
 
