@@ -85,7 +85,7 @@ impl crate::cmd::Command for CmdAuthLogin {
         if host.is_empty() {
             if interactive {
                 match dialoguer::Input::<String>::new()
-                    .with_prompt("Oxide instance hostname:")
+                    .with_prompt("Oxide instance hostname")
                     .interact_text()
                 {
                     Ok(input) => {
@@ -146,6 +146,7 @@ impl crate::cmd::Command for CmdAuthLogin {
                 }
             }
 
+            // TODO: fix this url once we know the URL in the console.
             writeln!(
                 ctx.io.err_out,
                 "Tip: you can generate an API Token here https://{}/account",
@@ -153,7 +154,7 @@ impl crate::cmd::Command for CmdAuthLogin {
             )?;
 
             token = match dialoguer::Input::<String>::new()
-                .with_prompt("Paste your authentication token:")
+                .with_prompt("Paste your authentication token")
                 .interact_text()
             {
                 Ok(input) => input,
