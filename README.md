@@ -22,7 +22,7 @@ repo as well since that is where the API client comes from.
 
 ### Running the tests
 
-The tests require a nexus server. The tests use the `OXIDE_TEST_API_TOKEN` and `OXIDE_TEST_API_HOST` variables for knowing where to look and authenticate.
+The tests require a nexus server. The tests use the `OXIDE_TEST_TOKEN` and `OXIDE_TEST_HOST` variables for knowing where to look and authenticate.
 You need to run the tests with `--test-threads=1`, ex: `cargo test -- --test-threads=1` because env variables are being set and tested and things will overlap.
 
 **Note:** you DON'T want to run the tests against your production account, since it will create a bunch of stuff and then destroy what it created (and likely everything else).
