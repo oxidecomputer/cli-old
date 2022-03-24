@@ -363,14 +363,19 @@ impl InstanceDetails {
 
 /// SSH into an instance.
 ///
-/// This command is a thin wrapper around the ssh(1) command that takes care of
+/// This command is a thin wrapper around the **ssh(1)** command that takes care of
 /// authentication and the translation of the instance name into an IP address.
 #[derive(Parser, Debug, Clone)]
-#[clap(verbatim_doc_comment)]
+#[clap(verbatim_doc_comment, trailing_var_arg = true)]
 pub struct CmdInstanceSsh {
     /// The instance to ssh into. Can be an ID or name.
     #[clap(name = "instance", required = true)]
-    instance: String,
+    pub instance: String,
+
+    /// The command and args to run on the instance. If not specified,
+    /// you will get an interactive shell.
+    #[clap(name = "args", multiple_values = true, required = false)]
+    pub args: Vec<String>,
 
     /// The project that holds the instance.
     #[clap(long, short, required = true)]
@@ -383,6 +388,12 @@ pub struct CmdInstanceSsh {
     /// The user to authenticate as.
     #[clap(long, short, required = true, env = "USER")]
     pub user: String,
+
+    /// Additional flags to be passed to **ssh(1)**. It is recommended that flags
+    /// be passed using an assignment operator and quotes.
+    /// Example: `--ssh-flag "-L 80:localhost:80"`.
+    #[clap(long = "ssh-flag", multiple_occurrences = true, required = false)]
+    pub ssh_flags: Vec<String>,
 }
 
 #[async_trait::async_trait]
@@ -406,6 +417,8 @@ impl crate::cmd::Command for CmdInstanceSsh {
             pubkey.public_key_base64()
         )?;
 
+        println!("ARGS: {:?}", self.args);
+
         // TODO: Add our pubkey to our Oxide user's authorized_keys.
         writeln!(ctx.io.out, "Adding temporary ssh key to your user account...")?;
 
@@ -419,7 +432,7 @@ impl crate::cmd::Command for CmdInstanceSsh {
         let mut ssh = crate::ssh_client::SshSession::connect(&key, &self.user, "34.69.170.43:22").await?;
 
         // Do the command.
-        let r = ssh.call("whoami").await?;
+        let r = ssh.call(&self.args.join(" ")).await?;
         assert!(r.success());
         write!(ctx.io.out, "{}", r.output())?;
         ssh.close().await?;
