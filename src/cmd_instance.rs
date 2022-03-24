@@ -3,6 +3,7 @@ use std::io::Write;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use cli_macro::crud_gen;
+use thrussh_keys::PublicKeyBase64;
 
 /// Create, list, edit, view, and delete instances.
 ///
@@ -21,6 +22,7 @@ pub struct CmdInstance {
 enum SubCommand {
     Disks(CmdInstanceDisks),
     Edit(CmdInstanceEdit),
+    Ssh(CmdInstanceSsh),
     Start(CmdInstanceStart),
     Stop(CmdInstanceStop),
     Reboot(CmdInstanceReboot),
@@ -35,6 +37,7 @@ impl crate::cmd::Command for CmdInstance {
             SubCommand::Disks(cmd) => cmd.run(ctx).await,
             SubCommand::Edit(cmd) => cmd.run(ctx).await,
             SubCommand::List(cmd) => cmd.run(ctx).await,
+            SubCommand::Ssh(cmd) => cmd.run(ctx).await,
             SubCommand::Start(cmd) => cmd.run(ctx).await,
             SubCommand::Stop(cmd) => cmd.run(ctx).await,
             SubCommand::Reboot(cmd) => cmd.run(ctx).await,
@@ -123,7 +126,6 @@ impl crate::cmd::Command for CmdInstanceStart {
         let full_name = format!("{}/{}", self.organization, self.project);
 
         // Start the instance.
-        // TODO: Do we want a progress bar here?
         client
             .instances()
             .start(&self.instance, &self.organization, &self.project)
@@ -204,7 +206,6 @@ impl crate::cmd::Command for CmdInstanceStop {
         }
 
         // Stop the instance.
-        // TODO: Do we want a progress bar here?
         client
             .instances()
             .stop(&self.instance, &self.organization, &self.project)
@@ -285,7 +286,6 @@ impl crate::cmd::Command for CmdInstanceReboot {
         }
 
         // Reboot the instance.
-        // TODO: Do we want a progress bar here?
         client
             .instances()
             .reboot(&self.instance, &self.organization, &self.project)
@@ -356,6 +356,80 @@ impl InstanceDetails {
         if let Some(handle) = handle {
             handle.done();
         }
+
+        Ok(())
+    }
+}
+
+/// SSH into an instance.
+///
+/// This command is a thin wrapper around the ssh(1) command that takes care of
+/// authentication and the translation of the instance name into an IP address.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdInstanceSsh {
+    /// The instance to ssh into. Can be an ID or name.
+    #[clap(name = "instance", required = true)]
+    instance: String,
+
+    /// The project that holds the instance.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// The user to authenticate as.
+    #[clap(long, short, required = true, env = "USER")]
+    pub user: String,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdInstanceSsh {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        // Generate a key to use for ssh-ing into the instance.
+        // We default to ed25519 here, since its a nice thing.
+        writeln!(ctx.io.out, "Generating a temporary ssh key...")?;
+        let key = thrussh_keys::key::KeyPair::generate_ed25519().unwrap();
+        let pubkey = key.clone_public_key();
+
+        writeln!(
+            ctx.io.out,
+            "Temporary public key has fingerprint `{}`",
+            pubkey.fingerprint()
+        )?;
+
+        writeln!(
+            ctx.io.out,
+            "Temporary bytes are `ssh-ed25519 {}`",
+            pubkey.public_key_base64()
+        )?;
+
+        // TODO: Add our pubkey to our Oxide user's authorized_keys.
+        writeln!(ctx.io.out, "Adding temporary ssh key to your user account...")?;
+
+        if !dialoguer::Confirm::new()
+            .with_prompt("Do you want to continue?")
+            .interact()?
+        {
+            return Ok(());
+        }
+
+        let mut ssh = crate::ssh_client::SshSession::connect(&key, &self.user, "34.69.170.43:22").await?;
+
+        // Do the command.
+        let r = ssh.call("whoami").await?;
+        assert!(r.success());
+        write!(ctx.io.out, "{}", r.output())?;
+        ssh.close().await?;
+
+        // TODO: When we are done, we need to remove our key from our Oxide user's authorized keys.
+        // This makes it act as a temporary key.
+        writeln!(
+            ctx.io.out,
+            "Cleaning up the temporary ssh key from your user account..."
+        )?;
 
         Ok(())
     }
