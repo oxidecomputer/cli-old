@@ -186,7 +186,7 @@ impl crate::config::Config for FileConfig {
         let hosts = self.hosts()?;
 
         if hosts.is_empty() {
-            return Err(anyhow!("No hosts found"));
+            return Err(anyhow!("No hosts found. Try logging in with `oxide auth login`."));
         }
 
         let hosts_source = crate::config_file::hosts_file()?;
