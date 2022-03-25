@@ -8,10 +8,8 @@ For the CLI docs for end users refer to: https://docs.oxide.computer/cli/manual
 
 To authenticate today, use the spoof method token: `oxide-spoof-001de000-05e4-4000-8000-000000004007`
 
-If you are running nexus locally without `https://` I'd recommend not using the
-prompt to authenticate but using the env variables `OXIDE_HOST` and
-`OXIDE_TOKEN`. The `OXIDE_HOST` can be anything like `http://{my_ip}:{port}`.
-It's essentially a URL.
+If you are running nexus locally without `https://` make sure you denote that in
+the URL you pass to `OXIDE_HOST` or to `oxide auth login`.
 
 ### Installing
 
@@ -34,7 +32,6 @@ repo as well since that is where the API client comes from.
 ### Running the tests
 
 The tests require a nexus server. The tests use the `OXIDE_TEST_TOKEN` and `OXIDE_TEST_HOST` variables for knowing where to look and authenticate.
-You need to run the tests with `--test-threads=1`, ex: `cargo test -- --test-threads=1` because env variables are being set and tested and things will overlap.
 
 For now the token for spoof is `oxide-spoof-001de000-05e4-4000-8000-000000004007`.
 

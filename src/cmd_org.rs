@@ -88,6 +88,7 @@ mod test {
 
     #[test_context(TContext)]
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    #[serial_test::serial]
     async fn test_cmd_org() {
         let tests: Vec<TestItem> = vec![
             TestItem {

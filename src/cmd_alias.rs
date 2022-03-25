@@ -307,6 +307,7 @@ mod test {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    #[serial_test::serial]
     async fn test_cmd_alias() {
         let tests: Vec<TestAlias> = vec![
             TestAlias {

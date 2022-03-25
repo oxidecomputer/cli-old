@@ -175,6 +175,7 @@ mod test {
 
     #[test_context(TContext)]
     #[test]
+    #[serial_test::serial]
     fn test_context() {
         let tests = vec![
             TestItem {

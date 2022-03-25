@@ -195,6 +195,7 @@ mod test {
 
     #[test_context(Context)]
     #[test]
+    #[serial_test::serial]
     fn test_env_color_disabled() {
         let tests = vec![
             TestItem {

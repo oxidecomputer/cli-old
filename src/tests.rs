@@ -102,6 +102,7 @@ impl AsyncTestContext for MainContext {
 
 #[test_context(MainContext)]
 #[tokio::test]
+#[serial_test::serial]
 async fn test_main(ctx: &mut MainContext) {
     let version = clap::crate_version!();
 

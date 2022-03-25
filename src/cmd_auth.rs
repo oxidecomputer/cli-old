@@ -456,6 +456,7 @@ mod test {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    #[serial_test::serial]
     async fn test_cmd_auth() {
         let test_host =
             std::env::var("OXIDE_TEST_HOST").expect("you need to set OXIDE_TEST_HOST to where the api is running");
