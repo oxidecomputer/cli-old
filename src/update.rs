@@ -245,7 +245,10 @@ mod test {
     async fn test_download_binary_to_temp_file() {
         let file = super::download_binary_to_temp_file("v0.1.0").await.unwrap();
 
-        assert_eq!(file, "oxide");
+        assert_eq!(
+            file,
+            format!("{}/oxide", std::env::temp_dir().to_str().unwrap().trim_end_matches('/'))
+        );
     }
 
     #[test]

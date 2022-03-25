@@ -60,10 +60,11 @@ jobs:
         uses: actions-rs/tarpaulin@v0.1
         with:
           version: '0.15.0'
-          args: '--all -- --test-threads 1'
+          args: '--all'
         env:
           OXIDE_TEST_TOKEN: ${{secrets.OXIDE_TOKEN}}
           OXIDE_TEST_HOST: localhost:8888
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v2
