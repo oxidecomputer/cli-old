@@ -28,7 +28,7 @@ pub struct StateEntry {
 /// Returns the latest version of the cli, or none if there is not a new
 /// update or we shouldn't update.
 pub async fn check_for_update(current_version: &str, force: bool) -> Result<Option<ReleaseInfo>> {
-    if !should_check_for_update() {
+    if !should_check_for_update() && !force {
         return Ok(None);
     }
 
@@ -97,8 +97,6 @@ pub async fn get_latest_release_info() -> Result<ReleaseInfo> {
 
     let resp = req.send().await?;
     let text = resp.text().await?;
-
-    println!("RELEASE {}", text);
 
     let latest_release: ReleaseInfo = match serde_json::from_str(&text) {
         Ok(release_info) => release_info,
