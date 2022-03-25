@@ -89,9 +89,9 @@ pub async fn get_latest_release_info() -> Result<ReleaseInfo> {
     // Set the user agent.
     req = req.header("User-Agent", format!("oxide/{}", clap::crate_version!()));
 
-    /*if !github_token.is_empty() {
+    if !github_token.is_empty() {
         req = req.bearer_auth(github_token);
-    }*/
+    }
 
     let resp = req.send().await?;
     let text = resp.text().await?;

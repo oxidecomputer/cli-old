@@ -16,6 +16,7 @@ on:
       - Cargo.lock
       - .github/workflows/cargo-build.yml
   workflow_dispatch:
+permissions: read-all
 name: cargo test
 jobs:
   cargotest:
