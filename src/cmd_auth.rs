@@ -278,7 +278,7 @@ impl crate::cmd::Command for CmdAuthLogout {
 
         let client = ctx.api_client(&hostname)?;
 
-        // TODO: Get the current user.
+        // Get the current user.
         let session = client.hidden().session_me().await?;
 
         // TODO: this should be the users email or something better.

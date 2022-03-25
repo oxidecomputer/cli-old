@@ -177,7 +177,8 @@ impl IoStreams {
             filtered_env.insert("LV".to_string(), "-c".to_string());
         }
 
-        // TODO: fix this.
+        // TODO: fix this, either make the pager stuff work or remove it everwhere, see
+        // OXIDE_PAGER.
         let pager_cmd = Command::new(pager_args.first().unwrap())
             .args(pager_args.iter().skip(1))
             .env_clear()
@@ -250,7 +251,6 @@ impl IoStreams {
 
     pub fn force_terminal(&mut self, spec: &str) {
         self.color_enabled = !crate::colors::env_color_disabled();
-        // TODO: fix this.
         self.set_stdout_tty(true);
 
         if let Ok(i) = spec.parse::<i32>() {

@@ -127,7 +127,7 @@ impl crate::cmd::Command for CmdGenerateManPages {
 }
 
 impl CmdGenerateManPages {
-    // TODO: having the root like this sucks, clean this up.
+    // TODO: having the root repeated like this sucks, clean this up.
     fn generate(
         &self,
         ctx: &mut crate::context::Context,
