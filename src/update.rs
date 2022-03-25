@@ -37,8 +37,9 @@ pub async fn check_for_update(current_version: &str) -> Result<Option<ReleaseInf
         let state = get_state_entry(&state_file)?;
 
         let duration_since_last_check = chrono::Utc::now() - state.checked_for_update_at;
-        if duration_since_last_check < chrono::Duration::hours(24) {
-            // If we've checked for updates in the last 24 hours, don't check again.
+        // TODO: After we make a mjor release of v1 we should bump this to like 6/12 hours.
+        if duration_since_last_check < chrono::Duration::hours(1) {
+            // If we've checked for updates in the last 1 hour, don't check again.
             return Ok(None);
         }
     }
@@ -219,6 +220,12 @@ mod test {
                 current_version: "v0.10.0-pre.1".to_string(),
                 latest_version: "v0.9.0".to_string(),
                 want_result: false,
+            },
+            TestItem {
+                name: "latest is a pre-release".to_string(),
+                current_version: "v0.1.0".to_string(),
+                latest_version: "v0.2.0-pre.1".to_string(),
+                want_result: true,
             },
         ];
 
