@@ -1,4 +1,6 @@
-use std::{fs, io::Write, os::unix::fs::PermissionsExt};
+#[cfg(target_family = "unix")]
+use std::os::unix::fs::PermissionsExt;
+use std::{fs, io::Write};
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -95,6 +97,8 @@ pub async fn get_latest_release_info() -> Result<ReleaseInfo> {
 
     let resp = req.send().await?;
     let text = resp.text().await?;
+
+    println!("RELEASE {}", text);
 
     let latest_release: ReleaseInfo = match serde_json::from_str(&text) {
         Ok(release_info) => release_info,

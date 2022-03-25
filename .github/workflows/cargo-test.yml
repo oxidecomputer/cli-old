@@ -65,7 +65,7 @@ jobs:
         uses: actions-rs/tarpaulin@v0.1
         with:
           version: '0.15.0'
-          args: '--all'
+          args: '--all -- --nocapture'
         env:
           OXIDE_TEST_TOKEN: ${{secrets.OXIDE_TOKEN}}
           OXIDE_TEST_HOST: localhost:8888
