@@ -8,12 +8,16 @@ on:
       - Cargo.lock
       - .github/workflows/make-cross.yml
       - Makefile
+      - 'rust-toolchain'
+      - 'rust-toolchain.toml'
   pull_request:
     paths:
       - '**.rs'
       - Cargo.toml
       - Cargo.lock
       - .github/workflows/cargo-build.yml
+      - 'rust-toolchain'
+      - 'rust-toolchain.toml'
 name: make cross
 jobs:
   cross:

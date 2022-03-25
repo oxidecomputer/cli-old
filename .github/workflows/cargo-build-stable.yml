@@ -7,12 +7,16 @@ on:
       - Cargo.toml
       - Cargo.lock
       - .github/workflows/cargo-build.yml
+      - 'rust-toolchain'
+      - 'rust-toolchain.toml'
   pull_request:
     paths:
       - '**.rs'
       - Cargo.toml
       - Cargo.lock
       - .github/workflows/cargo-build.yml
+      - 'rust-toolchain'
+      - 'rust-toolchain.toml'
 name: cargo build (stable)
 jobs:
   cargobuild:
