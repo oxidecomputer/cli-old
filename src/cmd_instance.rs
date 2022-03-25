@@ -384,7 +384,7 @@ pub struct CmdInstanceSsh {
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
 
-    /// The user to authenticate as.
+    /// The ssh user. This defaults to `$USER` on the host the command is run on.
     #[clap(long, short, required = true, env = "USER")]
     pub user: String,
 

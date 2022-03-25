@@ -56,8 +56,8 @@ pub struct CmdAuthLogin {
     pub with_token: bool,
 
     /// The host of the Oxide instance to authenticate with.
-    /// This assumes the instance is an https:// url, if not otherwise specified
-    /// as http://.
+    /// This assumes the instance is an `https://` url, if not otherwise specified
+    /// as `http://`.
     #[clap(short = 'H', long, env = "OXIDE_HOST", default_value = "")]
     pub host: String,
     // Open a browser to authenticate.
