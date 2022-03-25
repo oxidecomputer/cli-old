@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use parse_display::{Display, FromStr};
 
-/// Shortcut to open the Oxide documentation or Console in your browser..
+/// Shortcut to open the Oxide documentation or Console in your browser.
 ///
 /// If no arguments are given, the default is to open the Oxide documentation.
 #[derive(Parser, Debug, Clone)]
