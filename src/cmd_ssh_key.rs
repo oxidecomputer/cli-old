@@ -89,14 +89,28 @@ pub struct CmdSSHKeySyncFromGithub {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeySyncFromGithub {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let cs = ctx.io.color_scheme();
+
         let keys = crate::ssh::get_github_ssh_keys(&self.github_username).await?;
 
         for key in keys {
+            writeln!(
+                ctx.io.out,
+                "Adding key `{} {}`...",
+                key.key_type.name,
+                key.fingerprint()
+            )?;
             // TODO: add the key to Oxide.
-            writeln!(ctx.io.out, "Adding key: {:?}", key)?;
         }
 
         // TODO: make the overwrite flag work.
+
+        writeln!(
+            ctx.io.out,
+            "{} Keys synced with GitHub user {}!",
+            cs.success_icon(),
+            self.github_username
+        )?;
 
         Ok(())
     }
