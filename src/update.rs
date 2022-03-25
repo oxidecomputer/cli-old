@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, io::Write};
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -167,9 +167,107 @@ pub fn is_under_homebrew() -> Result<bool> {
     Ok(binary_path_str.starts_with(brew_bin_prefix.to_str().unwrap()))
 }
 
+/// Takes a version string and returns the URL to download the latest release.
+fn get_exe_download_url(version: &str) -> String {
+    // Make sure the version starts with a v.
+    let version = if !version.starts_with('v') {
+        format!("v{}", version)
+    } else {
+        version.to_string()
+    };
+
+    format!(
+        "https://dl.oxide.computer/releases/cli/{}/oxide-{}",
+        version,
+        crate::built_info::TARGET
+    )
+}
+
+/// Takes a version string and downloads the latest binary to a temp file.
+/// This also checks the SHA256 hash of the file.
+async fn download_binary_to_temp_file(version: &str) -> Result<String> {
+    let temp_dir = std::env::temp_dir();
+    let temp_file = temp_dir.join("oxide");
+
+    let url = get_exe_download_url(version);
+
+    // Get the contents of the binary.
+    let resp = reqwest::get(&url).await?;
+    let bin_body = resp.bytes().await?;
+
+    // Get the contents of the sha256sum.
+    let resp = reqwest::get(&format!("{}.sha256", url)).await?;
+    let sha256_body = resp.text().await?;
+    let sha256_parts = sha256_body.split(' ').collect::<Vec<&str>>();
+    let sha256_hash = sha256_parts[0];
+
+    // Verify the sha256 hash of the binary.
+    let bin_hash = sha256_digest(bin_body.as_ref())?;
+    if bin_hash != sha256_hash {
+        anyhow::bail!("SHA256 hash mismatch: local ({}) != remote ({})", bin_hash, sha256_hash);
+    }
+
+    // Write the body to the file.
+    let mut f = std::fs::OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open(&temp_file)?;
+    f.write_all(&bin_body)?;
+    f.flush()?;
+
+    Ok(temp_file.as_os_str().to_str().unwrap().to_string())
+}
+
+/// Calculates the SHA256 hash of a reader.
+fn sha256_digest<R: std::io::Read>(mut reader: R) -> Result<String> {
+    let mut context = ring::digest::Context::new(&ring::digest::SHA256);
+    let mut buffer = [0; 1024];
+
+    loop {
+        let count = reader.read(&mut buffer)?;
+        if count == 0 {
+            break;
+        }
+        context.update(&buffer[..count]);
+    }
+
+    let digest = context.finish();
+
+    Ok(data_encoding::HEXLOWER.encode(digest.as_ref()))
+}
+
 #[cfg(test)]
 mod test {
     use pretty_assertions::assert_eq;
+
+    #[tokio::test]
+    async fn test_download_binary_to_temp_file() {
+        let file = super::download_binary_to_temp_file("v0.1.0").await.unwrap();
+
+        assert_eq!(file, "oxide");
+    }
+
+    #[test]
+    fn test_get_exe_download_url() {
+        let url = super::get_exe_download_url("0.1.0");
+        assert_eq!(
+            url,
+            format!(
+                "https://dl.oxide.computer/releases/cli/v0.1.0/oxide-{}",
+                crate::built_info::TARGET
+            )
+        );
+
+        let url = super::get_exe_download_url("v0.2.0");
+        assert_eq!(
+            url,
+            format!(
+                "https://dl.oxide.computer/releases/cli/v0.2.0/oxide-{}",
+                crate::built_info::TARGET
+            )
+        );
+    }
 
     #[tokio::test]
     #[serial_test::serial]

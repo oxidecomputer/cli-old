@@ -49,6 +49,13 @@ pub mod cmd_subnet;
 pub mod cmd_version;
 /// The vpc command.
 pub mod cmd_vpc;
+
+// Use of a mod or pub mod is not actually necessary.
+mod built_info {
+    // The file has been placed there by the build script.
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
 mod colors;
 mod config;
 mod config_alias;
