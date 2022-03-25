@@ -76,7 +76,7 @@ fn is_ci() -> bool {
 }
 
 /// Get the information about the latest version of the cli.
-async fn get_latest_release_info() -> Result<ReleaseInfo> {
+pub async fn get_latest_release_info() -> Result<ReleaseInfo> {
     // If the user has a GITHUB_TOKEN environment variable, use it to get the latest release.
     // This allows us to test this while the repo is still private.
     // We might want to remove this in the future.
@@ -89,9 +89,9 @@ async fn get_latest_release_info() -> Result<ReleaseInfo> {
     // Set the user agent.
     req = req.header("User-Agent", format!("oxide/{}", clap::crate_version!()));
 
-    if !github_token.is_empty() {
+    /*if !github_token.is_empty() {
         req = req.bearer_auth(github_token);
-    }
+    }*/
 
     let resp = req.send().await?;
     let text = resp.text().await?;
@@ -139,7 +139,7 @@ fn set_state_entry(filename: &str, t: chrono::DateTime<chrono::Utc>, r: ReleaseI
 }
 
 /// Return is one version is greater than another.
-fn version_greater_then(v: &str, w: &str) -> Result<bool> {
+pub fn version_greater_then(v: &str, w: &str) -> Result<bool> {
     match version_compare::compare(v, w) {
         Ok(cmp) => Ok(cmp == version_compare::Cmp::Gt),
         Err(_) => Err(anyhow!("failed to compare versions: {} {}", v, w)),
@@ -167,38 +167,6 @@ pub fn is_under_homebrew() -> Result<bool> {
     Ok(binary_path_str.starts_with(brew_bin_prefix.to_str().unwrap()))
 }
 
-/// Update running binary to the latest version.
-/// This function will return an error if the binary is under Homebrew or if
-/// the running version is already the latest version.
-pub async fn update_running_binary() -> Result<()> {
-    if is_under_homebrew()? {
-        anyhow::bail!("You are running under Homebrew. Please run `brew upgrade oxide` instead.");
-    }
-
-    // Get the latest release.
-    let latest_release = get_latest_release_info().await?;
-    let current_version = clap::crate_version!();
-
-    if !version_greater_then(&latest_release.version, current_version)? {
-        anyhow::bail!(
-            "You are already running the latest version ({}) of the cli.",
-            current_version
-        );
-    }
-
-    let current_binary_path = std::env::current_exe()?;
-
-    // TODO: Should probably write some output about the version we are updating to.
-
-    // Download the latest release.
-    let temp_latest_binary_path = download_binary_to_temp_file(&latest_release.version).await?;
-
-    // Rename the file to that of the current running exe.
-    std::fs::rename(temp_latest_binary_path, current_binary_path)?;
-
-    Ok(())
-}
-
 /// Takes a version string and returns the URL to download the latest release.
 fn get_exe_download_url(version: &str) -> String {
     // Make sure the version starts with a v.
@@ -217,7 +185,7 @@ fn get_exe_download_url(version: &str) -> String {
 
 /// Takes a version string and downloads the latest binary to a temp file.
 /// This also checks the SHA256 hash of the file.
-async fn download_binary_to_temp_file(version: &str) -> Result<String> {
+pub async fn download_binary_to_temp_file(version: &str) -> Result<String> {
     let temp_dir = std::env::temp_dir();
     let temp_file = temp_dir.join("oxide");
 
@@ -253,6 +221,7 @@ async fn download_binary_to_temp_file(version: &str) -> Result<String> {
         .ok_or_else(|| anyhow::anyhow!("failed to convert temp file path to string"))?;
 
     // Set the file permissions to be correct, executable, write (so we can update).
+    // TODO: make this also work on windows.
     #[cfg(target_family = "unix")]
     std::fs::set_permissions(&temp_file_path, std::fs::Permissions::from_mode(0o755))?;
 

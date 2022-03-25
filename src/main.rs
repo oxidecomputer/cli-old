@@ -45,6 +45,8 @@ pub mod cmd_snapshot;
 pub mod cmd_ssh_key;
 /// The subnet command.
 pub mod cmd_subnet;
+/// The update command.
+pub mod cmd_update;
 /// The version command.
 pub mod cmd_version;
 /// The vpc command.
@@ -169,6 +171,7 @@ enum SubCommand {
     SshKey(cmd_ssh_key::CmdSSHKey),
     #[clap(alias = "subnets")]
     Subnet(cmd_subnet::CmdSubnet),
+    Update(cmd_update::CmdUpdate),
     Version(cmd_version::CmdVersion),
     #[clap(alias = "vpcs")]
     Vpc(cmd_vpc::CmdVpc),
@@ -295,6 +298,7 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Snapshot(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::SshKey(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Subnet(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Update(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Version(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Vpc(cmd) => run_cmd(&cmd, ctx).await,
     };
