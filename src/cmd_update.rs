@@ -13,7 +13,7 @@ pub struct CmdUpdate {}
 impl crate::cmd::Command for CmdUpdate {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         if crate::update::is_under_homebrew()? {
-            anyhow::bail!("You are running under Homebrew. Please run `brew upgrade oxide` instead.");
+            anyhow::bail!("You are running under Homebrew. Please run `brew update && brew upgrade oxide` instead.");
         }
 
         // Get the latest release.
