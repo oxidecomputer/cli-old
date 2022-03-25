@@ -173,7 +173,7 @@ async fn main() -> Result<(), ()> {
     // Check for updates to the cli.
     // We don't await here since we don't want to block the main thread.
     // We'll check again before we exit.
-    let update = crate::update::check_for_update(build_version);
+    let update = crate::update::check_for_update(build_version, false);
 
     // Let's get our configuration.
     let mut c = crate::config_file::parse_default_config().unwrap();

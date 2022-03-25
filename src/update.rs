@@ -25,7 +25,7 @@ pub struct StateEntry {
 ///
 /// Returns the latest version of the cli, or none if there is not a new
 /// update or we shouldn't update.
-pub async fn check_for_update(current_version: &str) -> Result<Option<ReleaseInfo>> {
+pub async fn check_for_update(current_version: &str, force: bool) -> Result<Option<ReleaseInfo>> {
     if !should_check_for_update() {
         return Ok(None);
     }
@@ -36,11 +36,13 @@ pub async fn check_for_update(current_version: &str) -> Result<Option<ReleaseInf
     if std::path::Path::new(&state_file).exists() {
         let state = get_state_entry(&state_file)?;
 
-        let duration_since_last_check = chrono::Utc::now() - state.checked_for_update_at;
-        // TODO: After we make a mjor release of v1 we should bump this to like 6/12 hours.
-        if duration_since_last_check < chrono::Duration::hours(1) {
-            // If we've checked for updates in the last 1 hour, don't check again.
-            return Ok(None);
+        if !force {
+            let duration_since_last_check = chrono::Utc::now() - state.checked_for_update_at;
+            // TODO: After we make a mjor release of v1 we should bump this to like 6/12 hours.
+            if duration_since_last_check < chrono::Duration::hours(1) {
+                // If we've checked for updates in the last 1 hour, don't check again.
+                return Ok(None);
+            }
         }
     }
 
@@ -169,6 +171,19 @@ pub fn is_under_homebrew() -> Result<bool> {
 mod test {
     use pretty_assertions::assert_eq;
 
+    #[tokio::test]
+    #[serial_test::serial]
+    async fn test_check_for_update() {
+        let result = super::check_for_update("0.0.1", true).await.unwrap();
+        assert_eq!(result.is_some(), true);
+
+        let latest_release = result.unwrap();
+
+        let gh_latest_release = super::get_latest_release_info().await.unwrap();
+
+        assert_eq!(latest_release.version, gh_latest_release.version);
+    }
+
     pub struct TestItem {
         name: String,
         current_version: String,
@@ -224,6 +239,12 @@ mod test {
             TestItem {
                 name: "latest is a pre-release".to_string(),
                 current_version: "v0.1.0".to_string(),
+                latest_version: "v0.2.0-pre.1".to_string(),
+                want_result: true,
+            },
+            TestItem {
+                name: "latest is a pre-release (current without v)".to_string(),
+                current_version: "0.1.0".to_string(),
                 latest_version: "v0.2.0-pre.1".to_string(),
                 want_result: true,
             },
