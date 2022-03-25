@@ -121,7 +121,7 @@ impl Context<'_> {
             Ok(format.clone())
         } else {
             let value = self.config.get("", "format")?;
-            FormatOutput::from_str(&value)
+            Ok(FormatOutput::from_str(&value).unwrap_or_default())
         }
     }
 }
