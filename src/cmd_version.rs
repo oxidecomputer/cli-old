@@ -10,8 +10,13 @@ pub struct CmdVersion {}
 impl crate::cmd::Command for CmdVersion {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let version = clap::crate_version!();
+        let git_hash = git_rev::try_revision_string!();
 
-        writeln!(ctx.io.out, "oxide {}", version)?;
+        if let Some(gh) = git_hash {
+            writeln!(ctx.io.out, "oxide {} ({})", version, gh);
+        } else {
+            writeln!(ctx.io.out, "oxide {}", version);
+        }
 
         writeln!(ctx.io.out, "{}", changelog_url(version))?;
 

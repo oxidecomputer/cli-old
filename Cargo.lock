@@ -830,6 +830,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "git_rev"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60884563ea313b5037683cd5d44f1e14e9cb07b08543756242a65887f9cff48e"
+
+[[package]]
 name = "gloo-timers"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1319,7 +1325,7 @@ dependencies = [
 
 [[package]]
 name = "oxide"
-version = "0.2.0-pre.1"
+version = "0.2.0-pre.2"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -1334,6 +1340,7 @@ dependencies = [
  "dialoguer",
  "dirs",
  "futures",
+ "git_rev",
  "heck 0.4.0",
  "http",
  "ipnetwork",

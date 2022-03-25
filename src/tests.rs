@@ -192,7 +192,7 @@ async fn test_main(ctx: &mut MainContext) {
         TestItem {
             name: "version".to_string(),
             args: vec!["oxide".to_string(), "version".to_string()],
-            want_out: format!("oxide {}\n{}", version, crate::cmd_version::changelog_url(version)),
+            want_out: format!("oxide {} ({})\n{}", version, git_rev::revision_string!(), crate::cmd_version::changelog_url(version)),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
