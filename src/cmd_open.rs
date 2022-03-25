@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use parse_display::{Display, FromStr};
 
 /// Shortcut to open the Oxide documentation or Console in your browser..
 ///
@@ -12,7 +13,8 @@ pub struct CmdOpen {
 }
 
 /// The type of shortcut to open.
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, FromStr, Display)]
+#[display(style = "kebab-case")]
 pub enum OpenShortcut {
     /// Open the Oxide documentation in your browser.
     Docs,
@@ -30,27 +32,13 @@ impl Default for OpenShortcut {
     }
 }
 
-impl std::fmt::Display for OpenShortcut {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl OpenShortcut {
+    fn get_url(&self) -> String {
         match self {
-            OpenShortcut::Docs => write!(f, "https://docs.oxide.computer"),
-            OpenShortcut::ApiRef => write!(f, "https://docs.oxide.computer/api"),
-            OpenShortcut::CliRef => write!(f, "https://docs.oxide.computer/cli"),
-            OpenShortcut::Console => write!(f, ""),
-        }
-    }
-}
-
-impl std::str::FromStr for OpenShortcut {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            "docs" => Ok(OpenShortcut::Docs),
-            "api-ref" => Ok(OpenShortcut::ApiRef),
-            "cli-ref" => Ok(OpenShortcut::CliRef),
-            "console" => Ok(OpenShortcut::Console),
-            _ => Err(anyhow::anyhow!("Invalid value for [shortcut]: {}", s)),
+            OpenShortcut::Docs => "https://docs.oxide.computer".to_string(),
+            OpenShortcut::ApiRef => "https://docs.oxide.computer/api".to_string(),
+            OpenShortcut::CliRef => "https://docs.oxide.computer/cli".to_string(),
+            OpenShortcut::Console => "".to_string(),
         }
     }
 }
@@ -59,7 +47,7 @@ impl std::str::FromStr for OpenShortcut {
 impl crate::cmd::Command for CmdOpen {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         if self.shortcut != OpenShortcut::Console {
-            return ctx.browser("", &self.shortcut.to_string());
+            return ctx.browser("", &self.shortcut.get_url());
         }
 
         // If they want to open the console, we need to get their default host.

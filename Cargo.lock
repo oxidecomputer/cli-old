@@ -1348,6 +1348,7 @@ dependencies = [
  "num-traits",
  "open",
  "oxide-api",
+ "parse-display",
  "pretty_assertions",
  "pulldown-cmark",
  "pulldown-cmark-to-cmark",
