@@ -94,20 +94,23 @@ impl crate::cmd::Command for CmdSSHKeySyncFromGithub {
         let keys = crate::ssh::get_github_ssh_keys(&self.github_username).await?;
 
         for key in keys {
+            // TODO: add the key to Oxide.
             writeln!(
                 ctx.io.out,
-                "Adding key `{} {}`...",
+                "{} Added key `{} {}`",
+                cs.success_icon(),
                 key.key_type.name,
                 key.fingerprint()
             )?;
-            // TODO: add the key to Oxide.
+
+            // TODO: print if a key already exists.
         }
 
         // TODO: make the overwrite flag work.
 
         writeln!(
             ctx.io.out,
-            "{} Keys synced with GitHub user {}!",
+            "{} Oxide ssh keys synced with GitHub user `{}`!",
             cs.success_icon(),
             self.github_username
         )?;
