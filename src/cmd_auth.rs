@@ -45,6 +45,9 @@ impl crate::cmd::Command for CmdAuth {
 ///
 ///     # authenticate with a specific Oxide instance
 ///     $ oxide auth login --host oxide.internal
+///
+///     # authenticate with an insecure Oxide instance (not recommended)
+///     $ oxide auth login --host http://oxide.internal
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdAuthLogin {
@@ -52,7 +55,9 @@ pub struct CmdAuthLogin {
     #[clap(long)]
     pub with_token: bool,
 
-    /// The hostname of the Oxide instance to authenticate with.
+    /// The host of the Oxide instance to authenticate with.
+    /// This assumes the instance is an https:// url, if not otherwise specified
+    /// as http://.
     #[clap(short = 'H', long, env = "OXIDE_HOST", default_value = "")]
     pub host: String,
     // Open a browser to authenticate.
@@ -85,7 +90,9 @@ impl crate::cmd::Command for CmdAuthLogin {
         if host.is_empty() {
             if interactive {
                 match dialoguer::Input::<String>::new()
-                    .with_prompt("Oxide instance hostname")
+                    .with_prompt(
+                        "Oxide instance host (this assumes https:// unless http:// is given as a part of the URL)",
+                    )
                     .interact_text()
                 {
                     Ok(input) => {

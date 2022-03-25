@@ -163,9 +163,9 @@ pub fn new_blank_root() -> Result<toml_edit::Document> {
 }
 
 pub fn clean_hostname(host: &str) -> String {
-    host.trim_start_matches("https://")
-        .trim_start_matches("http://")
-        .to_string()
+    // We only trim the secure hostname if it is a valid hostname.
+    // If they want http:// they should pass it in and we will not trim it.
+    host.trim_start_matches("https://").to_string()
 }
 
 #[cfg(test)]
