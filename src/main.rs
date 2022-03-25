@@ -23,6 +23,8 @@ pub mod cmd_generate;
 pub mod cmd_image;
 /// The instance command.
 pub mod cmd_instance;
+/// The open command.
+pub mod cmd_open;
 /// The organization command.
 pub mod cmd_org;
 /// The project command.
@@ -138,6 +140,8 @@ enum SubCommand {
     Image(cmd_image::CmdImage),
     #[clap(alias = "instances")]
     Instance(cmd_instance::CmdInstance),
+    #[clap(alias = "open")]
+    Open(cmd_open::CmdOpen),
     #[clap(alias = "orgs")]
     Org(cmd_org::CmdOrganization),
     #[clap(alias = "projects")]
@@ -273,6 +277,7 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Generate(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Image(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Instance(cmd) => run_cmd(&cmd, ctx).await,
+        SubCommand::Open(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Org(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Project(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Rack(cmd) => run_cmd(&cmd, ctx).await,
