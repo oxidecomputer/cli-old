@@ -1,6 +1,7 @@
 use std::io::BufRead;
 
 use anyhow::Result;
+use data_encoding::BASE64;
 use parse_display::{Display, FromStr};
 use ring::{
     rand,
@@ -43,7 +44,7 @@ impl Default for SSHKeyAlgorithm {
 }
 
 /// A public and private keypair.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum SSHKeyPair {
     // TODO: do RSA.
     //Rsa(PKey<K>),
@@ -83,16 +84,22 @@ impl SSHKeyPair {
     }
 
     pub fn public_key(&self) -> Result<sshkeys::PublicKey> {
-        let pk = match self {
+        let (t, pk) = match self {
             SSHKeyPair::Ecdsa(ec_key) => {
                 let mut bytes: Vec<u8> = ec_key.public_key().as_ref().to_vec();
                 bytes.remove(0);
-                bytes
+                ("ecdsa-sha2-nistp256", bytes)
             }
-            SSHKeyPair::Ed25519(ed_key) => ed_key.public_key().as_ref().to_vec(),
+            SSHKeyPair::Ed25519(ed_key) => ("ssh-ed25519", ed_key.public_key().as_ref().to_vec()),
         };
 
-        let key = sshkeys::PublicKey::from_bytes(&pk)?;
+        // Format the public key.
+        let pk_str = format!("{} {}", t, BASE64.encode(&pk));
+
+        println!("{}", pk_str);
+
+        let key = sshkeys::PublicKey::from_string(&pk_str)?;
+
         Ok(key)
     }
 }
@@ -120,7 +127,7 @@ mod test {
         let pub_key = key.public_key().unwrap();
 
         assert_eq!(pub_key.key_type.name, "thing");
-        assert_eq!(pub_key.fingerprint(), "thing");
+        assert_eq!(pub_key.fingerprint().to_string(), "thing");
     }
 
     #[test]
@@ -132,6 +139,6 @@ mod test {
         let pub_key = key.public_key().unwrap();
 
         assert_eq!(pub_key.key_type.name, "thing");
-        assert_eq!(pub_key.fingerprint(), "thing");
+        assert_eq!(pub_key.fingerprint().to_string(), "thing");
     }
 }
