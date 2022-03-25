@@ -70,6 +70,7 @@ jobs:
           OXIDE_TEST_TOKEN: ${{secrets.OXIDE_TOKEN}}
           OXIDE_TEST_HOST: localhost:8888
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          RUST_BACKTRACE: 1
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v2
