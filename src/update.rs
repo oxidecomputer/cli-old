@@ -1,4 +1,4 @@
-use std::{fs, io::Write};
+use std::{fs, io::Write, os::unix::fs::PermissionsExt};
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -167,6 +167,38 @@ pub fn is_under_homebrew() -> Result<bool> {
     Ok(binary_path_str.starts_with(brew_bin_prefix.to_str().unwrap()))
 }
 
+/// Update running binary to the latest version.
+/// This function will return an error if the binary is under Homebrew or if
+/// the running version is already the latest version.
+pub async fn update_running_binary() -> Result<()> {
+    if is_under_homebrew()? {
+        anyhow::bail!("You are running under Homebrew. Please run `brew upgrade oxide` instead.");
+    }
+
+    // Get the latest release.
+    let latest_release = get_latest_release_info().await?;
+    let current_version = clap::crate_version!();
+
+    if !version_greater_then(&latest_release.version, current_version)? {
+        anyhow::bail!(
+            "You are already running the latest version ({}) of the cli.",
+            current_version
+        );
+    }
+
+    let current_binary_path = std::env::current_exe()?;
+
+    // TODO: Should probably write some output about the version we are updating to.
+
+    // Download the latest release.
+    let temp_latest_binary_path = download_binary_to_temp_file(&latest_release.version).await?;
+
+    // Rename the file to that of the current running exe.
+    std::fs::rename(temp_latest_binary_path, current_binary_path)?;
+
+    Ok(())
+}
+
 /// Takes a version string and returns the URL to download the latest release.
 fn get_exe_download_url(version: &str) -> String {
     // Make sure the version starts with a v.
@@ -216,7 +248,15 @@ async fn download_binary_to_temp_file(version: &str) -> Result<String> {
     f.write_all(&bin_body)?;
     f.flush()?;
 
-    Ok(temp_file.as_os_str().to_str().unwrap().to_string())
+    let temp_file_path = temp_file
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("failed to convert temp file path to string"))?;
+
+    // Set the file permissions to be correct, executable, write (so we can update).
+    #[cfg(target_family = "unix")]
+    std::fs::set_permissions(&temp_file_path, std::fs::Permissions::from_mode(0o755))?;
+
+    Ok(temp_file_path.to_string())
 }
 
 /// Calculates the SHA256 hash of a reader.
