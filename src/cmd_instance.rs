@@ -3,7 +3,6 @@ use std::io::Write;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use cli_macro::crud_gen;
-use thrussh_keys::PublicKeyBase64;
 
 /// Create, list, edit, view, and delete instances.
 ///
@@ -404,33 +403,26 @@ impl crate::cmd::Command for CmdInstanceSsh {
         // Generate a key to use for ssh-ing into the instance.
         // We default to ed25519 here, since its a nice thing.
         writeln!(ctx.io.out, "Generating a temporary ssh key...")?;
-        let key = thrussh_keys::key::KeyPair::generate_ed25519().unwrap();
-        let pubkey = key.clone_public_key();
+        /* let key = thrussh_keys::key::KeyPair::generate_ed25519().unwrap();
+                let pubkey = key.clone_public_key();
 
-        writeln!(
-            ctx.io.out,
-            "Temporary public key has fingerprint `{}`",
-            pubkey.fingerprint()
-        )?;
+                writeln!(
+                    ctx.io.out,
+                    "Temporary public key has fingerprint `{}`",
+                    pubkey.fingerprint()
+                )?;
 
-        writeln!(
-            ctx.io.out,
-            "Temporary bytes are `ssh-ed25519 {}`",
-            pubkey.public_key_base64()
-        )?;
+                writeln!(
+                    ctx.io.out,
+                    "Temporary bytes are `ssh-ed25519 {}`",
+                    pubkey.public_key_base64()
+                )?;
 
-        println!("ARGS: {:?}", self.args);
+                println!("ARGS: {:?}", self.args);
 
-        // TODO: Add our pubkey to our Oxide user's authorized_keys.
-        writeln!(ctx.io.out, "Adding temporary ssh key to your user account...")?;
-
-        if !dialoguer::Confirm::new()
-            .with_prompt("Do you want to continue?")
-            .interact()?
-        {
-            return Ok(());
-        }
-
+                // TODO: Add our pubkey to our Oxide user's authorized_keys.
+                writeln!(ctx.io.out, "Adding temporary ssh key to your user account...")?;
+        */
         // TODO: We need to get the instance IP address.
         let _instance = client
             .instances()
