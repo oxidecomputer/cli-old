@@ -254,6 +254,10 @@ mod test {
 
     #[tokio::test]
     async fn test_download_binary_to_temp_file() {
+        if crate::update::is_ci() {
+            return;
+        }
+
         let file = super::download_binary_to_temp_file("v0.1.0").await.unwrap();
 
         assert_eq!(

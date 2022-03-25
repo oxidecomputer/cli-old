@@ -159,8 +159,7 @@ pub struct CmdDiskEdit {}
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskEdit {
     async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        println!("Not implemented yet in omicron.");
-        Ok(())
+        todo!()
     }
 }
 
