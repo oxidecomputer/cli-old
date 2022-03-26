@@ -1,7 +1,6 @@
 use std::io::BufRead;
 
 use anyhow::Result;
-use data_encoding::BASE64;
 use parse_display::{Display, FromStr};
 use ring::{
     rand,
@@ -78,25 +77,37 @@ impl SSHKeyPair {
             }
         };
 
-        println!("{:?}", key);
-
         Ok(key)
     }
 
     pub fn public_key(&self) -> Result<sshkeys::PublicKey> {
+        let mut w = sshkeys::Writer::new();
+
         let (t, pk) = match self {
             SSHKeyPair::Ecdsa(ec_key) => {
                 let mut bytes: Vec<u8> = ec_key.public_key().as_ref().to_vec();
                 bytes.remove(0);
-                ("ecdsa-sha2-nistp256", bytes)
+
+                let t = "ecdsa-sha2-nistp256";
+
+                w.write_string(t);
+                w.write_string("nistp256");
+
+                (t, bytes)
             }
-            SSHKeyPair::Ed25519(ed_key) => ("ssh-ed25519", ed_key.public_key().as_ref().to_vec()),
+            SSHKeyPair::Ed25519(ed_key) => {
+                let t = "ssh-ed25519";
+                w.write_string(t);
+
+                (t, ed_key.public_key().as_ref().to_vec())
+            }
         };
 
-        // Format the public key.
-        let pk_str = format!("{} {}", t, BASE64.encode(&pk));
+        w.write_bytes(&pk);
 
-        println!("{}", pk_str);
+        let bytes = w.into_bytes();
+
+        let pk_str = format!("{} {}", t, data_encoding::BASE64.encode(&bytes));
 
         let key = sshkeys::PublicKey::from_string(&pk_str)?;
 
@@ -126,8 +137,8 @@ mod test {
         let key = result.unwrap();
         let pub_key = key.public_key().unwrap();
 
-        assert_eq!(pub_key.key_type.name, "thing");
-        assert_eq!(pub_key.fingerprint().to_string(), "thing");
+        assert_eq!(pub_key.key_type.name, "ssh-ed25519");
+        assert_eq!(pub_key.fingerprint().to_string().len() > 0, true);
     }
 
     #[test]
@@ -138,7 +149,7 @@ mod test {
         let key = result.unwrap();
         let pub_key = key.public_key().unwrap();
 
-        assert_eq!(pub_key.key_type.name, "thing");
-        assert_eq!(pub_key.fingerprint().to_string(), "thing");
+        assert_eq!(pub_key.key_type.name, "ecdsa-sha2-nistp256");
+        assert_eq!(pub_key.fingerprint().to_string().len() > 0, true);
     }
 }

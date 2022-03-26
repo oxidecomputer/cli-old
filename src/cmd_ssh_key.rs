@@ -36,8 +36,17 @@ pub struct CmdSSHKeyAdd {}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyAdd {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        todo!()
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        // Let's generate a key.
+        let key = crate::ssh::SSHKeyPair::generate(&crate::ssh::SSHKeyAlgorithm::Ed25519)?;
+
+        writeln!(ctx.io.out, "Your SSH key is: {:?}", key)?;
+
+        let pubkey = key.public_key()?;
+
+        writeln!(ctx.io.out, "Your SSH public key is: {:?}", pubkey)?;
+
+        Ok(())
     }
 }
 
@@ -97,10 +106,11 @@ impl crate::cmd::Command for CmdSSHKeySyncFromGithub {
             // TODO: add the key to Oxide.
             writeln!(
                 ctx.io.out,
-                "{} Added key `{} {}`",
+                "{} Added key `{} {}`\n\t`{}`",
                 cs.success_icon(),
                 key.key_type.name,
-                key.fingerprint()
+                key.fingerprint(),
+                key,
             )?;
 
             // TODO: print if a key already exists.
