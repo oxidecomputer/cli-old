@@ -24,9 +24,12 @@ impl AsyncTestContext for MainContext {
     async fn setup() -> Self {
         let test_host =
             std::env::var("OXIDE_TEST_HOST").expect("you need to set OXIDE_TEST_HOST to where the api is running");
+        let test_host = crate::cmd_auth::parse_host(&test_host)
+            .expect("invalid OXIDE_TEST_HOST")
+            .to_string();
         let test_token = std::env::var("OXIDE_TEST_TOKEN").expect("OXIDE_TEST_TOKEN is required");
 
-        let oxide = oxide_api::Client::new(&test_token, format!("http://{}", &test_host));
+        let oxide = oxide_api::Client::new(&test_token, &test_host);
 
         let racks = oxide
             .racks()

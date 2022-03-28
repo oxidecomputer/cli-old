@@ -3,8 +3,6 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 
-use crate::config::clean_hostname;
-
 /// Login, logout, and get the status of your authentication.
 ///
 /// Manage `oxide`'s authentication state.
@@ -29,6 +27,66 @@ impl crate::cmd::Command for CmdAuth {
             SubCommand::Login(cmd) => cmd.run(ctx).await,
             SubCommand::Logout(cmd) => cmd.run(ctx).await,
             SubCommand::Status(cmd) => cmd.run(ctx).await,
+        }
+    }
+}
+
+/// Attempt to parse a given host string as a valid URL.
+///
+/// http(s) are the only supported schemas. If no schema is specified then https is assumed.
+/// The returned URL if successful will be stripped of any path, username, password,
+/// fragment or query.
+pub fn parse_host(input: &str) -> Result<url::Url> {
+    match url::Url::parse(input) {
+        Ok(mut url) => {
+            if !url.has_host() {
+                // We've successfully parsed a URL with no host.
+                // This can happen if input was something like `localhost:8080`
+                // where `localhost:` is treated as the scheme (`8080` would be the path).
+                // Let's try again by prefixing with `https://`
+                return parse_host(&format!("https://{input}"));
+            }
+
+            // Make sure scheme is http(s)
+            let scheme = url.scheme();
+            if scheme != "http" && scheme != "https" {
+                anyhow::bail!("non-http(s) scheme given")
+            }
+
+            // We're only interested in the scheme, host & port
+            // Clear any other component that was set
+            url.set_path("");
+            let _ = url.set_username("");
+            let _ = url.set_password(None);
+            url.set_fragment(None);
+            url.set_query(None);
+
+            Ok(url)
+        }
+        Err(url::ParseError::RelativeUrlWithoutBase) => {
+            // The input is being interpreted as a relative path meaning the input
+            // didn't include a scheme mostly likely. Let's try again by prefixing
+            // with `https://`
+            parse_host(&format!("https://{input}"))
+        }
+        Err(err) => anyhow::bail!(err),
+    }
+}
+
+fn parse_host_interactively(ctx: &mut crate::context::Context) -> Result<url::Url> {
+    loop {
+        match dialoguer::Input::<String>::new()
+            .with_prompt("Oxide instance host (this assumes https:// unless http:// is given as a part of the URL)")
+            .interact_text()
+        {
+            Ok(input) => match parse_host(&input) {
+                Ok(url) => return Ok(url),
+                Err(err) => {
+                    writeln!(ctx.io.err_out, "Invalid host specified ({err}). Try again.")?;
+                    continue;
+                }
+            },
+            Err(err) => anyhow::bail!("host prompt failed: {err}"),
         }
     }
 }
@@ -58,8 +116,8 @@ pub struct CmdAuthLogin {
     /// The host of the Oxide instance to authenticate with.
     /// This assumes the instance is an `https://` url, if not otherwise specified
     /// as `http://`.
-    #[clap(short = 'H', long, env = "OXIDE_HOST", default_value = "")]
-    pub host: String,
+    #[clap(short = 'H', long, env = "OXIDE_HOST", parse(try_from_str = parse_host))]
+    pub host: Option<url::Url>,
     // Open a browser to authenticate.
     // TODO: Make this work when we have device auth.
     // #[clap(short, long)]
@@ -85,27 +143,17 @@ impl crate::cmd::Command for CmdAuthLogin {
             interactive = true;
         }
 
-        let mut host = clean_hostname(&self.host);
-
-        if host.is_empty() {
+        let host;
+        let host = if let Some(host) = &self.host {
+            host.as_str()
+        } else {
             if interactive {
-                match dialoguer::Input::<String>::new()
-                    .with_prompt(
-                        "Oxide instance host (this assumes https:// unless http:// is given as a part of the URL)",
-                    )
-                    .interact_text()
-                {
-                    Ok(input) => {
-                        host = clean_hostname(&input);
-                    }
-                    Err(err) => {
-                        return Err(anyhow!("prompt failed: {}", err));
-                    }
-                }
+                host = parse_host_interactively(ctx)?;
+                host.as_str()
             } else {
                 return Err(anyhow!("--host required when not running interactively"));
             }
-        }
+        };
 
         if let Err(err) = ctx.config.check_writable(&host, "token") {
             if let Some(crate::config_from_env::ReadOnlyEnvVarError::Variable(var)) = err.downcast_ref() {
@@ -156,7 +204,7 @@ impl crate::cmd::Command for CmdAuthLogin {
             // TODO: fix this url once we know the URL in the console.
             writeln!(
                 ctx.io.err_out,
-                "Tip: you can generate an API Token here https://{}/account",
+                "Tip: you can generate an API Token here {}account",
                 host
             )?;
 
@@ -208,27 +256,25 @@ impl crate::cmd::Command for CmdAuthLogin {
 #[clap(verbatim_doc_comment)]
 pub struct CmdAuthLogout {
     /// The hostname of the Oxide instance to log out of.
-    #[clap(short = 'H', long, default_value = "", env = "OXIDE_HOST")]
-    pub host: String,
+    #[clap(short = 'H', long, env = "OXIDE_HOST", parse(try_from_str = parse_host))]
+    pub host: Option<url::Url>,
 }
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdAuthLogout {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        if self.host.is_empty() && !ctx.io.can_prompt() {
+        if self.host.is_none() && !ctx.io.can_prompt() {
             return Err(anyhow!("--host required when not running interactively"));
         }
-
-        let mut hostname = self.host.to_string();
 
         let candidates = ctx.config.hosts()?;
         if candidates.is_empty() {
             return Err(anyhow!("not logged in to any hosts"));
         }
 
-        if hostname.is_empty() {
+        let hostname = if self.host.is_none() {
             if candidates.len() == 1 {
-                hostname = candidates[0].to_string();
+                candidates[0].to_string()
             } else {
                 let index = dialoguer::Select::with_theme(&dialoguer::theme::ColorfulTheme::default())
                     .with_prompt("What account do you want to log out of?")
@@ -237,15 +283,14 @@ impl crate::cmd::Command for CmdAuthLogout {
                     .interact();
 
                 match index {
-                    Ok(i) => {
-                        hostname = candidates[i].to_string();
-                    }
+                    Ok(i) => candidates[i].to_string(),
                     Err(err) => {
                         return Err(anyhow!("prompt failed: {}", err));
                     }
                 }
             }
         } else {
+            let hostname = self.host.as_ref().unwrap().to_string();
             let mut found = false;
             for c in candidates {
                 if c == hostname {
@@ -257,7 +302,9 @@ impl crate::cmd::Command for CmdAuthLogout {
             if !found {
                 return Err(anyhow!("not logged into {}", hostname));
             }
-        }
+
+            hostname
+        };
 
         if let Err(err) = ctx.config.check_writable(&hostname, "token") {
             if let Some(crate::config_from_env::ReadOnlyEnvVarError::Variable(var)) = err.downcast_ref() {
@@ -331,8 +378,8 @@ pub struct CmdAuthStatus {
     pub show_token: bool,
 
     /// Check a specific hostname's auth status.
-    #[clap(short = 'H', long, default_value = "")]
-    pub host: String,
+    #[clap(short = 'H', long, env = "OXIDE_HOST", parse(try_from_str = parse_host))]
+    pub host: Option<url::Url>,
 }
 
 #[async_trait::async_trait]
@@ -357,7 +404,7 @@ impl crate::cmd::Command for CmdAuthStatus {
         let mut hostname_found = false;
 
         for hostname in &hostnames {
-            if !self.host.is_empty() && self.host != *hostname {
+            if matches!(&self.host, Some(host) if host.as_str() != *hostname) {
                 continue;
             }
 
@@ -414,7 +461,7 @@ impl crate::cmd::Command for CmdAuthStatus {
             writeln!(
                 ctx.io.err_out,
                 "Hostname {} not found among authenticated Oxide hosts",
-                self.host
+                self.host.as_ref().unwrap().as_str(),
             )?;
             return Err(anyhow!(""));
         }
@@ -460,6 +507,7 @@ mod test {
     async fn test_cmd_auth() {
         let test_host =
             std::env::var("OXIDE_TEST_HOST").expect("you need to set OXIDE_TEST_HOST to where the api is running");
+        let test_host = crate::cmd_auth::parse_host(&test_host).expect("invalid OXIDE_TEST_HOST");
 
         let test_token = std::env::var("OXIDE_TEST_TOKEN").expect("OXIDE_TEST_TOKEN is required");
 
@@ -468,7 +516,7 @@ mod test {
                 name: "status".to_string(),
                 cmd: crate::cmd_auth::SubCommand::Status(crate::cmd_auth::CmdAuthStatus {
                     show_token: false,
-                    host: "".to_string(),
+                    host: None,
                 }),
                 stdin: "".to_string(),
                 want_out: "You are not logged into any Oxide hosts. Run oxide auth login to authenticate.\n"
@@ -478,7 +526,7 @@ mod test {
             TestItem {
                 name: "login --with-token=false".to_string(),
                 cmd: crate::cmd_auth::SubCommand::Login(crate::cmd_auth::CmdAuthLogin {
-                    host: test_host.to_string(),
+                    host: Some(test_host.clone()),
                     with_token: false,
                 }),
                 stdin: test_token.to_string(),
@@ -488,7 +536,7 @@ mod test {
             TestItem {
                 name: "login --with-token=true".to_string(),
                 cmd: crate::cmd_auth::SubCommand::Login(crate::cmd_auth::CmdAuthLogin {
-                    host: test_host.to_string(),
+                    host: Some(test_host.clone()),
                     with_token: true,
                 }),
                 stdin: test_token.to_string(),
@@ -499,7 +547,7 @@ mod test {
                 name: "status".to_string(),
                 cmd: crate::cmd_auth::SubCommand::Status(crate::cmd_auth::CmdAuthStatus {
                     show_token: false,
-                    host: "".to_string(),
+                    host: Some(test_host.clone()),
                 }),
                 stdin: "".to_string(),
                 want_out: format!("{}\n✔ Logged in to {} as", test_host, test_host),
@@ -507,7 +555,7 @@ mod test {
             },
             TestItem {
                 name: "logout no prompt no host".to_string(),
-                cmd: crate::cmd_auth::SubCommand::Logout(crate::cmd_auth::CmdAuthLogout { host: "".to_string() }),
+                cmd: crate::cmd_auth::SubCommand::Logout(crate::cmd_auth::CmdAuthLogout { host: None }),
                 stdin: "".to_string(),
                 want_out: "".to_string(),
                 want_err: "--host required when not running interactively".to_string(),
@@ -515,10 +563,10 @@ mod test {
             TestItem {
                 name: "logout no prompt with host".to_string(),
                 cmd: crate::cmd_auth::SubCommand::Logout(crate::cmd_auth::CmdAuthLogout {
-                    host: test_host.to_string(),
+                    host: Some(test_host.clone()),
                 }),
                 stdin: "".to_string(),
-                want_out: "✔ Logged out of localhost:8888 ".to_string(),
+                want_out: format!("✔ Logged out of {}", test_host),
                 want_err: "".to_string(),
             },
         ];
@@ -563,5 +611,70 @@ mod test {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_parse_host() {
+        use super::parse_host;
+
+        // TODO: Replace with assert_matches when stable
+
+        // The simple cases where only the host name or IP is passed
+        assert!(matches!(
+            parse_host("example.com").map(|host| host.to_string()),
+            Ok(host) if host == "https://example.com/"
+        ));
+        assert!(matches!(
+            parse_host("localhost").map(|host| host.to_string()),
+            Ok(host) if host == "https://localhost/"
+        ));
+        assert!(matches!(
+            parse_host("127.0.0.1").map(|host| host.to_string()),
+            Ok(host) if host == "https://127.0.0.1/"
+        ));
+        assert!(matches!(
+            parse_host("[::1]").map(|host| host.to_string()),
+            Ok(host) if host == "https://[::1]/"
+        ));
+
+        // Explicit port
+        assert!(matches!(
+            parse_host("example.com:8888").map(|host| host.to_string()),
+            Ok(host) if host == "https://example.com:8888/"
+        ));
+        assert!(matches!(
+            parse_host("localhost:8888").map(|host| host.to_string()),
+            Ok(host) if host == "https://localhost:8888/"
+        ));
+        assert!(matches!(
+            parse_host("127.0.0.1:8888").map(|host| host.to_string()),
+            Ok(host) if host == "https://127.0.0.1:8888/"
+        ));
+        assert!(matches!(
+            parse_host("[::1]:8888").map(|host| host.to_string()),
+            Ok(host) if host == "https://[::1]:8888/"
+        ));
+
+        // Explicit scheme
+        assert!(matches!(
+            parse_host("http://example.com:8888").map(|host| host.to_string()),
+            Ok(host) if host == "http://example.com:8888/"
+        ));
+        assert!(matches!(
+            parse_host("http://localhost").map(|host| host.to_string()),
+            Ok(host) if host == "http://localhost/"
+        ));
+
+        // Nonsense scheme
+        assert!(matches!(
+            parse_host("ftp://localhost").map(|host| host.to_string()),
+            Err(_)
+        ));
+
+        // Strip out any extraneous pieces we don't need
+        assert!(matches!(
+            parse_host("http://user:pass@example.com:8888/random/path/?k=v&t=s#fragment=33").map(|host| host.to_string()),
+            Ok(host) if host == "http://example.com:8888/"
+        ));
     }
 }

@@ -1558,6 +1558,7 @@ dependencies = [
  "tokio",
  "toml",
  "toml_edit",
+ "url",
  "uuid",
  "version-compare",
 ]
