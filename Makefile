@@ -104,6 +104,8 @@ start-cockroachdb: ## Start CockroachDB.
 	@echo "Waiting for CockroachDB to start..."
 	@sleep 5
 
+OMICRON_DOCKER_VERSION:=d622119367645ae912f2a8100d8f46fb750ca62d
+
 .PHONY: start-omicron
 start-omicron: start-cockroachdb ## Start Omicron.
 	@echo "+ $@"
@@ -115,7 +117,7 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--hostname=nexus \
 		--net host \
 		--entrypoint=omicron-dev \
-		ghcr.io/oxidecomputer/omicron:d622119367645ae912f2a8100d8f46fb750ca62d \
+		ghcr.io/oxidecomputer/omicron:$(OMICRON_DOCKER_VERSION) \
 			db-populate --database-url "postgresql://root@0.0.0.0:26257/omicron?sslmode=disable"
 	@echo "Starting nexus..."
 	docker run -d \
@@ -125,7 +127,7 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--net host \
 		-v "$(CURDIR)/tests/omicron.toml:/etc/omicron/config.toml:ro"  \
 		--entrypoint=nexus \
-		ghcr.io/oxidecomputer/omicron:d622119367645ae912f2a8100d8f46fb750ca62d \
+		ghcr.io/oxidecomputer/omicron:$(OMICRON_DOCKER_VERSION) \
 			/etc/omicron/config.toml
 	@echo "Starting sled-agent..."
 	docker run -d \
@@ -134,7 +136,7 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--hostname=sled-agent \
 		--net host \
 		--entrypoint=sled-agent-sim \
-		ghcr.io/oxidecomputer/omicron:d622119367645ae912f2a8100d8f46fb750ca62d \
+		ghcr.io/oxidecomputer/omicron:$(OMICRON_DOCKER_VERSION) \
 			B100B75C-D2EF-415F-A07E-D3915470913D 0.0.0.0:12345 0.0.0.0:12221
 
 .PHONY: gen-docs
