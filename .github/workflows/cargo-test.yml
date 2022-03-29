@@ -10,6 +10,7 @@ on:
       - .github/workflows/cargo-test.yml
       - 'rust-toolchain'
       - 'rust-toolchain.toml'
+      - 'Makefile'
   pull_request:
     paths:
       - '**.rs'
@@ -19,6 +20,7 @@ on:
       - .github/workflows/cargo-build.yml
       - 'rust-toolchain'
       - 'rust-toolchain.toml'
+      - 'Makefile'
   workflow_dispatch:
 permissions: read-all
 name: cargo test
