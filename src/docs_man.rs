@@ -103,7 +103,7 @@ fn app_has_subcommands(app: &clap::Command) -> bool {
 }
 
 fn subcommand_heading(app: &clap::Command) -> String {
-    match app.get_subommand_help_heading() {
+    match app.get_subcommand_help_heading() {
         Some(title) => title.to_string(),
         None => "Subcommands".to_string(),
     }
