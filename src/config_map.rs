@@ -25,7 +25,7 @@ impl ConfigMap {
         match self.root.get(key) {
             Some(toml_edit::Item::Value(toml_edit::Value::Boolean(s))) => Ok(*s.value()),
             Some(v) => Err(anyhow!("Expected bool value for key '{}', found '{:?}'", key, v)),
-            None => Err(anyhow!("Key '{}' not found", key)),
+            None => Ok(false),
         }
     }
 

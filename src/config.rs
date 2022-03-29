@@ -296,6 +296,12 @@ token = "MY_TOKEN""#,
         let token = c.get("example.org", "token").unwrap();
         assert_eq!(token, "EXAMPLE_TOKEN");
 
+        // Getting the default host should return an error.
+        assert_eq!(c.default_host().is_err(), true);
+        if let Err(e) = c.default_host() {
+            assert_eq!(e.to_string(), "No host has been set as default. Try setting a default with `oxide config set -H <host> default true`. Options for hosts are: example.org, thing.com");
+        }
+
         c.set("example.org", "default", "true").unwrap();
         assert_eq!(c.default_host().unwrap(), "example.org".to_string());
 
