@@ -126,7 +126,7 @@ mod test {
 
         let keys = result.unwrap();
 
-        assert_eq!(keys.len() > 0, true);
+        assert_eq!(!keys.is_empty(), true);
     }
 
     #[test]
@@ -138,7 +138,7 @@ mod test {
         let pub_key = key.public_key().unwrap();
 
         assert_eq!(pub_key.key_type.name, "ssh-ed25519");
-        assert_eq!(pub_key.fingerprint().to_string().len() > 0, true);
+        assert_eq!(!pub_key.fingerprint().to_string().is_empty(), true);
     }
 
     #[test]
@@ -150,6 +150,6 @@ mod test {
         let pub_key = key.public_key().unwrap();
 
         assert_eq!(pub_key.key_type.name, "ecdsa-sha2-nistp256");
-        assert_eq!(pub_key.fingerprint().to_string().len() > 0, true);
+        assert_eq!(!pub_key.fingerprint().to_string().is_empty(), true);
     }
 }

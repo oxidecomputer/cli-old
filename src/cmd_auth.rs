@@ -146,16 +146,14 @@ impl crate::cmd::Command for CmdAuthLogin {
         let host;
         let host = if let Some(host) = &self.host {
             host.as_str()
+        } else if interactive {
+            host = parse_host_interactively(ctx)?;
+            host.as_str()
         } else {
-            if interactive {
-                host = parse_host_interactively(ctx)?;
-                host.as_str()
-            } else {
-                return Err(anyhow!("--host required when not running interactively"));
-            }
+            return Err(anyhow!("--host required when not running interactively"));
         };
 
-        if let Err(err) = ctx.config.check_writable(&host, "token") {
+        if let Err(err) = ctx.config.check_writable(host, "token") {
             if let Some(crate::config_from_env::ReadOnlyEnvVarError::Variable(var)) = err.downcast_ref() {
                 writeln!(
                     ctx.io.err_out,
@@ -178,7 +176,7 @@ impl crate::cmd::Command for CmdAuthLogin {
         if token.is_empty() {
             // We don't want to capture the error here just in case we have no host config
             // for this specific host yet.
-            let existing_token = if let Ok(existing_token) = ctx.config.get(&host, "token") {
+            let existing_token = if let Ok(existing_token) = ctx.config.get(host, "token") {
                 existing_token
             } else {
                 String::new()
@@ -220,9 +218,9 @@ impl crate::cmd::Command for CmdAuthLogin {
         }
 
         // Set the token in the config file.
-        ctx.config.set(&host, "token", &token)?;
+        ctx.config.set(host, "token", &token)?;
 
-        let client = ctx.api_client(&host)?;
+        let client = ctx.api_client(host)?;
 
         // Get the session for the token.
         let session = client.hidden().session_me().await?;
@@ -231,7 +229,7 @@ impl crate::cmd::Command for CmdAuthLogin {
         // TODO: This should instead store the email, or some username or something
         // that is human knowable.
         let email = session.id;
-        ctx.config.set(&host, "user", &email)?;
+        ctx.config.set(host, "user", &email)?;
 
         // Save the config.
         ctx.config.write()?;
