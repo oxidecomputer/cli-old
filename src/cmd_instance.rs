@@ -192,7 +192,7 @@ impl crate::cmd::Command for CmdInstanceStop {
             if let Err(err) = dialoguer::Input::<String>::new()
                 .with_prompt(format!("Type {} to confirm stop:", self.instance))
                 .validate_with(|input: &String| -> Result<(), &str> {
-                    if input.trim() == full_name {
+                    if input.trim() == self.instance {
                         Ok(())
                     } else {
                         Err("mismatched confirmation")
@@ -272,7 +272,7 @@ impl crate::cmd::Command for CmdInstanceReboot {
             if let Err(err) = dialoguer::Input::<String>::new()
                 .with_prompt(format!("Type {} to confirm reboot:", self.instance))
                 .validate_with(|input: &String| -> Result<(), &str> {
-                    if input.trim() == full_name {
+                    if input.trim() == self.instance {
                         Ok(())
                     } else {
                         Err("mismatched confirmation")
