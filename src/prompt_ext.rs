@@ -115,8 +115,7 @@ impl PromptExt for oxide_api::types::Ipv4Net {
             })
             .interact_text()?;
 
-        Ok(oxide_api::types::Ipv4Net::from_str(&input)
-            .map_err(|e| anyhow::anyhow!("invalid ipv4net `{}`: {}", input, e))?)
+        oxide_api::types::Ipv4Net::from_str(&input).map_err(|e| anyhow::anyhow!("invalid ipv4net `{}`: {}", input, e))
     }
 }
 
@@ -135,7 +134,6 @@ impl PromptExt for oxide_api::types::Ipv6Net {
             })
             .interact_text()?;
 
-        Ok(oxide_api::types::Ipv6Net::from_str(&input)
-            .map_err(|e| anyhow::anyhow!("invalid ipv6net `{}`: {}", input, e))?)
+        oxide_api::types::Ipv6Net::from_str(&input).map_err(|e| anyhow::anyhow!("invalid ipv6net `{}`: {}", input, e))
     }
 }
