@@ -59,7 +59,7 @@ mod test {
                     project: "bar".to_string(),
                     description: "".to_string(),
                     vpc: "".to_string(),
-                    ipv4_block,
+                    ipv4_block: Some(ipv4_block),
                     ipv6_block: Default::default(),
                 }),
 
@@ -75,7 +75,7 @@ mod test {
                     project: "".to_string(),
                     description: "blah blah".to_string(),
                     vpc: "foo bar".to_string(),
-                    ipv4_block,
+                    ipv4_block: Some(ipv4_block),
                     ipv6_block: Default::default(),
                 }),
 
@@ -91,7 +91,7 @@ mod test {
                     project: "".to_string(),
                     description: "blah blah".to_string(),
                     vpc: "blah".to_string(),
-                    ipv4_block,
+                    ipv4_block: Some(ipv4_block),
                     ipv6_block: Default::default(),
                 }),
 
@@ -107,7 +107,7 @@ mod test {
                     project: "".to_string(),
                     description: "blah blah".to_string(),
                     vpc: "blah".to_string(),
-                    ipv4_block,
+                    ipv4_block: Some(ipv4_block),
                     ipv6_block: Default::default(),
                 }),
 
@@ -123,7 +123,7 @@ mod test {
                     project: "bar".to_string(),
                     description: "blah blah".to_string(),
                     vpc: "".to_string(),
-                    ipv4_block,
+                    ipv4_block: Some(ipv4_block),
                     ipv6_block: Default::default(),
                 }),
 
