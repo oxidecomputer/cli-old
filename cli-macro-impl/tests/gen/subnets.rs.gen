@@ -94,7 +94,7 @@ pub struct CmdSubnetCreate {
     pub description: String,
     #[doc = "The IPv4 address range for this subnet.\n\nIt must be allocated from an RFC 1918 private address range, and must not overlap with any other existing subnet in the VPC."]
     #[clap(long = "ipv4-block", short = '4', required = true)]
-    pub ipv4_block: oxide_api::types::Ipv4Net,
+    pub ipv4_block: Option<oxide_api::types::Ipv4Net>,
     #[doc = "The IPv6 address range for this subnet.\n\nIt must be allocated from the RFC 4193 Unique Local Address range, with the prefix equal to the parent VPC's prefix. A random `/64` block will be assigned if one is not provided. It must not overlap with any existing subnet in the VPC."]
     #[clap(long = "ipv6-block", short = '6', required = false)]
     pub ipv6_block: Option<oxide_api::types::Ipv6Net>,
@@ -202,6 +202,12 @@ impl crate::cmd::Command for CmdSubnetCreate {
                     }
                 }
             }
+            if ipv4_block.is_none() {
+                {
+                    use crate::prompt_ext::PromptExt;
+                    ipv4_block = Some(oxide_api::types::Ipv4Net::prompt()?);
+                }
+            }
             if vpc.is_empty() {
                 match dialoguer::Input::<_>::new()
                     .with_prompt("subnet vpc:")
@@ -223,7 +229,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
                 &self.vpc,
                 &oxide_api::types::VpcSubnetCreate {
                     description: description.clone(),
-                    ipv4_block: ipv4_block.to_string(),
+                    ipv4_block: ipv4_block.as_ref().unwrap().to_string(),
                     ipv6_block: self
                         .ipv6_block
                         .map_or_else(|| String::new(), |v| v.to_string()),

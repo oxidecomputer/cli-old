@@ -184,10 +184,17 @@ impl<T: SchemaExt> ReferenceOrExt<T> for openapiv3::ReferenceOr<T> {
 
         // We want the full path to the type.
         let rendered = quote!(oxide_api::types::#ident);
+        let rendered_str = get_text(&rendered)?;
 
         // If we have a oneOf, we will want to make it an option.
         let schema = self.get_schema_from_reference(false)?;
         if let openapiv3::SchemaKind::OneOf { one_of: _ } = schema.schema_kind {
+            return Ok(quote! {
+                Option<#rendered>
+            });
+        }
+
+        if rendered_str == "oxide_api::types::Ipv4Net" || rendered_str == "oxide_api::types::Ipv6Net" {
             return Ok(quote! {
                 Option<#rendered>
             });
@@ -802,7 +809,7 @@ impl Operation {
 
                 if rendered.contains("Ipv6Net") || rendered.contains("Ipv4Net") {
                     if v.required {
-                        req_body_rendered.push(quote!(#p_og: #p_short.to_string()));
+                        req_body_rendered.push(quote!(#p_og: #p_short.as_ref().unwrap().to_string()));
                     } else {
                         req_body_rendered
                             .push(quote!(#p_og: self.#p_short.map_or_else(|| String::new(), |v| v.to_string())));
@@ -1199,19 +1206,40 @@ impl Operation {
                 continue;
             }
 
-            // TODO: for now skip any weird things and don't prompt for them
-            // WE NEED TO FIX THIS
-            // Likely its one prompt for the type then another prompt for whatever the field
-            // requires.
-            if n == "target" || n == "destination" || n == "ipv4_block" {
-                continue;
-            }
-
             let p = format_ident!("{}", n);
 
             let title = format!("{} {}:", singular_tag_str, n);
 
             let is_check = v.get_is_check_fn(true)?;
+
+            let rendered = v.render_type(true)?;
+            let rendered_str = get_text(&rendered)?
+                .trim_start_matches("Option<")
+                .trim_start_matches("oxide_api::types::")
+                .trim_end_matches('>')
+                .to_string();
+            let rendered = format_ident!("{}", rendered_str);
+
+            // Any weird OneOfs and other types that have a custom prompt should be
+            // handled here.
+            if rendered_str == "Ipv4Net"
+                || rendered_str == "RouteTarget"
+                || rendered_str == "RouteDestination"
+                || rendered_str == "Ipv6Net"
+            {
+                additional_prompts.push(quote! {
+                    // Propmt if they didn't provide the value.
+                    if #p.#is_check() {
+                        {
+                            use crate::prompt_ext::PromptExt;
+                            #p = Some(oxide_api::types::#rendered::prompt()?);
+                        }
+                    }
+                });
+
+                // Continue through the loop early.
+                continue;
+            }
 
             additional_prompts.push(quote! {
                 // Propmt if they didn't provide the value.

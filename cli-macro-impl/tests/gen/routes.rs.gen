@@ -230,6 +230,12 @@ impl crate::cmd::Command for CmdRouteCreate {
                     }
                 }
             }
+            if destination.is_none() {
+                {
+                    use crate::prompt_ext::PromptExt;
+                    destination = Some(oxide_api::types::RouteDestination::prompt()?);
+                }
+            }
             if router.is_empty() {
                 match dialoguer::Input::<_>::new()
                     .with_prompt("route router:")
@@ -239,6 +245,12 @@ impl crate::cmd::Command for CmdRouteCreate {
                     Err(err) => {
                         return Err(anyhow::anyhow!("prompt failed: {}", err));
                     }
+                }
+            }
+            if target.is_none() {
+                {
+                    use crate::prompt_ext::PromptExt;
+                    target = Some(oxide_api::types::RouteTarget::prompt()?);
                 }
             }
             if vpc.is_empty() {

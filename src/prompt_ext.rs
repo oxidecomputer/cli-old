@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anyhow::Result;
 
-trait PromptExt {
+pub trait PromptExt {
     fn prompt() -> Result<Self>
     where
         Self: Sized;
@@ -85,7 +85,7 @@ impl PromptExt for oxide_api::types::RouteTargetType {
         let items = oxide_api::types::RouteTarget::variants();
 
         let index = dialoguer::Select::new()
-            .with_prompt("Select a route target type:")
+            .with_prompt("Select a route target type")
             .items(&items[..])
             .interact();
 
@@ -97,5 +97,45 @@ impl PromptExt for oxide_api::types::RouteTargetType {
         };
 
         oxide_api::types::RouteTargetType::from_str(&item)
+    }
+}
+
+impl PromptExt for oxide_api::types::Ipv4Net {
+    fn prompt() -> Result<Self> {
+        let input = dialoguer::Input::<String>::new()
+            .with_prompt("IPv4 network")
+            .validate_with(|input: &String| -> Result<(), &str> {
+                let ipnet = oxide_api::types::Ipv4Net::from_str(input);
+
+                if ipnet.is_err() {
+                    Err("invalid IPv4 network")
+                } else {
+                    Ok(())
+                }
+            })
+            .interact_text()?;
+
+        Ok(oxide_api::types::Ipv4Net::from_str(&input)
+            .map_err(|e| anyhow::anyhow!("invalid ipv4net `{}`: {}", input, e))?)
+    }
+}
+
+impl PromptExt for oxide_api::types::Ipv6Net {
+    fn prompt() -> Result<Self> {
+        let input = dialoguer::Input::<String>::new()
+            .with_prompt("IPv6 network")
+            .validate_with(|input: &String| -> Result<(), &str> {
+                let ipnet = oxide_api::types::Ipv6Net::from_str(input);
+
+                if ipnet.is_err() {
+                    Err("invalid IPv6 network")
+                } else {
+                    Ok(())
+                }
+            })
+            .interact_text()?;
+
+        Ok(oxide_api::types::Ipv6Net::from_str(&input)
+            .map_err(|e| anyhow::anyhow!("invalid ipv6net `{}`: {}", input, e))?)
     }
 }
