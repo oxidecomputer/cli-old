@@ -183,7 +183,7 @@ impl crate::cmd::Command for CmdDiskCreate {
             }
             if description.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("disk description:")
+                    .with_prompt("disk description")
                     .interact_text()
                 {
                     Ok(input) => description = input,
@@ -193,14 +193,9 @@ impl crate::cmd::Command for CmdDiskCreate {
                 }
             }
             if size.is_zero() {
-                match dialoguer::Input::<_>::new()
-                    .with_prompt("disk size:")
-                    .interact_text()
                 {
-                    Ok(input) => size = input,
-                    Err(err) => {
-                        return Err(anyhow::anyhow!("prompt failed: {}", err));
-                    }
+                    use crate::prompt_ext::PromptExt;
+                    size = oxide_api::types::ByteCount::prompt("disk size")?;
                 }
             }
         }

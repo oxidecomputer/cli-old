@@ -182,7 +182,7 @@ impl crate::cmd::Command for CmdVpcCreate {
             }
             if description.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("VPC description:")
+                    .with_prompt("VPC description")
                     .interact_text()
                 {
                     Ok(input) => description = input,
@@ -193,7 +193,7 @@ impl crate::cmd::Command for CmdVpcCreate {
             }
             if dns_name.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("VPC dns_name:")
+                    .with_prompt("VPC dns_name")
                     .interact_text()
                 {
                     Ok(input) => dns_name = input,

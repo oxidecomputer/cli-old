@@ -203,7 +203,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
             }
             if description.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("instance description:")
+                    .with_prompt("instance description")
                     .interact_text()
                 {
                     Ok(input) => description = input,
@@ -214,7 +214,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
             }
             if hostname.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("instance hostname:")
+                    .with_prompt("instance hostname")
                     .interact_text()
                 {
                     Ok(input) => hostname = input,
@@ -224,19 +224,14 @@ impl crate::cmd::Command for CmdInstanceCreate {
                 }
             }
             if memory.is_zero() {
-                match dialoguer::Input::<_>::new()
-                    .with_prompt("instance memory:")
-                    .interact_text()
                 {
-                    Ok(input) => memory = input,
-                    Err(err) => {
-                        return Err(anyhow::anyhow!("prompt failed: {}", err));
-                    }
+                    use crate::prompt_ext::PromptExt;
+                    memory = oxide_api::types::ByteCount::prompt("instance memory")?;
                 }
             }
             if ncpus.is_zero() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("instance ncpus:")
+                    .with_prompt("instance ncpus")
                     .interact_text()
                 {
                     Ok(input) => ncpus = input,

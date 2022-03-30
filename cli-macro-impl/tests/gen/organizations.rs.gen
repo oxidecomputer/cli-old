@@ -93,7 +93,7 @@ impl crate::cmd::Command for CmdOrganizationCreate {
             }
             if description.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("organization description:")
+                    .with_prompt("organization description")
                     .interact_text()
                 {
                     Ok(input) => description = input,

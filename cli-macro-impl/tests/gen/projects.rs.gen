@@ -109,7 +109,7 @@ impl crate::cmd::Command for CmdProjectCreate {
             }
             if description.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("project description:")
+                    .with_prompt("project description")
                     .interact_text()
                 {
                     Ok(input) => description = input,
