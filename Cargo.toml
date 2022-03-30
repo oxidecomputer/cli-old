@@ -57,7 +57,7 @@ terminal-spinners = "^0.3.2"
 thiserror = "1"
 tokio = { version = "1", features = ["full"] }
 toml = "^0.5.8"
-toml_edit = "^0.13.4"
+toml_edit = "^0.14.2"
 url = "2.2.2"
 uuid = { version = "^0.8", features = ["serde", "v4"] }
 version-compare = "^0.1.0"
