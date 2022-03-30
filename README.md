@@ -46,3 +46,18 @@ For now the token for spoof is `oxide-spoof-001de000-05e4-4000-8000-000000004007
 4. Everything else is triggered from the tag push. Just make sure all the tests
    and cross compilation pass on the `main` branch before making and pushing
    a new tag.
+
+### Building
+
+If you're on Debian or Ubuntu, install the required dependencies by running `.github/workflows/cross-deps.sh`. Otherwise, look there to see what packages are required.
+
+Make sure to update to the latest stable rustc: for example, if you use `rustup`, run `rustup update`.
+
+Then, simply `make`.
+
+Binaries will be available in `cross/`.
+
+If you want to only build one of the cross targets, supply the `CROSS_TARGETS` environment variable:
+
+    CROSS_TARGETS=x86_64-unknown-linux-musl make
+
