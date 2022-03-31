@@ -3,14 +3,14 @@ use std::str::FromStr;
 use anyhow::Result;
 
 pub trait PromptExt {
-    fn prompt() -> Result<Self>
+    fn prompt(base: &str) -> Result<Self>
     where
         Self: Sized;
 }
 
 impl PromptExt for oxide_api::types::RouteDestination {
-    fn prompt() -> Result<Self> {
-        let route_destination_type = oxide_api::types::RouteDestinationType::prompt()?;
+    fn prompt(base: &str) -> Result<Self> {
+        let route_destination_type = oxide_api::types::RouteDestinationType::prompt(base)?;
 
         let value: String = match dialoguer::Input::<String>::new()
             .with_prompt(&format!("{} value?", route_destination_type))
@@ -37,11 +37,11 @@ impl PromptExt for oxide_api::types::RouteDestination {
 }
 
 impl PromptExt for oxide_api::types::RouteDestinationType {
-    fn prompt() -> Result<Self> {
+    fn prompt(base: &str) -> Result<Self> {
         let items = oxide_api::types::RouteDestination::variants();
 
         let index = dialoguer::Select::new()
-            .with_prompt("Select a route destination type:")
+            .with_prompt(base)
             .items(&items[..])
             .interact();
 
@@ -57,8 +57,8 @@ impl PromptExt for oxide_api::types::RouteDestinationType {
 }
 
 impl PromptExt for oxide_api::types::RouteTarget {
-    fn prompt() -> Result<Self> {
-        let route_target_type = oxide_api::types::RouteTargetType::prompt()?;
+    fn prompt(base: &str) -> Result<Self> {
+        let route_target_type = oxide_api::types::RouteTargetType::prompt(base)?;
 
         let value: String = match dialoguer::Input::<String>::new()
             .with_prompt(&format!("{} value?", route_target_type))
@@ -81,11 +81,11 @@ impl PromptExt for oxide_api::types::RouteTarget {
 }
 
 impl PromptExt for oxide_api::types::RouteTargetType {
-    fn prompt() -> Result<Self> {
+    fn prompt(base: &str) -> Result<Self> {
         let items = oxide_api::types::RouteTarget::variants();
 
         let index = dialoguer::Select::new()
-            .with_prompt("Select a route target type")
+            .with_prompt(base)
             .items(&items[..])
             .interact();
 
@@ -101,9 +101,9 @@ impl PromptExt for oxide_api::types::RouteTargetType {
 }
 
 impl PromptExt for oxide_api::types::Ipv4Net {
-    fn prompt() -> Result<Self> {
+    fn prompt(base: &str) -> Result<Self> {
         let input = dialoguer::Input::<String>::new()
-            .with_prompt("IPv4 network")
+            .with_prompt(base)
             .validate_with(|input: &String| -> Result<(), &str> {
                 let ipnet = oxide_api::types::Ipv4Net::from_str(input);
 
@@ -120,9 +120,9 @@ impl PromptExt for oxide_api::types::Ipv4Net {
 }
 
 impl PromptExt for oxide_api::types::Ipv6Net {
-    fn prompt() -> Result<Self> {
+    fn prompt(base: &str) -> Result<Self> {
         let input = dialoguer::Input::<String>::new()
-            .with_prompt("IPv6 network")
+            .with_prompt(base)
             .validate_with(|input: &String| -> Result<(), &str> {
                 let ipnet = oxide_api::types::Ipv6Net::from_str(input);
 
@@ -135,5 +135,18 @@ impl PromptExt for oxide_api::types::Ipv6Net {
             .interact_text()?;
 
         oxide_api::types::Ipv6Net::from_str(&input).map_err(|e| anyhow::anyhow!("invalid ipv6net `{}`: {}", input, e))
+    }
+}
+
+impl PromptExt for oxide_api::types::ByteCount {
+    fn prompt(base: &str) -> Result<Self> {
+        let input = dialoguer::Input::<String>::new()
+                .with_prompt(base)
+                .interact_text()?;
+        // Echo the user's input, and print in a normalized base-2 form,
+        // to give them the chance to verify their input.
+        let bytes = input.parse::<::byte_unit::Byte>()?;
+        println!("Using {} bytes ({})", bytes, bytes.get_appropriate_unit(true));
+        Ok(oxide_api::types::ByteCount::try_from(bytes.get_bytes())?)
     }
 }

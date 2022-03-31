@@ -193,7 +193,7 @@ impl crate::cmd::Command for CmdSubnetCreate {
             }
             if description.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("subnet description:")
+                    .with_prompt("subnet description")
                     .interact_text()
                 {
                     Ok(input) => description = input,
@@ -205,12 +205,12 @@ impl crate::cmd::Command for CmdSubnetCreate {
             if ipv4_block.is_none() {
                 {
                     use crate::prompt_ext::PromptExt;
-                    ipv4_block = Some(oxide_api::types::Ipv4Net::prompt()?);
+                    ipv4_block = Some(oxide_api::types::Ipv4Net::prompt("IPv4 network")?);
                 }
             }
             if vpc.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("subnet vpc:")
+                    .with_prompt("subnet vpc")
                     .interact_text()
                 {
                     Ok(input) => vpc = input,

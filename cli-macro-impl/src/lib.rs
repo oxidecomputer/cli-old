@@ -1208,7 +1208,7 @@ impl Operation {
 
             let p = format_ident!("{}", n);
 
-            let title = format!("{} {}:", singular_tag_str, n);
+            let title = format!("{} {}", singular_tag_str, n);
 
             let is_check = v.get_is_check_fn(true)?;
 
@@ -1220,19 +1220,29 @@ impl Operation {
                 .to_string();
             let rendered = format_ident!("{}", rendered_str);
 
+            let needs_extra_prompt = match rendered_str.as_str() {
+                "Ipv4Net" => Some(("IPv4 network", true)),
+                "Ipv6Net" => Some(("IPv6 network", true)),
+                "RouteDestination" => Some(("Select a route destination type", true)),
+                "RouteTarget" => Some(("Select a route target type", true)),
+                "ByteCount" => Some((title.as_str(), false)),
+                _ => None,
+            };
+
             // Any weird OneOfs and other types that have a custom prompt should be
             // handled here.
-            if rendered_str == "Ipv4Net"
-                || rendered_str == "RouteTarget"
-                || rendered_str == "RouteDestination"
-                || rendered_str == "Ipv6Net"
-            {
+            if let Some((base_prompt, is_optional)) = needs_extra_prompt {
+                let prompt = if is_optional {
+                    quote!{ Some(oxide_api::types::#rendered::prompt(#base_prompt)?) }
+                } else {
+                    quote!{ oxide_api::types::#rendered::prompt(#base_prompt)? }
+                };
                 additional_prompts.push(quote! {
-                    // Propmt if they didn't provide the value.
+                    // Prompt if they didn't provide the value.
                     if #p.#is_check() {
                         {
                             use crate::prompt_ext::PromptExt;
-                            #p = Some(oxide_api::types::#rendered::prompt()?);
+                            #p = #prompt;
                         }
                     }
                 });

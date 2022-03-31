@@ -221,7 +221,7 @@ impl crate::cmd::Command for CmdRouteCreate {
             }
             if description.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("route description:")
+                    .with_prompt("route description")
                     .interact_text()
                 {
                     Ok(input) => description = input,
@@ -233,12 +233,14 @@ impl crate::cmd::Command for CmdRouteCreate {
             if destination.is_none() {
                 {
                     use crate::prompt_ext::PromptExt;
-                    destination = Some(oxide_api::types::RouteDestination::prompt()?);
+                    destination = Some(oxide_api::types::RouteDestination::prompt(
+                        "Select a route destination type",
+                    )?);
                 }
             }
             if router.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("route router:")
+                    .with_prompt("route router")
                     .interact_text()
                 {
                     Ok(input) => router = input,
@@ -250,12 +252,14 @@ impl crate::cmd::Command for CmdRouteCreate {
             if target.is_none() {
                 {
                     use crate::prompt_ext::PromptExt;
-                    target = Some(oxide_api::types::RouteTarget::prompt()?);
+                    target = Some(oxide_api::types::RouteTarget::prompt(
+                        "Select a route target type",
+                    )?);
                 }
             }
             if vpc.is_empty() {
                 match dialoguer::Input::<_>::new()
-                    .with_prompt("route vpc:")
+                    .with_prompt("route vpc")
                     .interact_text()
                 {
                     Ok(input) => vpc = input,
