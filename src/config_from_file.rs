@@ -80,7 +80,7 @@ impl FileConfig {
             }
         }
 
-        Err(anyhow!("host {} not found", hostname))
+        Err(anyhow!("host `{}` not found. Try authenticating with `oxide auth login` or be sure you are using both env vars: `OXIDE_HOST` and `OXIDE_TOKEN`.", hostname))
     }
 
     fn make_host_config(&self, hostname: &str) -> Result<HostConfig> {
