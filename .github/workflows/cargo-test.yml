@@ -22,6 +22,7 @@ on:
       - 'rust-toolchain.toml'
       - 'Makefile'
   workflow_dispatch:
+    inputs:
 permissions: read-all
 name: cargo test
 jobs:
