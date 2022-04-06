@@ -127,7 +127,7 @@ fn test_do_gen() {
 
     actual = do_gen(
         quote! {
-            tag = "images::global",
+            tag = "images:global",
         },
         quote! {
             #[derive(Parser, Debug, Clone)]

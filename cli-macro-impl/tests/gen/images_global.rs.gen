@@ -1,3 +1,327 @@
 use num_traits::identities::Zero;
 #[derive(Parser, Debug, Clone)]
-enum SubCommand {}
+enum SubCommand {
+    List(CmdImageList),
+    Create(CmdImageCreate),
+    #[clap(alias = "get")]
+    View(CmdImageView),
+    Delete(CmdImageDelete),
+}
+
+#[doc = "List images."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdImageList {
+    #[doc = "The project that holds the images."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "The order in which to sort the results."]
+    #[clap(long = "sort-by", short = 's', default_value_t)]
+    pub sort_by: oxide_api::types::NameSortMode,
+    #[doc = r" Maximum number of items to list."]
+    #[clap(long, short, default_value = "30")]
+    pub limit: u32,
+    #[doc = r" Make additional HTTP requests to fetch all pages."]
+    #[clap(long)]
+    pub paginate: bool,
+    #[doc = r" Output format."]
+    #[clap(long, short)]
+    pub format: Option<crate::types::FormatOutput>,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdImageList {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if self.limit < 1 {
+            return Err(anyhow::anyhow!("--limit must be greater than 0"));
+        }
+
+        let client = ctx.api_client("")?;
+        let results = if self.paginate {
+            client
+                .images()
+                .get_all(&self.organization, &self.project, self.sort_by.clone())
+                .await?
+        } else {
+            client
+                .images()
+                .get_page(
+                    self.limit,
+                    &self.organization,
+                    "",
+                    &self.project,
+                    self.sort_by.clone(),
+                )
+                .await?
+        };
+        let format = ctx.format(&self.format)?;
+        ctx.io.write_output_for_vec(&format, &results)?;
+        Ok(())
+    }
+}
+
+#[doc = "Create a new image.\n\nTo create a image interactively, use `oxide image create` with no arguments."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdImageCreate {
+    #[doc = "The name of the image to create."]
+    #[clap(name = "image", required = true)]
+    pub image: String,
+    #[doc = "The project that holds the image."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "The description for the image."]
+    #[clap(long = "description", short = 'D', default_value_t)]
+    pub description: String,
+    #[doc = "The source of the image's contents."]
+    #[clap(long = "source", short = 's')]
+    pub source: Option<oxide_api::types::ImageSource>,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdImageCreate {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let mut description = self.description.clone();
+        let mut image = self.image.clone();
+        let mut organization = self.organization.clone();
+        let mut project = self.project.clone();
+        let mut source = self.source.clone();
+        if description.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!(
+                "-D|--description required in non-interactive mode"
+            ));
+        }
+
+        if image.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!("[image] required in non-interactive mode"));
+        }
+
+        if organization.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!(
+                "-o|--organization required in non-interactive mode"
+            ));
+        }
+
+        if project.is_empty() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!(
+                "-p|--project required in non-interactive mode"
+            ));
+        }
+
+        if source.is_none() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!(
+                "-s|--source required in non-interactive mode"
+            ));
+        }
+
+        let client = ctx.api_client("")?;
+        if ctx.io.can_prompt() {
+            if organization.is_empty() {
+                let mut orgs: Vec<String> = Vec::new();
+                let resp = client
+                    .organizations()
+                    .get_all(oxide_api::types::NameOrIdSortMode::NameAscending)
+                    .await?;
+                for org in resp {
+                    orgs.push(org.name.to_string());
+                }
+                match dialoguer::Select::new()
+                    .with_prompt("Project organization:")
+                    .items(&orgs)
+                    .interact()
+                {
+                    Ok(index) => organization = orgs[index].to_string(),
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+            if project.is_empty() {
+                let mut org_projects: Vec<String> = Vec::new();
+                let projects = client
+                    .projects()
+                    .get_all(
+                        &organization,
+                        oxide_api::types::NameOrIdSortMode::NameAscending,
+                    )
+                    .await?;
+                for project in projects {
+                    org_projects.push(project.name.to_string());
+                }
+                match dialoguer::Select::new()
+                    .with_prompt("Select project:")
+                    .items(&org_projects)
+                    .interact()
+                {
+                    Ok(index) => project = org_projects[index].to_string(),
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+            if image.is_empty() {
+                match dialoguer::Input::<String>::new()
+                    .with_prompt(&format!("{} name:", "image"))
+                    .interact_text()
+                {
+                    Ok(name) => image = name,
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+            if description.is_empty() {
+                match dialoguer::Input::<_>::new()
+                    .with_prompt("image description")
+                    .interact_text()
+                {
+                    Ok(input) => description = input,
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
+            if source.is_none() {
+                {
+                    use crate::prompt_ext::PromptExt;
+                    source = Some(oxide_api::types::ImageSource::prompt(
+                        "Input a url or snapshot id for the image source",
+                    )?);
+                }
+            }
+        }
+
+        client
+            .images()
+            .post(
+                &self.organization,
+                &self.project,
+                &oxide_api::types::ImageCreate {
+                    description: description.clone(),
+                    name: image.clone(),
+                    source: source.unwrap(),
+                },
+            )
+            .await?;
+        let cs = ctx.io.color_scheme();
+        let full_name = format!("{}/{}", organization, project);
+        writeln!(
+            ctx.io.out,
+            "{} Created {} {} in {}",
+            cs.success_icon(),
+            "image",
+            image,
+            full_name
+        )?;
+        Ok(())
+    }
+}
+
+#[doc = "View image.\n\nDisplay information about an Oxide image.\n\nWith `--web`, open the image in a web browser instead."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdImageView {
+    #[doc = "The image to view. Can be an ID or name."]
+    #[clap(name = "image", required = true)]
+    pub image: String,
+    #[doc = "The project that holds the image."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = "Open the image in the browser."]
+    #[clap(short, long)]
+    pub web: bool,
+    #[doc = r" Output format."]
+    #[clap(long, short)]
+    pub format: Option<crate::types::FormatOutput>,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdImageView {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if self.web {
+            let url = format!("https://{}/{}", ctx.config.default_host()?, self.image);
+            ctx.browser("", &url)?;
+            return Ok(());
+        }
+
+        let client = ctx.api_client("")?;
+        let result = client
+            .images()
+            .get(&self.image, &self.organization, &self.project)
+            .await?;
+        let format = ctx.format(&self.format)?;
+        ctx.io.write_output(&format, &result)?;
+        Ok(())
+    }
+}
+
+#[doc = "Delete image."]
+#[derive(clap :: Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdImageDelete {
+    #[doc = "The image to delete. Can be an ID or name."]
+    #[clap(name = "image", required = true)]
+    pub image: String,
+    #[doc = "The project to delete the image from."]
+    #[clap(long, short, required = true)]
+    pub project: String,
+    #[doc = r" The organization that holds the project."]
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+    #[doc = r" Confirm deletion without prompting."]
+    #[clap(long)]
+    pub confirm: bool,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdImageDelete {
+    async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        if !ctx.io.can_prompt() && !self.confirm {
+            return Err(anyhow::anyhow!(
+                "--confirm required when not running interactively"
+            ));
+        }
+
+        let client = ctx.api_client("")?;
+        if !self.confirm {
+            if let Err(err) = dialoguer::Input::<String>::new()
+                .with_prompt(format!("Type {} to confirm deletion:", self.image))
+                .validate_with(|input: &String| -> Result<(), &str> {
+                    if input.trim() == self.image {
+                        Ok(())
+                    } else {
+                        Err("mismatched confirmation")
+                    }
+                })
+                .interact_text()
+            {
+                return Err(anyhow::anyhow!("prompt failed: {}", err));
+            }
+        }
+
+        client
+            .images()
+            .delete(&self.image, &self.organization, &self.project)
+            .await?;
+        let cs = ctx.io.color_scheme();
+        let full_name = format!("{}/{}", self.organization, self.project);
+        writeln!(
+            ctx.io.out,
+            "{} Deleted {} {} from {}",
+            cs.success_icon_with_color(ansi_term::Color::Red),
+            "image",
+            self.image,
+            full_name
+        )?;
+        Ok(())
+    }
+}
