@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-//use cli_macro::crud_gen;
+use cli_macro::crud_gen;
 
 /// Create, list, view, and delete snapshots.
 #[derive(Parser, Debug, Clone)]
@@ -10,9 +10,9 @@ pub struct CmdSnapshot {
     subcmd: SubCommand,
 }
 
-/*#[crud_gen {
+#[crud_gen {
     tag = "snapshots",
-}]*/
+}]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {}
 

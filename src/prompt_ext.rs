@@ -40,10 +40,7 @@ impl PromptExt for oxide_api::types::RouteDestinationType {
     fn prompt(base: &str) -> Result<Self> {
         let items = oxide_api::types::RouteDestination::variants();
 
-        let index = dialoguer::Select::new()
-            .with_prompt(base)
-            .items(&items[..])
-            .interact();
+        let index = dialoguer::Select::new().with_prompt(base).items(&items[..]).interact();
 
         let item = match index {
             Ok(i) => items[i].to_string(),
@@ -84,10 +81,7 @@ impl PromptExt for oxide_api::types::RouteTargetType {
     fn prompt(base: &str) -> Result<Self> {
         let items = oxide_api::types::RouteTarget::variants();
 
-        let index = dialoguer::Select::new()
-            .with_prompt(base)
-            .items(&items[..])
-            .interact();
+        let index = dialoguer::Select::new().with_prompt(base).items(&items[..]).interact();
 
         let item = match index {
             Ok(i) => items[i].to_string(),
@@ -140,13 +134,19 @@ impl PromptExt for oxide_api::types::Ipv6Net {
 
 impl PromptExt for oxide_api::types::ByteCount {
     fn prompt(base: &str) -> Result<Self> {
-        let input = dialoguer::Input::<String>::new()
-                .with_prompt(base)
-                .interact_text()?;
+        let input = dialoguer::Input::<String>::new().with_prompt(base).interact_text()?;
         // Echo the user's input, and print in a normalized base-2 form,
         // to give them the chance to verify their input.
         let bytes = input.parse::<::byte_unit::Byte>()?;
         println!("Using {} bytes ({})", bytes, bytes.get_appropriate_unit(true));
         Ok(oxide_api::types::ByteCount::try_from(bytes.get_bytes())?)
+    }
+}
+
+impl PromptExt for oxide_api::types::ImageSource {
+    fn prompt(base: &str) -> Result<Self> {
+        let input = dialoguer::Input::<String>::new().with_prompt(base).interact_text()?;
+
+        oxide_api::types::ImageSource::from_str(&input)
     }
 }

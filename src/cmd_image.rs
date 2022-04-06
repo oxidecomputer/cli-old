@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-//use cli_macro::crud_gen;
+use cli_macro::crud_gen;
 
 /// Create, list, view, and delete images.
 #[derive(Parser, Debug, Clone)]
@@ -10,9 +10,9 @@ pub struct CmdImage {
     subcmd: SubCommand,
 }
 
-/*#[crud_gen {
+#[crud_gen {
     tag = "images",
-}]*/
+}]
 #[derive(Parser, Debug, Clone)]
 enum SubCommand {}
 
