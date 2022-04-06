@@ -17,7 +17,11 @@ struct Params {
 
 pub fn do_gen(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     // Get the data from the parameters.
-    let params = from_tokenstream::<Params>(&attr)?;
+    let mut params = from_tokenstream::<Params>(&attr)?;
+
+    if params.tag.ends_with(":global") {
+        params.tag = params.tag.trim_end_matches(":global").to_string();
+    }
 
     // Lets get the Open API spec.
     let api = load_api_spec()?;
@@ -334,7 +338,21 @@ impl SchemaExt for openapiv3::Schema {
                     .as_ref()
                     .ok_or_else(|| anyhow::anyhow!("no items in array `{:#?}`", a))?;
 
-                schema.render_type(required)
+                let rt = schema.render_type(required)?;
+                let mut rendered = get_text(&rt)?;
+
+                // We don't want a vec of options.
+                if rendered.starts_with("Option<") {
+                    rendered = rendered
+                        .trim_start_matches("Option<")
+                        .trim_end_matches('>')
+                        .trim_start_matches("oxide_api::types::")
+                        .to_string();
+                }
+
+                let ident = format_ident!("{}", rendered);
+
+                Ok(quote!(Vec<oxide_api::types::#ident>))
             }
             openapiv3::SchemaKind::Type(openapiv3::Type::String(st)) => {
                 if !st.enumeration.is_empty() {
@@ -823,6 +841,11 @@ impl Operation {
                     } else {
                         req_body_rendered.push(quote!(#p_og: #p_short.unwrap()));
                     }
+                } else if rendered.starts_with("Vec<") {
+                    // We parse all Vec's as strings and so now we have to convert them back to the
+                    // original type.
+                    req_body_rendered
+                        .push(quote!(#p_og: self.#p_short.iter().map(|v| serde_json::from_str(v).unwrap()).collect()));
                 } else if rendered == "uuid::Uuid" {
                     //if v.required {
                     req_body_rendered.push(quote!(#p_og: "".to_string()));
@@ -962,7 +985,7 @@ impl Operation {
             format!("The {} that holds the {}.", n, prop)
         };
 
-        let type_name = schema.render_type(required)?;
+        let mut type_name = schema.render_type(required)?;
 
         let rendered = get_text(&type_name)?;
 
@@ -980,6 +1003,10 @@ impl Operation {
             quote!(false)
         };
 
+        if rendered.starts_with("Vec<") {
+            type_name = quote!(Vec<String>);
+        }
+
         let clap_line = if (self.method == "POST" || name == "sort_by")
             && !rendered.contains("Ipv6Net")
             && !rendered.contains("Ipv4Net")
@@ -989,6 +1016,11 @@ impl Operation {
                 // A default value there is pretty much always going to be None.
                 quote! {
                     #[clap(#long_flag, #short_flag)]
+                }
+            } else if rendered.starts_with("Vec<") {
+                // A default value there is pretty much always going to be None.
+                quote! {
+                    #[clap(#long_flag, #short_flag multiple_values = true)]
                 }
             } else {
                 quote! {
@@ -1226,6 +1258,7 @@ impl Operation {
                 "RouteDestination" => Some(("Select a route destination type", true)),
                 "RouteTarget" => Some(("Select a route target type", true)),
                 "ByteCount" => Some((title.as_str(), false)),
+                "ImageSource" => Some(("Input a url or snapshot id for the image source", true)),
                 _ => None,
             };
 
@@ -1233,9 +1266,9 @@ impl Operation {
             // handled here.
             if let Some((base_prompt, is_optional)) = needs_extra_prompt {
                 let prompt = if is_optional {
-                    quote!{ Some(oxide_api::types::#rendered::prompt(#base_prompt)?) }
+                    quote! { Some(oxide_api::types::#rendered::prompt(#base_prompt)?) }
                 } else {
-                    quote!{ oxide_api::types::#rendered::prompt(#base_prompt)? }
+                    quote! { oxide_api::types::#rendered::prompt(#base_prompt)? }
                 };
                 additional_prompts.push(quote! {
                     // Prompt if they didn't provide the value.

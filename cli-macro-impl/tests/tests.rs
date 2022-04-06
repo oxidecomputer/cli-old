@@ -111,4 +111,30 @@ fn test_do_gen() {
     .unwrap();
 
     expectorate::assert_contents("tests/gen/projects.rs.gen", &get_text_fmt(&actual).unwrap());
+
+    actual = do_gen(
+        quote! {
+            tag = "images",
+        },
+        quote! {
+            #[derive(Parser, Debug, Clone)]
+            enum SubCommand {}
+        },
+    )
+    .unwrap();
+
+    expectorate::assert_contents("tests/gen/images.rs.gen", &get_text_fmt(&actual).unwrap());
+
+    actual = do_gen(
+        quote! {
+            tag = "images::global",
+        },
+        quote! {
+            #[derive(Parser, Debug, Clone)]
+            enum SubCommand {}
+        },
+    )
+    .unwrap();
+
+    expectorate::assert_contents("tests/gen/images_global.rs.gen", &get_text_fmt(&actual).unwrap());
 }

@@ -21,6 +21,8 @@ pub mod cmd_disk;
 pub mod cmd_generate;
 /// The image command.
 pub mod cmd_image;
+/// The image global subcommand.
+pub mod cmd_image_global;
 /// The instance command.
 pub mod cmd_instance;
 /// The open command.

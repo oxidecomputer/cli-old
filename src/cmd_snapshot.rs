@@ -18,7 +18,12 @@ enum SubCommand {}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSnapshot {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        todo!()
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        match &self.subcmd {
+            SubCommand::Create(cmd) => cmd.run(ctx).await,
+            SubCommand::Delete(cmd) => cmd.run(ctx).await,
+            SubCommand::List(cmd) => cmd.run(ctx).await,
+            SubCommand::View(cmd) => cmd.run(ctx).await,
+        }
     }
 }
