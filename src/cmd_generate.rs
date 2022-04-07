@@ -73,7 +73,7 @@ impl CmdGenerateMarkdown {
         let markdown = format!(
             r#"---
 title: "{}"
-description: "{}"
+excerpt: "{}"
 layout: manual
 ---
 
