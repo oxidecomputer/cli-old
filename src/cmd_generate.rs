@@ -249,7 +249,7 @@ mod test {
         let expected = r#"Generating markdown for `git` -> git.md
 ---
 title: "git"
-description: "A fictional versioning CLI"
+excerpt: "A fictional versioning CLI"
 layout: manual
 ---
 
@@ -275,7 +275,7 @@ A fictional versioning CLI
 Generating markdown for `git clone` -> git_clone.md
 ---
 title: "git clone"
-description: "Clones repos"
+excerpt: "Clones repos"
 layout: manual
 ---
 
@@ -298,7 +298,7 @@ Clones repos
 Generating markdown for `git push` -> git_push.md
 ---
 title: "git push"
-description: "pushes things"
+excerpt: "pushes things"
 layout: manual
 ---
 
@@ -321,7 +321,7 @@ pushes things
 Generating markdown for `git add` -> git_add.md
 ---
 title: "git add"
-description: "adds things"
+excerpt: "adds things"
 layout: manual
 ---
 
@@ -348,7 +348,7 @@ adds things
 Generating markdown for `git add new` -> git_add_new.md
 ---
 title: "git add new"
-description: "subcommand for adding new stuff"
+excerpt: "subcommand for adding new stuff"
 layout: manual
 ---
 
@@ -375,7 +375,7 @@ subcommand for adding new stuff
 Generating markdown for `git add new foo` -> git_add_new_foo.md
 ---
 title: "git add new foo"
-description: "sub subcommand"
+excerpt: "sub subcommand"
 layout: manual
 ---
 
