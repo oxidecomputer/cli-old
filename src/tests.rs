@@ -1518,7 +1518,7 @@ date:"#
                 "--router".to_string(),
                 "my-router".to_string(),
             ],
-            want_out: r#"id | name | description | destination | kind | router_id | target | time_created | time_modified |"#.to_string(),
+            want_out: r#"id | name | description | destination | kind | target | time_created | time_modified | vpc_router_id"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
