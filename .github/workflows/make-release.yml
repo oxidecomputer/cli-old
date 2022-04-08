@@ -76,7 +76,7 @@ jobs:
           destination: dl.oxide.computer
       # Store the readme as an artifact so we can combine the two.
       - name: Archive the README.md data
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{matrix.os}}-${{github.ref_name}}-README.md
           path: ${{github.workspace}}/cross/${{matrix.os}}-${{github.ref_name}}-README.md
@@ -120,7 +120,7 @@ jobs:
           destination: dl.oxide.computer
       # Store the readme as an artifact so we can combine the two.
       - name: Archive the README.md data
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: illumos-${{github.ref_name}}-README.md
           path: ${{github.workspace}}/cross/illumos-${{github.ref_name}}-README.md
