@@ -7,19 +7,7 @@
       "url": "https://oxide.computer",
       "email": "api@oxide.computer"
     },
-    "version": "0.0.1",
-    "x-go": {
-      "client": "// Create a client with your token and host.\nclient, err := oxide.NewClient(\"$OXIDE_TOKEN\", \"your apps user agent\", \"$OXIDE_HOST\")\nif err != nil {\n  panic(err)\n}\n\n// - OR -\n\n// Create a new client with your token and host parsed from the environment\n// variables: OXIDE_TOKEN, OXIDE_HOST.\nclient, err := oxide.NewClientFromEnv(\"your apps user agent\")\nif err != nil {\n  panic(err)\n}",
-      "install": "go get github.com/oxidecomputer/oxide.go"
-    },
-    "x-ts": {
-      "client": "// Create a new HttpClient and configure it with the baseUrl and token.\nlet client = new Api({\n    baseUrl: \"$OXIDE_HOST\",\n    token: \"$OXIDE_TOKEN\",\n});",
-      "install": "yarn add @oxidecomputer/api\n# - OR -\n$ npm install @oxidecomputer/api"
-    },
-    "x-rust": {
-      "client": "use oxide_api::Client;\n\n// Authenticate via an API token.\nlet client = Client::new(\"$OXIDE_TOKEN\", \"$OXIDE_HOST\");\n\n// - OR -\n\n// Authenticate with your token and host parsed from the environment variables:\n// OXIDE_TOKEN, OXIDE_HOST.\nlet client = Client::new_from_env();",
-      "install": "[dependencies]\noxide-api = \"0.1.0-rc.32\""
-    }
+    "version": "0.0.1"
   },
   "paths": {
     "/hardware/racks": {
@@ -79,18 +67,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List racks in the system.\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `sortBy`\nrackResultsPage, err := client.Racks.List(limit, pageToken, sortBy)\n\n// - OR -\n\n// ListAllPages: List racks in the system.\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `sortBy`\nRack, err := client.Racks.ListAllPages(sortBy)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RacksService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.hardwareRacksGet(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List racks in the system.\n*\n* This function performs a `GET` to the `/hardware/racks` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::IdSortMode` -- Supported set of sort modes for scanning by id only.\n*  \n*  Currently, we only support scanning in ascending order.\n*/\nlet vec_crate_types_rack = client.racks().get_page(limit, page_token, sort_by).await?;\n\n// - OR -\n\n/**\n* List racks in the system.\n*\n* This function performs a `GET` to the `/hardware/racks` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_rack = client.racks().get_all(sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/racks/struct.Racks.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       }
     },
     "/hardware/racks/{rack_id}": {
@@ -130,17 +107,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Fetch information about a particular rack.\n//\n// Parameters:\n//\t- `rackId`: The rack's unique ID.\nrack, err := client.Racks.Get(rackID)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RacksService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.hardwareRacksGetRack(HardwareRacksGetRackParams{rackId}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Fetch information about a particular rack.\n*\n* This function performs a `GET` to the `/hardware/racks/{rack_id}` endpoint.\n*\n* **Parameters:**\n*\n* * `rack_id: &str` -- The rack's unique ID.\n*/\nlet rack = client.racks().get(rack_id).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/racks/struct.Racks.html#method.get"
         }
       }
     },
@@ -201,18 +167,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List sleds in the system.\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `sortBy`\nsledResultsPage, err := client.Sleds.List(limit, pageToken, sortBy)\n\n// - OR -\n\n// ListAllPages: List sleds in the system.\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `sortBy`\nSled, err := client.Sleds.ListAllPages(sortBy)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SledsService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.hardwareSledsGet(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List sleds in the system.\n*\n* This function performs a `GET` to the `/hardware/sleds` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::IdSortMode` -- Supported set of sort modes for scanning by id only.\n*  \n*  Currently, we only support scanning in ascending order.\n*/\nlet vec_crate_types_sled = client.sleds().get_page(limit, page_token, sort_by).await?;\n\n// - OR -\n\n/**\n* List sleds in the system.\n*\n* This function performs a `GET` to the `/hardware/sleds` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_sled = client.sleds().get_all(sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/sleds/struct.Sleds.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       }
     },
     "/hardware/sleds/{sled_id}": {
@@ -252,17 +207,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Fetch information about a sled in the system.\n//\n// Parameters:\n//\t- `sledId`: The sled's unique ID.\nsled, err := client.Sleds.Get(sledID)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SledsService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.hardwareSledsGetSled(HardwareSledsGetSledParams{sledId}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Fetch information about a sled in the system.\n*\n* This function performs a `GET` to the `/hardware/sleds/{sled_id}` endpoint.\n*\n* **Parameters:**\n*\n* * `sled_id: &str` -- The sled's unique ID.\n*/\nlet sled = client.sleds().get(sled_id).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/sleds/struct.Sleds.html#method.get"
         }
       }
     },
@@ -324,18 +268,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// GlobalList: List global images.\n//\n// Returns a list of all the global images. Global images are returned sorted by creation date, with the most recent images appearing first.\n//\n// To iterate over all pages, use the `GlobalListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `sortBy`\nimageResultsPage, err := client.Images.GlobalList(limit, pageToken, sortBy)\n\n// - OR -\n\n// GlobalListAllPages: List global images.\n//\n// Returns a list of all the global images. Global images are returned sorted by creation date, with the most recent images appearing first.\n//\n// This method is a wrapper around the `GlobalList` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `sortBy`\nImage, err := client.Images.GlobalListAllPages(sortBy)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ImagesService.GlobalList"
-        },
-        "x-ts": {
-          "example": "let resp = client.imagesGet(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List global images.\n*\n* This function performs a `GET` to the `/images` endpoint.\n*\n* Returns a list of all the global images. Global images are returned sorted by creation date, with the most recent images appearing first.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n*/\nlet vec_crate_types_image = client.images_global().images_get(limit, page_token, sort_by).await?;\n\n// - OR -\n\n/**\n* List global images.\n*\n* This function performs a `GET` to the `/images` endpoint.\n*\n* As opposed to `images_get`, this function returns all the pages of the request at once.\n*\n* Returns a list of all the global images. Global images are returned sorted by creation date, with the most recent images appearing first.\n*/\nlet vec_crate_types_image = client.images_global().images_get_all(sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/images_global/struct.ImagesGlobal.html#method.images_get"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -371,17 +304,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// GlobalCreate: Create a global image.\n//\n// Create a new global image. This image can then be used by any user as a base for instances.\nimage, err := client.Images.GlobalCreate(body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ImagesService.GlobalCreate"
-        },
-        "x-ts": {
-          "example": "let resp = client.imagesPost(query, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a global image.\n*\n* This function performs a `POST` to the `/images` endpoint.\n*\n* Create a new global image. This image can then be used by any user as a base for instances.\n*/\nlet image = client.images_global().images_post(body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/images_global/struct.ImagesGlobal.html#method.images_post"
         }
       }
     },
@@ -421,17 +343,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// GlobalGet: Get a global image.\n//\n// Returns the details of a specific global image.\n//\n// Parameters:\n//\t- `imageName`\nimage, err := client.Images.GlobalGet(imageName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ImagesService.GlobalGet"
-        },
-        "x-ts": {
-          "example": "let resp = client.imagesGetImage(ImagesGetImageParams{imageName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Get a global image.\n*\n* This function performs a `GET` to the `/images/{image_name}` endpoint.\n*\n* Returns the details of a specific global image.\n*\n* **Parameters:**\n*\n* * `image_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet image = client.images_global().images_get_image(image_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/images_global/struct.ImagesGlobal.html#method.images_get_image"
         }
       },
       "delete": {
@@ -462,17 +373,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// GlobalDelete: Delete a global image.\n//\n// Permanently delete a global image. This operation cannot be undone. Any instances using the global image will continue to run, however new instances can not be created with this image.\n//\n// Parameters:\n//\t- `imageName`\nif err := client.Images.GlobalDelete(imageName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ImagesService.GlobalDelete"
-        },
-        "x-ts": {
-          "example": "let resp = client.imagesDeleteImage(ImagesDeleteImageParams{imageName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete a global image.\n*\n* This function performs a `DELETE` to the `/images/{image_name}` endpoint.\n*\n* Permanently delete a global image. This operation cannot be undone. Any instances using the global image will continue to run, however new instances can not be created with this image.\n*\n* **Parameters:**\n*\n* * `image_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.images_global().images_delete_image(image_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/images_global/struct.ImagesGlobal.html#method.images_delete_image"
         }
       }
     },
@@ -501,13 +401,6 @@
               }
             }
           }
-        },
-        "x-ts": {
-          "example": "let resp = client.spoofLogin(query, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* This function performs a `POST` to the `/login` endpoint.\n*/\nclient.hidden().spoof_login(body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/hidden/struct.Hidden.html#method.spoof_login"
         }
       }
     },
@@ -526,13 +419,6 @@
               }
             }
           }
-        },
-        "x-ts": {
-          "example": "let resp = client.logout(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* This function performs a `POST` to the `/logout` endpoint.\n*/\nclient.hidden().logout().await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/hidden/struct.Hidden.html#method.logout"
         }
       }
     },
@@ -593,18 +479,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List all organizations.\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `sortBy`\norganizationResultsPage, err := client.Organizations.List(limit, pageToken, sortBy)\n\n// - OR -\n\n// ListAllPages: List all organizations.\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `sortBy`\nOrganization, err := client.Organizations.ListAllPages(sortBy)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#OrganizationsService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.organizationsGet(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List all organizations.\n*\n* This function performs a `GET` to the `/organizations` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameOrIdSortMode` -- Supported set of sort modes for scanning by name or id.\n*/\nlet vec_crate_types_organization = client.organizations().get_page(limit, page_token, sort_by).await?;\n\n// - OR -\n\n/**\n* List all organizations.\n*\n* This function performs a `GET` to the `/organizations` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_organization = client.organizations().get_all(sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/organizations/struct.Organizations.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -639,17 +514,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create a new organization.\norganization, err := client.Organizations.Create(body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#OrganizationsService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.organizationsPost(query, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a new organization.\n*\n* This function performs a `POST` to the `/organizations` endpoint.\n*/\nlet organization = client.organizations().post(body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/organizations/struct.Organizations.html#method.post"
         }
       }
     },
@@ -689,17 +553,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Fetch a specific organization\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\norganization, err := client.Organizations.Get(organizationName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#OrganizationsService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.organizationsGetOrganization(OrganizationsGetOrganizationParams{orgName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Fetch a specific organization.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet organization = client.organizations().get(organization_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/organizations/struct.Organizations.html#method.get"
         }
       },
       "put": {
@@ -747,17 +600,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Put: Update a specific organization.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\norganization, err := client.Organizations.Put(organizationName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#OrganizationsService.Put"
-        },
-        "x-ts": {
-          "example": "let resp = client.organizationsPutOrganization(OrganizationsPutOrganizationParams{orgName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Update a specific organization.\n*\n* This function performs a `PUT` to the `/organizations/{organization_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet organization = client.organizations().put(organization_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/organizations/struct.Organizations.html#method.put"
         }
       },
       "delete": {
@@ -788,17 +630,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete a specific organization.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\nif err := client.Organizations.Delete(organizationName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#OrganizationsService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.organizationsDeleteOrganization(OrganizationsDeleteOrganizationParams{orgName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete a specific organization.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.organizations().delete(organization_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/organizations/struct.Organizations.html#method.delete"
         }
       }
     },
@@ -869,18 +700,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List all projects.\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`: The organization's unique name.\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `sortBy`\nprojectResultsPage, err := client.Projects.List(limit, pageToken, sortBy, organizationName)\n\n// - OR -\n\n// ListAllPages: List all projects.\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `sortBy`\nProject, err := client.Projects.ListAllPages(sortBy, organizationName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ProjectsService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.organizationProjectsGet(OrganizationProjectsGetParams{orgName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List all projects.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameOrIdSortMode` -- Supported set of sort modes for scanning by name or id.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_project = client.projects().get_page(limit, organization_name, page_token, sort_by).await?;\n\n// - OR -\n\n/**\n* List all projects.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_project = client.projects().get_all(organization_name, sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/projects/struct.Projects.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -927,17 +747,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create a new project.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\nproject, err := client.Projects.Create(organizationName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ProjectsService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.organizationProjectsPost(OrganizationProjectsPostParams{orgName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a new project.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet project = client.projects().post(organization_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/projects/struct.Projects.html#method.post"
         }
       }
     },
@@ -987,17 +796,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Fetch a specific project\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\nproject, err := client.Projects.Get(organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ProjectsService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.organizationProjectsGetProject(OrganizationProjectsGetProjectParams{orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Fetch a specific project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet project = client.projects().get(organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/projects/struct.Projects.html#method.get"
         }
       },
       "put": {
@@ -1055,17 +853,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Put: Update a specific project.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\nproject, err := client.Projects.Put(organizationName, projectName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ProjectsService.Put"
-        },
-        "x-ts": {
-          "example": "let resp = client.organizationProjectsPutProject(OrganizationProjectsPutProjectParams{orgName, projectName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Update a specific project.\n*\n* This function performs a `PUT` to the `/organizations/{organization_name}/projects/{project_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet project = client.projects().put(organization_name, project_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/projects/struct.Projects.html#method.put"
         }
       },
       "delete": {
@@ -1106,17 +893,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete a specific project.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\nif err := client.Projects.Delete(organizationName, projectName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ProjectsService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.organizationProjectsDeleteProject(OrganizationProjectsDeleteProjectParams{orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete a specific project.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}/projects/{project_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.projects().delete(organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/projects/struct.Projects.html#method.delete"
         }
       }
     },
@@ -1197,18 +973,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List disks in a project.\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`: The organization's unique name.\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`: The project's unique name within the organization.\n//\t- `sortBy`\ndiskResultsPage, err := client.Disks.List(limit, pageToken, sortBy, organizationName, projectName)\n\n// - OR -\n\n// ListAllPages: List disks in a project.\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\n//\t- `sortBy`\nDisk, err := client.Disks.ListAllPages(sortBy, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#DisksService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectDisksGet(ProjectDisksGetParams{orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List disks in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/disks` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_disk = client.disks().get_page(limit, organization_name, page_token, project_name, sort_by).await?;\n\n// - OR -\n\n/**\n* List disks in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/disks` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_disk = client.disks().get_all(organization_name, project_name, sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/disks/struct.Disks.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -1265,17 +1030,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create a disk in a project.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\ndisk, err := client.Disks.Create(organizationName, projectName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#DisksService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectDisksPost(ProjectDisksPostParams{orgName, projectName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a disk in a project.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/disks` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet disk = client.disks().post(organization_name, project_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/disks/struct.Disks.html#method.post"
         }
       }
     },
@@ -1332,17 +1086,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Fetch a single disk in a project.\n//\n// Parameters:\n//\t- `diskName`\n//\t- `organizationName`\n//\t- `projectName`\ndisk, err := client.Disks.Get(diskName, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#DisksService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectDisksGetDisk(ProjectDisksGetDiskParams{diskName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Fetch a single disk in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/disks/{disk_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `disk_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet disk = client.disks().get(disk_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/disks/struct.Disks.html#method.get"
         }
       },
       "delete": {
@@ -1390,17 +1133,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete a disk from a project.\n//\n// Parameters:\n//\t- `diskName`\n//\t- `organizationName`\n//\t- `projectName`\nif err := client.Disks.Delete(diskName, organizationName, projectName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#DisksService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectDisksDeleteDisk(ProjectDisksDeleteDiskParams{diskName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete a disk from a project.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}/projects/{project_name}/disks/{disk_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `disk_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.disks().delete(disk_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/disks/struct.Disks.html#method.delete"
         }
       }
     },
@@ -1482,18 +1214,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List images\n//\n// List images in a project. The images are returned sorted by creation date, with the most recent images appearing first.\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`: The organization's unique name.\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`: The project's unique name within the organization.\n//\t- `sortBy`\nimageResultsPage, err := client.Images.List(limit, pageToken, sortBy, organizationName, projectName)\n\n// - OR -\n\n// ListAllPages: List images\n//\n// List images in a project. The images are returned sorted by creation date, with the most recent images appearing first.\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\n//\t- `sortBy`\nImage, err := client.Images.ListAllPages(sortBy, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ImagesService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectImagesGet(ProjectImagesGetParams{orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List images.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/images` endpoint.\n*\n* List images in a project. The images are returned sorted by creation date, with the most recent images appearing first.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_image = client.images().get_page(limit, organization_name, page_token, project_name, sort_by).await?;\n\n// - OR -\n\n/**\n* List images.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/images` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*\n* List images in a project. The images are returned sorted by creation date, with the most recent images appearing first.\n*/\nlet vec_crate_types_image = client.images().get_all(organization_name, project_name, sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/images/struct.Images.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -1551,17 +1272,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create an image\n//\n// Create a new image in a project.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\nimage, err := client.Images.Create(organizationName, projectName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ImagesService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectImagesPost(ProjectImagesPostParams{orgName, projectName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create an image.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/images` endpoint.\n*\n* Create a new image in a project.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet image = client.images().post(organization_name, project_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/images/struct.Images.html#method.post"
         }
       }
     },
@@ -1619,17 +1329,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Get an image\n//\n// Get the details of a specific image in a project.\n//\n// Parameters:\n//\t- `imageName`\n//\t- `organizationName`\n//\t- `projectName`\nimage, err := client.Images.Get(imageName, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ImagesService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectImagesGetImage(ProjectImagesGetImageParams{imageName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Get an image.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/images/{image_name}` endpoint.\n*\n* Get the details of a specific image in a project.\n*\n* **Parameters:**\n*\n* * `image_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet image = client.images().get(image_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/images/struct.Images.html#method.get"
         }
       },
       "delete": {
@@ -1678,17 +1377,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete an image\n//\n// Permanently delete an image from a project. This operation cannot be undone. Any instances in the project using the image will continue to run, however new instances can not be created with this image.\n//\n// Parameters:\n//\t- `imageName`\n//\t- `organizationName`\n//\t- `projectName`\nif err := client.Images.Delete(imageName, organizationName, projectName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#ImagesService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectImagesDeleteImage(ProjectImagesDeleteImageParams{imageName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete an image.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}/projects/{project_name}/images/{image_name}` endpoint.\n*\n* Permanently delete an image from a project. This operation cannot be undone. Any instances in the project using the image will continue to run, however new instances can not be created with this image.\n*\n* **Parameters:**\n*\n* * `image_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.images().delete(image_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/images/struct.Images.html#method.delete"
         }
       }
     },
@@ -1769,18 +1457,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List instances in a project.\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`: The organization's unique name.\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`: The project's unique name within the organization.\n//\t- `sortBy`\ninstanceResultsPage, err := client.Instances.List(limit, pageToken, sortBy, organizationName, projectName)\n\n// - OR -\n\n// ListAllPages: List instances in a project.\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\n//\t- `sortBy`\nInstance, err := client.Instances.ListAllPages(sortBy, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectInstancesGet(ProjectInstancesGetParams{orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List instances in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/instances` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_instance = client.instances().get_page(limit, organization_name, page_token, project_name, sort_by).await?;\n\n// - OR -\n\n/**\n* List instances in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/instances` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_instance = client.instances().get_all(organization_name, project_name, sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -1837,17 +1514,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create an instance in a project.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\ninstance, err := client.Instances.Create(organizationName, projectName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectInstancesPost(ProjectInstancesPostParams{orgName, projectName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create an instance in a project.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/instances` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet instance = client.instances().post(organization_name, project_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.post"
         }
       }
     },
@@ -1904,17 +1570,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Get an instance in a project.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\ninstance, err := client.Instances.Get(instanceName, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectInstancesGetInstance(ProjectInstancesGetInstanceParams{instanceName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Get an instance in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet instance = client.instances().get(instance_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.get"
         }
       },
       "delete": {
@@ -1962,17 +1617,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete an instance from a project.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\nif err := client.Instances.Delete(instanceName, organizationName, projectName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectInstancesDeleteInstance(ProjectInstancesDeleteInstanceParams{instanceName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete an instance from a project.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.instances().delete(instance_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.delete"
         }
       }
     },
@@ -2060,18 +1704,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// DisksList: List disks attached to this instance.\n//\n// To iterate over all pages, use the `DisksListAllPages` method, instead.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`\n//\t- `sortBy`\ndiskResultsPage, err := client.Instances.DisksList(limit, pageToken, sortBy, instanceName, organizationName, projectName)\n\n// - OR -\n\n// DisksListAllPages: List disks attached to this instance.\n//\n// This method is a wrapper around the `DisksList` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `sortBy`\nDisk, err := client.Instances.DisksListAllPages(sortBy, instanceName, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.DisksList"
-        },
-        "x-ts": {
-          "example": "let resp = client.instanceDisksGet(InstanceDisksGetParams{instanceName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List disks attached to this instance.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/disks` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_disk = client.instances().disks_get(instance_name, limit, organization_name, page_token, project_name, sort_by).await?;\n\n// - OR -\n\n/**\n* List disks attached to this instance.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/disks` endpoint.\n*\n* As opposed to `disks_get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_disk = client.instances().disks_get_all(instance_name, organization_name, project_name, sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.disks_get"
-        }
+        "x-dropshot-pagination": true
       }
     },
     "/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/disks/attach": {
@@ -2136,17 +1769,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// DisksAttach\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\ndisk, err := client.Instances.DisksAttach(instanceName, organizationName, projectName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.DisksAttach"
-        },
-        "x-ts": {
-          "example": "let resp = client.instanceDisksAttach(InstanceDisksAttachParams{instanceName, orgName, projectName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/disks/attach` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet disk = client.instances().disks_attach(instance_name, organization_name, project_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.disks_attach"
         }
       }
     },
@@ -2212,17 +1834,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// DisksDetach\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\ndisk, err := client.Instances.DisksDetach(instanceName, organizationName, projectName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.DisksDetach"
-        },
-        "x-ts": {
-          "example": "let resp = client.instanceDisksDetach(InstanceDisksDetachParams{instanceName, orgName, projectName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/disks/detach` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet disk = client.instances().disks_detach(instance_name, organization_name, project_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.disks_detach"
         }
       }
     },
@@ -2289,17 +1900,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Migrate: Migrate an instance to a different propolis-server, possibly on a different sled.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\ninstance, err := client.Instances.Migrate(instanceName, organizationName, projectName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.Migrate"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectInstancesMigrateInstance(ProjectInstancesMigrateInstanceParams{instanceName, orgName, projectName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Migrate an instance to a different propolis-server, possibly on a different sled.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/migrate` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet instance = client.instances().migrate(instance_name, organization_name, project_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.migrate"
         }
       }
     },
@@ -2387,18 +1987,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// NetworkInterfacesList: List network interfaces attached to this instance.\n//\n// To iterate over all pages, use the `NetworkInterfacesListAllPages` method, instead.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`\n//\t- `sortBy`\nnetworkInterfaceResultsPage, err := client.Instances.NetworkInterfacesList(limit, pageToken, sortBy, instanceName, organizationName, projectName)\n\n// - OR -\n\n// NetworkInterfacesListAllPages: List network interfaces attached to this instance.\n//\n// This method is a wrapper around the `NetworkInterfacesList` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `sortBy`\nNetworkInterface, err := client.Instances.NetworkInterfacesListAllPages(sortBy, instanceName, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.NetworkInterfacesList"
-        },
-        "x-ts": {
-          "example": "let resp = client.instanceNetworkInterfacesGet(InstanceNetworkInterfacesGetParams{instanceName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List network interfaces attached to this instance.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/network-interfaces` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_network_interface = client.instances().network_interfaces_get(instance_name, limit, organization_name, page_token, project_name, sort_by).await?;\n\n// - OR -\n\n/**\n* List network interfaces attached to this instance.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/network-interfaces` endpoint.\n*\n* As opposed to `network_interfaces_get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_network_interface = client.instances().network_interfaces_get_all(instance_name, organization_name, project_name, sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.network_interfaces_get"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -2462,17 +2051,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// NetworkInterfacesCreate: Create a network interface for an instance.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\nnetworkInterface, err := client.Instances.NetworkInterfacesCreate(instanceName, organizationName, projectName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.NetworkInterfacesCreate"
-        },
-        "x-ts": {
-          "example": "let resp = client.instanceNetworkInterfacesPost(InstanceNetworkInterfacesPostParams{instanceName, orgName, projectName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a network interface for an instance.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/network-interfaces` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet network_interface = client.instances().network_interfaces_post(instance_name, organization_name, project_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.network_interfaces_post"
         }
       }
     },
@@ -2538,17 +2116,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// NetworkInterfacesGetInterface: Get an interface attached to an instance.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `interfaceName`\n//\t- `organizationName`\n//\t- `projectName`\nnetworkInterface, err := client.Instances.NetworkInterfacesGetInterface(instanceName, interfaceName, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.NetworkInterfacesGetInterface"
-        },
-        "x-ts": {
-          "example": "let resp = client.instanceNetworkInterfacesGetInterface(InstanceNetworkInterfacesGetInterfaceParams{instanceName, interfaceName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Get an interface attached to an instance.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/network-interfaces/{interface_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `interface_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet network_interface = client.instances().network_interfaces_get_interface(instance_name, interface_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.network_interfaces_get_interface"
         }
       },
       "delete": {
@@ -2605,17 +2172,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// NetworkInterfacesDeleteInterface: Detach a network interface from an instance.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `interfaceName`\n//\t- `organizationName`\n//\t- `projectName`\nif err := client.Instances.NetworkInterfacesDeleteInterface(instanceName, interfaceName, organizationName, projectName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.NetworkInterfacesDeleteInterface"
-        },
-        "x-ts": {
-          "example": "let resp = client.instanceNetworkInterfacesDeleteInterface(InstanceNetworkInterfacesDeleteInterfaceParams{instanceName, interfaceName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Detach a network interface from an instance.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/network-interfaces/{interface_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `interface_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.instances().network_interfaces_delete_interface(instance_name, interface_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.network_interfaces_delete_interface"
         }
       }
     },
@@ -2672,17 +2228,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Reboot: Reboot an instance.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\ninstance, err := client.Instances.Reboot(instanceName, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.Reboot"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectInstancesInstanceReboot(ProjectInstancesInstanceRebootParams{instanceName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Reboot an instance.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/reboot` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet instance = client.instances().reboot(instance_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.reboot"
         }
       }
     },
@@ -2739,17 +2284,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Start: Boot an instance.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\ninstance, err := client.Instances.Start(instanceName, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.Start"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectInstancesInstanceStart(ProjectInstancesInstanceStartParams{instanceName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Boot an instance.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/start` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet instance = client.instances().start(instance_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.start"
         }
       }
     },
@@ -2806,17 +2340,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Stop: Halt an instance.\n//\n// Parameters:\n//\t- `instanceName`\n//\t- `organizationName`\n//\t- `projectName`\ninstance, err := client.Instances.Stop(instanceName, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#InstancesService.Stop"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectInstancesInstanceStop(ProjectInstancesInstanceStopParams{instanceName, orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Halt an instance.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/stop` endpoint.\n*\n* **Parameters:**\n*\n* * `instance_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet instance = client.instances().stop(instance_name, organization_name, project_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/instances/struct.Instances.html#method.stop"
         }
       }
     },
@@ -2897,18 +2420,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List snapshots in a project.\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`: The organization's unique name.\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`: The project's unique name within the organization.\n//\t- `sortBy`\nsnapshotResultsPage, err := client.Snapshots.List(limit, pageToken, sortBy, organizationName, projectName)\n\n// - OR -\n\n// ListAllPages: List snapshots in a project.\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\n//\t- `sortBy`\nSnapshot, err := client.Snapshots.ListAllPages(sortBy, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SnapshotsService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectSnapshotsGet(ProjectSnapshotsGetParams{orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List snapshots in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/snapshots` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_snapshot = client.snapshots().get_page(limit, organization_name, page_token, project_name, sort_by).await?;\n\n// - OR -\n\n/**\n* List snapshots in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/snapshots` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_snapshot = client.snapshots().get_all(organization_name, project_name, sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/snapshots/struct.Snapshots.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -2965,17 +2477,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create a snapshot of a disk.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\nsnapshot, err := client.Snapshots.Create(organizationName, projectName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SnapshotsService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectSnapshotsPost(ProjectSnapshotsPostParams{orgName, projectName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a snapshot of a disk.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/snapshots` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet snapshot = client.snapshots().post(organization_name, project_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/snapshots/struct.Snapshots.html#method.post"
         }
       }
     },
@@ -3032,17 +2533,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Get a snapshot in a project.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `snapshotName`\nsnapshot, err := client.Snapshots.Get(organizationName, projectName, snapshotName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SnapshotsService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectSnapshotsGetSnapshot(ProjectSnapshotsGetSnapshotParams{orgName, projectName, snapshotName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Get a snapshot in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/snapshots/{snapshot_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `snapshot_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet snapshot = client.snapshots().get(organization_name, project_name, snapshot_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/snapshots/struct.Snapshots.html#method.get"
         }
       },
       "delete": {
@@ -3090,17 +2580,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete a snapshot from a project.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `snapshotName`\nif err := client.Snapshots.Delete(organizationName, projectName, snapshotName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SnapshotsService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectSnapshotsDeleteSnapshot(ProjectSnapshotsDeleteSnapshotParams{orgName, projectName, snapshotName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete a snapshot from a project.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}/projects/{project_name}/snapshots/{snapshot_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `snapshot_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.snapshots().delete(organization_name, project_name, snapshot_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/snapshots/struct.Snapshots.html#method.delete"
         }
       }
     },
@@ -3181,18 +2660,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List VPCs in a project.\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`: The organization's unique name.\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`: The project's unique name within the organization.\n//\t- `sortBy`\nvPCResultsPage, err := client.VPCs.List(limit, pageToken, sortBy, organizationName, projectName)\n\n// - OR -\n\n// ListAllPages: List VPCs in a project.\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\n//\t- `sortBy`\nVPC, err := client.VPCs.ListAllPages(sortBy, organizationName, projectName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#VPCsService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectVpcsGet(ProjectVpcsGetParams{orgName, projectName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List VPCs in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_vpc = client.vpcs().get_page(limit, organization_name, page_token, project_name, sort_by).await?;\n\n// - OR -\n\n/**\n* List VPCs in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_vpc = client.vpcs().get_all(organization_name, project_name, sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/vpcs/struct.Vpcs.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -3249,17 +2717,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create a VPC in a project.\n//\n// Parameters:\n//\t- `organizationName`: The organization's unique name.\n//\t- `projectName`: The project's unique name within the organization.\nvPC, err := client.VPCs.Create(organizationName, projectName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#VPCsService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectVpcsPost(ProjectVpcsPostParams{orgName, projectName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a VPC in a project.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/vpcs` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc = client.vpcs().post(organization_name, project_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/vpcs/struct.Vpcs.html#method.post"
         }
       }
     },
@@ -3316,17 +2773,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Get a VPC in a project.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `vpcName`\nvPC, err := client.VPCs.Get(organizationName, projectName, vpcName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#VPCsService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectVpcsGetVpc(ProjectVpcsGetVpcParams{orgName, projectName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Get a VPC in a project.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc = client.vpcs().get(organization_name, project_name, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/vpcs/struct.Vpcs.html#method.get"
         }
       },
       "put": {
@@ -3391,17 +2837,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Put: Update a VPC.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `vpcName`\nvPC, err := client.VPCs.Put(organizationName, projectName, vpcName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#VPCsService.Put"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectVpcsPutVpc(ProjectVpcsPutVpcParams{orgName, projectName, vpcName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Update a VPC.\n*\n* This function performs a `PUT` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc = client.vpcs().put(organization_name, project_name, vpc_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/vpcs/struct.Vpcs.html#method.put"
         }
       },
       "delete": {
@@ -3449,17 +2884,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete a vpc from a project.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `vpcName`\nif err := client.VPCs.Delete(organizationName, projectName, vpcName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#VPCsService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.projectVpcsDeleteVpc(ProjectVpcsDeleteVpcParams{orgName, projectName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete a vpc from a project.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.vpcs().delete(organization_name, project_name, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/vpcs/struct.Vpcs.html#method.delete"
         }
       }
     },
@@ -3516,17 +2940,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// RulesList: List firewall rules for a VPC.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `vpcName`\nfirewallRules, err := client.Firewall.RulesList(organizationName, projectName, vpcName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#FirewallService.RulesList"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcFirewallRulesGet(VpcFirewallRulesGetParams{orgName, projectName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List firewall rules for a VPC.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/firewall/rules` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc_firewall_rules = client.firewall().rules_get(organization_name, project_name, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/firewall/struct.Firewall.html#method.rules_get"
         }
       },
       "put": {
@@ -3591,17 +3004,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// RulesPut: Replace the firewall rules for a VPC\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `vpcName`\nfirewallRules, err := client.Firewall.RulesPut(organizationName, projectName, vpcName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#FirewallService.RulesPut"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcFirewallRulesPut(VpcFirewallRulesPutParams{orgName, projectName, vpcName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Replace the firewall rules for a VPC.\n*\n* This function performs a `PUT` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/firewall/rules` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc_firewall_rules = client.firewall().rules_put(organization_name, project_name, vpc_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/firewall/struct.Firewall.html#method.rules_put"
         }
       }
     },
@@ -3689,18 +3091,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List VPC Custom and System Routers\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`\n//\t- `sortBy`\n//\t- `vpcName`\nrouterResultsPage, err := client.Routers.List(limit, pageToken, sortBy, organizationName, projectName, vpcName)\n\n// - OR -\n\n// ListAllPages: List VPC Custom and System Routers\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `sortBy`\n//\t- `vpcName`\nRouter, err := client.Routers.ListAllPages(sortBy, organizationName, projectName, vpcName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RoutersService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcRoutersGet(VpcRoutersGetParams{orgName, projectName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List VPC Custom and System Routers.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_vpc_router = client.routers().get_page(limit, organization_name, page_token, project_name, sort_by, vpc_name).await?;\n\n// - OR -\n\n/**\n* List VPC Custom and System Routers.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_vpc_router = client.routers().get_all(organization_name, project_name, sort_by, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/routers/struct.Routers.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -3764,17 +3155,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create a VPC Router\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `vpcName`\nrouter, err := client.Routers.Create(organizationName, projectName, vpcName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RoutersService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcRoutersPost(VpcRoutersPostParams{orgName, projectName, vpcName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a VPC Router.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc_router = client.routers().post(organization_name, project_name, vpc_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/routers/struct.Routers.html#method.post"
         }
       }
     },
@@ -3840,17 +3220,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Get a VPC Router\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `routerName`\n//\t- `vpcName`\nrouter, err := client.Routers.Get(organizationName, projectName, routerName, vpcName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RoutersService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcRoutersGetRouter(VpcRoutersGetRouterParams{orgName, projectName, routerName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Get a VPC Router.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers/{router_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `router_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc_router = client.routers().get(organization_name, project_name, router_name, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/routers/struct.Routers.html#method.get"
         }
       },
       "put": {
@@ -3924,17 +3293,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Put: Update a VPC Router\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `routerName`\n//\t- `vpcName`\nrouter, err := client.Routers.Put(organizationName, projectName, routerName, vpcName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RoutersService.Put"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcRoutersPutRouter(VpcRoutersPutRouterParams{orgName, projectName, routerName, vpcName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Update a VPC Router.\n*\n* This function performs a `PUT` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers/{router_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `router_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc_router = client.routers().put(organization_name, project_name, router_name, vpc_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/routers/struct.Routers.html#method.put"
         }
       },
       "delete": {
@@ -3991,17 +3349,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete a router from its VPC\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `routerName`\n//\t- `vpcName`\nif err := client.Routers.Delete(organizationName, projectName, routerName, vpcName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RoutersService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcRoutersDeleteRouter(VpcRoutersDeleteRouterParams{orgName, projectName, routerName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete a router from its VPC.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers/{router_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `router_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.routers().delete(organization_name, project_name, router_name, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/routers/struct.Routers.html#method.delete"
         }
       }
     },
@@ -4098,18 +3445,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List a Router's routes\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`\n//\t- `routerName`\n//\t- `sortBy`\n//\t- `vpcName`\nrouteResultsPage, err := client.Routes.List(limit, pageToken, sortBy, organizationName, projectName, routerName, vpcName)\n\n// - OR -\n\n// ListAllPages: List a Router's routes\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `routerName`\n//\t- `sortBy`\n//\t- `vpcName`\nRoute, err := client.Routes.ListAllPages(sortBy, organizationName, projectName, routerName, vpcName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RoutesService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.routersRoutesGet(RoutersRoutesGetParams{orgName, projectName, routerName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List a Router's routes.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers/{router_name}/routes` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `router_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_router_route = client.routes().get_page(limit, organization_name, page_token, project_name, router_name, sort_by, vpc_name).await?;\n\n// - OR -\n\n/**\n* List a Router's routes.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers/{router_name}/routes` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_router_route = client.routes().get_all(organization_name, project_name, router_name, sort_by, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/routes/struct.Routes.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -4182,17 +3518,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create a VPC Router\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `routerName`\n//\t- `vpcName`\nroute, err := client.Routes.Create(organizationName, projectName, routerName, vpcName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RoutesService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.routersRoutesPost(RoutersRoutesPostParams{orgName, projectName, routerName, vpcName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a VPC Router.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers/{router_name}/routes` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `router_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet router_route = client.routes().post(organization_name, project_name, router_name, vpc_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/routes/struct.Routes.html#method.post"
         }
       }
     },
@@ -4267,17 +3592,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Get a VPC Router route\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `routeName`\n//\t- `routerName`\n//\t- `vpcName`\nroute, err := client.Routes.Get(organizationName, projectName, routeName, routerName, vpcName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RoutesService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.routersRoutesGetRoute(RoutersRoutesGetRouteParams{orgName, projectName, routeName, routerName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Get a VPC Router route.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers/{router_name}/routes/{route_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `route_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `router_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet router_route = client.routes().get(organization_name, project_name, route_name, router_name, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/routes/struct.Routes.html#method.get"
         }
       },
       "put": {
@@ -4360,17 +3674,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Put: Update a Router route\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `routeName`\n//\t- `routerName`\n//\t- `vpcName`\nroute, err := client.Routes.Put(organizationName, projectName, routeName, routerName, vpcName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RoutesService.Put"
-        },
-        "x-ts": {
-          "example": "let resp = client.routersRoutesPutRoute(RoutersRoutesPutRouteParams{orgName, projectName, routeName, routerName, vpcName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Update a Router route.\n*\n* This function performs a `PUT` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers/{router_name}/routes/{route_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `route_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `router_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet router_route = client.routes().put(organization_name, project_name, route_name, router_name, vpc_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/routes/struct.Routes.html#method.put"
         }
       },
       "delete": {
@@ -4436,17 +3739,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete a route from its router\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `routeName`\n//\t- `routerName`\n//\t- `vpcName`\nif err := client.Routes.Delete(organizationName, projectName, routeName, routerName, vpcName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RoutesService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.routersRoutesDeleteRoute(RoutersRoutesDeleteRouteParams{orgName, projectName, routeName, routerName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete a route from its router.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/routers/{router_name}/routes/{route_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `route_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `router_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.routes().delete(organization_name, project_name, route_name, router_name, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/routes/struct.Routes.html#method.delete"
         }
       }
     },
@@ -4534,18 +3826,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List subnets in a VPC.\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`\n//\t- `sortBy`\n//\t- `vpcName`\nsubnetResultsPage, err := client.Subnets.List(limit, pageToken, sortBy, organizationName, projectName, vpcName)\n\n// - OR -\n\n// ListAllPages: List subnets in a VPC.\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `sortBy`\n//\t- `vpcName`\nSubnet, err := client.Subnets.ListAllPages(sortBy, organizationName, projectName, vpcName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SubnetsService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcSubnetsGet(VpcSubnetsGetParams{orgName, projectName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List subnets in a VPC.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/subnets` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_vpc_subnet = client.subnets().get_page(limit, organization_name, page_token, project_name, sort_by, vpc_name).await?;\n\n// - OR -\n\n/**\n* List subnets in a VPC.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/subnets` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_vpc_subnet = client.subnets().get_all(organization_name, project_name, sort_by, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/subnets/struct.Subnets.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -4609,17 +3890,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create a subnet in a VPC.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `vpcName`\nsubnet, err := client.Subnets.Create(organizationName, projectName, vpcName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SubnetsService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcSubnetsPost(VpcSubnetsPostParams{orgName, projectName, vpcName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a subnet in a VPC.\n*\n* This function performs a `POST` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/subnets` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc_subnet = client.subnets().post(organization_name, project_name, vpc_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/subnets/struct.Subnets.html#method.post"
         }
       }
     },
@@ -4685,17 +3955,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Get subnet in a VPC.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `subnetName`\n//\t- `vpcName`\nsubnet, err := client.Subnets.Get(organizationName, projectName, subnetName, vpcName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SubnetsService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcSubnetsGetSubnet(VpcSubnetsGetSubnetParams{orgName, projectName, subnetName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Get subnet in a VPC.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/subnets/{subnet_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `subnet_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc_subnet = client.subnets().get(organization_name, project_name, subnet_name, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/subnets/struct.Subnets.html#method.get"
         }
       },
       "put": {
@@ -4769,17 +4028,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Put: Update a VPC Subnet.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `subnetName`\n//\t- `vpcName`\nsubnet, err := client.Subnets.Put(organizationName, projectName, subnetName, vpcName, body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SubnetsService.Put"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcSubnetsPutSubnet(VpcSubnetsPutSubnetParams{orgName, projectName, subnetName, vpcName}, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Update a VPC Subnet.\n*\n* This function performs a `PUT` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/subnets/{subnet_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `subnet_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vpc_subnet = client.subnets().put(organization_name, project_name, subnet_name, vpc_name, body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/subnets/struct.Subnets.html#method.put"
         }
       },
       "delete": {
@@ -4836,17 +4084,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete a subnet from a VPC.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `subnetName`\n//\t- `vpcName`\nif err := client.Subnets.Delete(organizationName, projectName, subnetName, vpcName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SubnetsService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.vpcSubnetsDeleteSubnet(VpcSubnetsDeleteSubnetParams{orgName, projectName, subnetName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete a subnet from a VPC.\n*\n* This function performs a `DELETE` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/subnets/{subnet_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `subnet_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.subnets().delete(organization_name, project_name, subnet_name, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/subnets/struct.Subnets.html#method.delete"
         }
       }
     },
@@ -4943,18 +4180,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// NetworkInterfacesList: List network interfaces in a VPC subnet.\n//\n// To iterate over all pages, use the `NetworkInterfacesListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `organizationName`\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `projectName`\n//\t- `sortBy`\n//\t- `subnetName`\n//\t- `vpcName`\nnetworkInterfaceResultsPage, err := client.Subnets.NetworkInterfacesList(limit, pageToken, sortBy, organizationName, projectName, subnetName, vpcName)\n\n// - OR -\n\n// NetworkInterfacesListAllPages: List network interfaces in a VPC subnet.\n//\n// This method is a wrapper around the `NetworkInterfacesList` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `organizationName`\n//\t- `projectName`\n//\t- `sortBy`\n//\t- `subnetName`\n//\t- `vpcName`\nNetworkInterface, err := client.Subnets.NetworkInterfacesListAllPages(sortBy, organizationName, projectName, subnetName, vpcName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SubnetsService.NetworkInterfacesList"
-        },
-        "x-ts": {
-          "example": "let resp = client.subnetNetworkInterfacesGet(SubnetNetworkInterfacesGetParams{orgName, projectName, subnetName, vpcName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List network interfaces in a VPC subnet.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/subnets/{subnet_name}/network-interfaces` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n* * `organization_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `project_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `subnet_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n* * `vpc_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet vec_crate_types_network_interface = client.subnets().network_interfaces_get(limit, organization_name, page_token, project_name, sort_by, subnet_name, vpc_name).await?;\n\n// - OR -\n\n/**\n* List network interfaces in a VPC subnet.\n*\n* This function performs a `GET` to the `/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/subnets/{subnet_name}/network-interfaces` endpoint.\n*\n* As opposed to `network_interfaces_get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_network_interface = client.subnets().network_interfaces_get_all(organization_name, project_name, sort_by, subnet_name, vpc_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/subnets/struct.Subnets.html#method.network_interfaces_get"
-        }
+        "x-dropshot-pagination": true
       }
     },
     "/roles": {
@@ -5006,18 +4232,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List the built-in roles\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\nroleResultsPage, err := client.Roles.List(limit, pageToken)\n\n// - OR -\n\n// ListAllPages: List the built-in roles\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\nRole, err := client.Roles.ListAllPages(,)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RolesService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.rolesGet(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List the built-in roles.\n*\n* This function performs a `GET` to the `/roles` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n*/\nlet vec_crate_types_role = client.roles().get_page(limit, page_token).await?;\n\n// - OR -\n\n/**\n* List the built-in roles.\n*\n* This function performs a `GET` to the `/roles` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_role = client.roles().get_all().await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/roles/struct.Roles.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       }
     },
     "/roles/{role_name}": {
@@ -5056,17 +4271,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Fetch a specific built-in role\n//\n// Parameters:\n//\t- `roleName`: The built-in role's unique name.\nrole, err := client.Roles.Get(roleName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#RolesService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.rolesGetRole(RolesGetRoleParams{roleName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Fetch a specific built-in role.\n*\n* This function performs a `GET` to the `/roles/{role_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `role_name: &str` -- The built-in role's unique name.\n*/\nlet role = client.roles().get(role_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/roles/struct.Roles.html#method.get"
         }
       }
     },
@@ -5127,18 +4331,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List all sagas (for debugging)\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `sortBy`\nsagaResultsPage, err := client.Sagas.List(limit, pageToken, sortBy)\n\n// - OR -\n\n// ListAllPages: List all sagas (for debugging)\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `sortBy`\nSaga, err := client.Sagas.ListAllPages(sortBy)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SagasService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.sagasGet(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List all sagas (for debugging).\n*\n* This function performs a `GET` to the `/sagas` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::IdSortMode` -- Supported set of sort modes for scanning by id only.\n*  \n*  Currently, we only support scanning in ascending order.\n*/\nlet vec_crate_types_saga = client.sagas().get_page(limit, page_token, sort_by).await?;\n\n// - OR -\n\n/**\n* List all sagas (for debugging).\n*\n* This function performs a `GET` to the `/sagas` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_saga = client.sagas().get_all(sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/sagas/struct.Sagas.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       }
     },
     "/sagas/{saga_id}": {
@@ -5177,17 +4370,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Fetch information about a single saga (for debugging)\n//\n// Parameters:\n//\t- `sagaId`\nsaga, err := client.Sagas.Get(sagaID)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SagasService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.sagasGetSaga(SagasGetSagaParams{sagaId}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Fetch information about a single saga (for debugging).\n*\n* This function performs a `GET` to the `/sagas/{saga_id}` endpoint.\n*\n* **Parameters:**\n*\n* * `saga_id: &str`\n*/\nlet saga = client.sagas().get(saga_id).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/sagas/struct.Sagas.html#method.get"
         }
       }
     },
@@ -5215,13 +4397,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-ts": {
-          "example": "let resp = client.sessionMe(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Fetch the user associated with the current session.\n*\n* This function performs a `GET` to the `/session/me` endpoint.\n*/\nlet session_user = client.hidden().session_me().await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/hidden/struct.Hidden.html#method.session_me"
         }
       }
     },
@@ -5281,18 +4456,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `sortBy`\nsiloResultsPage, err := client.Silos.List(limit, pageToken, sortBy)\n\n// - OR -\n\n// ListAllPages\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `sortBy`\nSilo, err := client.Silos.ListAllPages(sortBy)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SilosService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.silosGet(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* This function performs a `GET` to the `/silos` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameOrIdSortMode` -- Supported set of sort modes for scanning by name or id.\n*/\nlet vec_crate_types_silo = client.silos().get_page(limit, page_token, sort_by).await?;\n\n// - OR -\n\n/**\n* This function performs a `GET` to the `/silos` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_silo = client.silos().get_all(sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/silos/struct.Silos.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       },
       "post": {
         "tags": [
@@ -5327,17 +4491,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Create: Create a new silo.\nsilo, err := client.Silos.Create(body)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SilosService.Create"
-        },
-        "x-ts": {
-          "example": "let resp = client.silosPost(query, data, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Create a new silo.\n*\n* This function performs a `POST` to the `/silos` endpoint.\n*/\nlet silo = client.silos().post(body).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/silos/struct.Silos.html#method.post"
         }
       }
     },
@@ -5377,17 +4530,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Fetch a specific silo\n//\n// Parameters:\n//\t- `siloName`: The silo's unique name.\nsilo, err := client.Silos.Get(siloName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SilosService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.silosGetSilo(SilosGetSiloParams{siloName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Fetch a specific silo.\n*\n* This function performs a `GET` to the `/silos/{silo_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `silo_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet silo = client.silos().get(silo_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/silos/struct.Silos.html#method.get"
         }
       },
       "delete": {
@@ -5418,17 +4560,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Delete: Delete a specific silo.\n//\n// Parameters:\n//\t- `siloName`: The silo's unique name.\nif err := client.Silos.Delete(siloName); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#SilosService.Delete"
-        },
-        "x-ts": {
-          "example": "let resp = client.silosDeleteSilo(SilosDeleteSiloParams{siloName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Delete a specific silo.\n*\n* This function performs a `DELETE` to the `/silos/{silo_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `silo_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nclient.silos().delete(silo_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/silos/struct.Silos.html#method.delete"
         }
       }
     },
@@ -5481,18 +4612,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// TimeseriesSchemaList: List all timeseries schema\n//\n// To iterate over all pages, use the `TimeseriesSchemaListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\ntimeseriesSchemaResultsPage, err := client.Metrics.TimeseriesSchemaList(limit, pageToken)\n\n// - OR -\n\n// TimeseriesSchemaListAllPages: List all timeseries schema\n//\n// This method is a wrapper around the `TimeseriesSchemaList` method.\n// This method returns all the pages at once.\nTimeseriesSchema, err := client.Metrics.TimeseriesSchemaListAllPages(,)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#MetricsService.TimeseriesSchemaList"
-        },
-        "x-ts": {
-          "example": "let resp = client.timeseriesSchemaGet(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List all timeseries schema.\n*\n* This function performs a `GET` to the `/timeseries/schema` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n*/\nlet vec_crate_types_timeseries_schema = client.metrics().timeseries_schema_get(limit, page_token).await?;\n\n// - OR -\n\n/**\n* List all timeseries schema.\n*\n* This function performs a `GET` to the `/timeseries/schema` endpoint.\n*\n* As opposed to `timeseries_schema_get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_timeseries_schema = client.metrics().timeseries_schema_get_all().await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/metrics/struct.Metrics.html#method.timeseries_schema_get"
-        }
+        "x-dropshot-pagination": true
       }
     },
     "/updates/refresh": {
@@ -5512,17 +4632,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Refresh: Refresh update metadata\nif err := client.Updates.Refresh(); err != nil {\n\tpanic(err)\n}",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#UpdatesService.Refresh"
-        },
-        "x-ts": {
-          "example": "let resp = client.updatesRefresh(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Refresh update metadata.\n*\n* This function performs a `POST` to the `/updates/refresh` endpoint.\n*/\nclient.updates().refresh().await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/updates/struct.Updates.html#method.refresh"
         }
       }
     },
@@ -5583,18 +4692,7 @@
             "$ref": "#/components/responses/Error"
           }
         },
-        "x-dropshot-pagination": true,
-        "x-go": {
-          "example": "// List: List the built-in system users\n//\n// To iterate over all pages, use the `ListAllPages` method, instead.\n//\n// Parameters:\n//\t- `limit`: Maximum number of items returned by a single call\n//\t- `pageToken`: Token returned by previous call to retreive the subsequent page\n//\t- `sortBy`\nuserResultsPage, err := client.Users.List(limit, pageToken, sortBy)\n\n// - OR -\n\n// ListAllPages: List the built-in system users\n//\n// This method is a wrapper around the `List` method.\n// This method returns all the pages at once.\n//\n// Parameters:\n//\t- `sortBy`\nUser, err := client.Users.ListAllPages(sortBy)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#UsersService.List"
-        },
-        "x-ts": {
-          "example": "let resp = client.usersGet(query, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* List the built-in system users.\n*\n* This function performs a `GET` to the `/users` endpoint.\n*\n* **Parameters:**\n*\n* * `limit: u32` -- Maximum number of items returned by a single call.\n* * `page_token: &str` -- Token returned by previous call to retreive the subsequent page.\n* * `sort_by: crate::types::NameSortMode` -- Supported set of sort modes for scanning by name only\n*  \n*  Currently, we only support scanning in ascending order.\n*/\nlet vec_crate_types_user = client.users().get_page(limit, page_token, sort_by).await?;\n\n// - OR -\n\n/**\n* List the built-in system users.\n*\n* This function performs a `GET` to the `/users` endpoint.\n*\n* As opposed to `get`, this function returns all the pages of the request at once.\n*/\nlet vec_crate_types_user = client.users().get_all(sort_by).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/users/struct.Users.html#method.get_page"
-        }
+        "x-dropshot-pagination": true
       }
     },
     "/users/{user_name}": {
@@ -5633,17 +4731,6 @@
           "5XX": {
             "$ref": "#/components/responses/Error"
           }
-        },
-        "x-go": {
-          "example": "// Get: Fetch a specific built-in system user\n//\n// Parameters:\n//\t- `userName`: The built-in user's unique name.\nuser, err := client.Users.Get(userName)",
-          "libDocsLink": "https://pkg.go.dev/github.com/oxidecomputer/oxide.go/#UsersService.Get"
-        },
-        "x-ts": {
-          "example": "let resp = client.usersGetUser(UsersGetUserParams{userName}, params);"
-        },
-        "x-rust": {
-          "example": "/**\n* Fetch a specific built-in system user.\n*\n* This function performs a `GET` to the `/users/{user_name}` endpoint.\n*\n* **Parameters:**\n*\n* * `user_name: &str` -- Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'.\n*/\nlet user = client.users().get(user_name).await?;",
-          "libDocsLink": "https://docs.rs/oxide-api/latest/oxide_api/users/struct.Users.html#method.get"
         }
       }
     }
@@ -5662,6 +4749,15 @@
       }
     },
     "schemas": {
+      "BlockSize": {
+        "title": "disk block size in bytes",
+        "type": "integer",
+        "enum": [
+          512,
+          2048,
+          4096
+        ]
+      },
       "ByteCount": {
         "description": "A count of bytes, typically used either for memory or storage capacity\n\nThe maximum supported byte count is [`i64::MAX`].  This makes it somewhat inconvenient to define constructors: a u32 constructor can be infallible, but an i64 constructor can fail (if the value is negative) and a u64 constructor can fail (if the value is larger than i64::MAX).  We provide all of these for consumers' convenience.",
         "type": "integer",
@@ -5687,6 +4783,9 @@
         "description": "Client view of an [`Disk`]",
         "type": "object",
         "properties": {
+          "block_size": {
+            "$ref": "#/components/schemas/ByteCount"
+          },
           "description": {
             "description": "human-readable free-form text about a resource",
             "type": "string"
@@ -5696,6 +4795,11 @@
           },
           "id": {
             "description": "unique, immutable, system-controlled identifier for each resource",
+            "type": "string",
+            "format": "uuid"
+          },
+          "image_id": {
+            "nullable": true,
             "type": "string",
             "format": "uuid"
           },
@@ -5734,6 +4838,7 @@
           }
         },
         "required": [
+          "block_size",
           "description",
           "device_path",
           "id",
@@ -5749,14 +4854,28 @@
         "description": "Create-time parameters for a [`Disk`](omicron_common::api::external::Disk)",
         "type": "object",
         "properties": {
+          "block_size": {
+            "description": "size of blocks for this Disk. valid values are: 512, 2048, or 4096",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BlockSize"
+              }
+            ]
+          },
           "description": {
             "type": "string"
+          },
+          "image_id": {
+            "nullable": true,
+            "description": "id for image from which the Disk should be created, if any",
+            "type": "string",
+            "format": "uuid"
           },
           "name": {
             "$ref": "#/components/schemas/Name"
           },
           "size": {
-            "description": "size of the Disk",
+            "description": "total size of the Disk in bytes",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ByteCount"
@@ -5771,6 +4890,7 @@
           }
         },
         "required": [
+          "block_size",
           "description",
           "name",
           "size"
@@ -5780,12 +4900,12 @@
         "description": "Parameters for the [`Disk`](omicron_common::api::external::Disk) to be attached or detached to an instance",
         "type": "object",
         "properties": {
-          "disk": {
+          "name": {
             "$ref": "#/components/schemas/Name"
           }
         },
         "required": [
-          "disk"
+          "name"
         ]
       },
       "DiskResultsPage": {
@@ -5990,13 +5110,6 @@
           "IpAddr",
           "Uuid",
           "Bool"
-        ]
-      },
-      "IdSortMode": {
-        "description": "Supported set of sort modes for scanning by id only.\n\nCurrently, we only support scanning in ascending order.",
-        "type": "string",
-        "enum": [
-          "id-ascending"
         ]
       },
       "Image": {
@@ -6262,14 +5375,28 @@
             "description": "During instance creation, create and attach disks",
             "type": "object",
             "properties": {
+              "block_size": {
+                "description": "size of blocks for this Disk. valid values are: 512, 2048, or 4096",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/BlockSize"
+                  }
+                ]
+              },
               "description": {
                 "type": "string"
+              },
+              "image_id": {
+                "nullable": true,
+                "description": "id for image from which the Disk should be created, if any",
+                "type": "string",
+                "format": "uuid"
               },
               "name": {
                 "$ref": "#/components/schemas/Name"
               },
               "size": {
-                "description": "size of the Disk",
+                "description": "total size of the Disk in bytes",
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/ByteCount"
@@ -6290,6 +5417,7 @@
               }
             },
             "required": [
+              "block_size",
               "description",
               "name",
               "size",
@@ -6300,7 +5428,7 @@
             "description": "During instance creation, attach this disk",
             "type": "object",
             "properties": {
-              "disk": {
+              "name": {
                 "description": "A disk name to attach",
                 "allOf": [
                   {
@@ -6316,7 +5444,7 @@
               }
             },
             "required": [
-              "disk",
+              "name",
               "type"
             ]
           }
@@ -6505,22 +5633,6 @@
         "type": "string",
         "pattern": "[a-z](|[a-zA-Z0-9-]*[a-zA-Z0-9])",
         "maxLength": 63
-      },
-      "NameOrIdSortMode": {
-        "description": "Supported set of sort modes for scanning by name or id",
-        "type": "string",
-        "enum": [
-          "name-ascending",
-          "name-descending",
-          "id-ascending"
-        ]
-      },
-      "NameSortMode": {
-        "description": "Supported set of sort modes for scanning by name only\n\nCurrently, we only support scanning in ascending order.",
-        "type": "string",
-        "enum": [
-          "name-ascending"
-        ]
       },
       "NetworkInterface": {
         "description": "A `NetworkInterface` represents a virtual network interface device.",
@@ -8716,6 +7828,29 @@
             ]
           }
         }
+      },
+      "IdSortMode": {
+        "description": "Supported set of sort modes for scanning by id only.\n\nCurrently, we only support scanning in ascending order.",
+        "type": "string",
+        "enum": [
+          "id-ascending"
+        ]
+      },
+      "NameSortMode": {
+        "description": "Supported set of sort modes for scanning by name only\n\nCurrently, we only support scanning in ascending order.",
+        "type": "string",
+        "enum": [
+          "name-ascending"
+        ]
+      },
+      "NameOrIdSortMode": {
+        "description": "Supported set of sort modes for scanning by name or id",
+        "type": "string",
+        "enum": [
+          "name-ascending",
+          "name-descending",
+          "id-ascending"
+        ]
       }
     }
   },
