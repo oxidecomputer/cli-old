@@ -222,7 +222,7 @@ mod test {
                     project: "".to_string(),
                     description: "balla".to_string(),
                     size: Default::default(),
-                    block_size: oxide_api::types::BlockSize(0),
+                    block_size: 0,
                     image: uuid::Uuid::new_v4(),
                     snapshot: Default::default(),
                 }),
