@@ -188,6 +188,8 @@ mod test {
                     project: "".to_string(),
                     description: "hi hi".to_string(),
                     size: Default::default(),
+                    block_size: 0,
+                    image: uuid::Uuid::new_v4(),
                     snapshot: Default::default(),
                 }),
 
@@ -203,6 +205,8 @@ mod test {
                     project: "".to_string(),
                     description: "foo bar".to_string(),
                     size: Default::default(),
+                    block_size: 0,
+                    image: uuid::Uuid::new_v4(),
                     snapshot: Default::default(),
                 }),
 
@@ -218,6 +222,8 @@ mod test {
                     project: "".to_string(),
                     description: "balla".to_string(),
                     size: Default::default(),
+                    block_size: oxide_api::types::BlockSize(0),
+                    image: uuid::Uuid::new_v4(),
                     snapshot: Default::default(),
                 }),
 
@@ -233,6 +239,8 @@ mod test {
                     project: "bar".to_string(),
                     description: "".to_string(),
                     size: Default::default(),
+                    block_size: 0,
+                    image: uuid::Uuid::new_v4(),
                     snapshot: Default::default(),
                 }),
 
@@ -248,6 +256,8 @@ mod test {
                     project: "bar".to_string(),
                     description: "blah blah".to_string(),
                     size: Default::default(),
+                    block_size: 0,
+                    image: uuid::Uuid::new_v4(),
                     snapshot: Default::default(),
                 }),
 
