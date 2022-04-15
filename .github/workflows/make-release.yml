@@ -136,13 +136,13 @@ jobs:
             toolchain: nightly
             override: true
             components: rustfmt, clippy
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name:  ubuntu-latest-${{github.ref_name}}-README.md
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name:  macos-latest-${{github.ref_name}}-README.md
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name:  illumos-${{github.ref_name}}-README.md
       - name: combine readmes
