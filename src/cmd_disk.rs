@@ -77,7 +77,7 @@ impl crate::cmd::Command for CmdDiskAttach {
                 &self.organization,
                 &self.project,
                 &oxide_api::types::DiskIdentifier {
-                    disk: self.disk.to_string(),
+                    name: self.disk.to_string(),
                 },
             )
             .await?;
@@ -132,7 +132,7 @@ impl crate::cmd::Command for CmdDiskDetach {
                 &self.organization,
                 &self.project,
                 &oxide_api::types::DiskIdentifier {
-                    disk: self.disk.to_string(),
+                    name: self.disk.to_string(),
                 },
             )
             .await?;
