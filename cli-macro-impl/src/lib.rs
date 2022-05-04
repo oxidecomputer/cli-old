@@ -1169,7 +1169,7 @@ impl Operation {
 
                     // Select the project from the selected organization.
                     match dialoguer::Select::new()
-                        .with_prompt("Select project:")
+                        .with_prompt("Select project")
                         .items(&org_projects)
                         .interact()
                     {
@@ -1199,7 +1199,7 @@ impl Operation {
                     }
 
                     match dialoguer::Select::new()
-                        .with_prompt("Project organization:")
+                        .with_prompt("Project organization")
                         .items(&orgs)
                         .interact()
                     {
@@ -1218,7 +1218,7 @@ impl Operation {
             // Prompt for the resource name.
             if #singular_tag_lc.is_empty() {
                 match dialoguer::Input::<String>::new()
-                    .with_prompt(&format!("{} name:", #singular_tag_str))
+                    .with_prompt(&format!("{} name", #singular_tag_str))
                     .interact_text()
                 {
                     Ok(name) => #singular_tag_lc = name,
@@ -1934,7 +1934,7 @@ impl Operation {
                     // Confirm deletion.
                     if !self.confirm {
                         if let Err(err) = dialoguer::Input::<String>::new()
-                            .with_prompt(format!("Type {} to confirm deletion:", self.#singular_tag_lc))
+                            .with_prompt(format!("Type {} to confirm deletion", self.#singular_tag_lc))
                             .validate_with(|input: &String| -> Result<(), &str> {
                                 if input.trim() == self.#singular_tag_lc {
                                     Ok(())

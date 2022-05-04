@@ -190,7 +190,7 @@ impl crate::cmd::Command for CmdInstanceStop {
         // Confirm stop.
         if !self.confirm {
             if let Err(err) = dialoguer::Input::<String>::new()
-                .with_prompt(format!("Type {} to confirm stop:", self.instance))
+                .with_prompt(format!("Type {} to confirm stop", self.instance))
                 .validate_with(|input: &String| -> Result<(), &str> {
                     if input.trim() == self.instance {
                         Ok(())
@@ -270,7 +270,7 @@ impl crate::cmd::Command for CmdInstanceReboot {
         // Confirm reboot.
         if !self.confirm {
             if let Err(err) = dialoguer::Input::<String>::new()
-                .with_prompt(format!("Type {} to confirm reboot:", self.instance))
+                .with_prompt(format!("Type {} to confirm reboot", self.instance))
                 .validate_with(|input: &String| -> Result<(), &str> {
                     if input.trim() == self.instance {
                         Ok(())
