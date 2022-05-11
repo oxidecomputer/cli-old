@@ -1253,6 +1253,7 @@ impl Operation {
             let rendered = format_ident!("{}", rendered_str);
 
             let needs_extra_prompt = match rendered_str.as_str() {
+                "DiskSource" => Some(("Select a disk source", true)),
                 "Ipv4Net" => Some(("IPv4 network", true)),
                 "Ipv6Net" => Some(("IPv6 network", true)),
                 "RouteDestination" => Some(("Select a route destination type", true)),

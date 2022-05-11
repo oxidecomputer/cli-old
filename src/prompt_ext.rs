@@ -150,3 +150,44 @@ impl PromptExt for oxide_api::types::ImageSource {
         oxide_api::types::ImageSource::from_str(&input)
     }
 }
+
+impl PromptExt for oxide_api::types::DiskSource {
+    fn prompt(base: &str) -> Result<Self> {
+        let disk_source_type = oxide_api::types::DiskSourceType::prompt(base)?;
+
+        fn get_value(prompt: &str) -> Result<String> {
+            Ok(dialoguer::Input::<String>::new().with_prompt(prompt).interact_text()?)
+        }
+
+        Ok(match disk_source_type {
+            oxide_api::types::DiskSourceType::Blank => {
+                let input = get_value("Block size")?;
+                let bytes = input.parse::<::byte_unit::Byte>()?;
+                println!("Using {} bytes ({})", bytes, bytes.get_appropriate_unit(true));
+                let byte_count = oxide_api::types::ByteCount::try_from(bytes.get_bytes())?;
+                oxide_api::types::DiskSource::Blank(byte_count as i64)
+            }
+            oxide_api::types::DiskSourceType::Image => oxide_api::types::DiskSource::Image(get_value("Image ID")?),
+            oxide_api::types::DiskSourceType::GlobalImage => {
+                oxide_api::types::DiskSource::GlobalImage(get_value("Global image ID")?)
+            }
+            oxide_api::types::DiskSourceType::Snapshot => {
+                oxide_api::types::DiskSource::Snapshot(get_value("Snapshot ID")?)
+            }
+        })
+    }
+}
+
+impl PromptExt for oxide_api::types::DiskSourceType {
+    fn prompt(base: &str) -> Result<Self> {
+        let items = oxide_api::types::DiskSource::variants();
+        let index = dialoguer::Select::new().with_prompt(base).items(&items[..]).interact();
+        let item = match index {
+            Ok(i) => items[i].to_string(),
+            Err(err) => {
+                anyhow::bail!("prompt failed: {}", err);
+            }
+        };
+        oxide_api::types::DiskSourceType::from_str(&item)
+    }
+}
