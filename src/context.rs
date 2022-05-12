@@ -81,7 +81,7 @@ impl Context<'_> {
     /// environment to the specified path.
     ///
     /// Browser precedence:
-    /// 1. GH_BROWSER
+    /// 1. OXIDE_BROWSER
     /// 2. BROWSER
     /// 3. browser from config
     pub fn browser(&self, hostname: &str, url: &str) -> Result<()> {
@@ -94,7 +94,7 @@ impl Context<'_> {
             get_env_var("BROWSER")
         } else {
             source = crate::config_file::config_file()?;
-            self.config.get(hostname, "browser")?
+            self.config.get(hostname, "browser").unwrap_or_else(|_| "".to_string())
         };
 
         if browser.is_empty() {
