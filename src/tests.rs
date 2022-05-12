@@ -352,7 +352,7 @@ date:"#
         TestItem {
             name: "list roles".to_string(),
             args: vec!["oxide".to_string(), "roles".to_string(), "list".to_string()],
-            want_out: r#"fleet.admin        |    Fleet Administrator"#
+            want_out: r#"fleet.admin          |     Fleet Administrator"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
