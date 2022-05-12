@@ -31,7 +31,7 @@ impl crate::cmd::Command for CmdAuth {
     }
 }
 
-/// Attempt to parse a given host string as a valid URL.
+/// Parse and normalize a given host string as a valid URL.
 ///
 /// http(s) are the only supported schemas. If no schema is specified then https is assumed.
 /// The returned URL if successful will be stripped of any path, username, password,
