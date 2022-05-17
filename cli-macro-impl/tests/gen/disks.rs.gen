@@ -80,41 +80,35 @@ pub struct CmdDiskCreate {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
-    #[doc = "size of blocks for this Disk. valid values are: 512, 2048, or 4096"]
-    #[clap(long = "block-size", short = 'b', default_value_t)]
-    pub block_size: oxide_api::types::BlockSize,
     #[doc = "The description for the disk."]
     #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
-    #[doc = "id for image from which the Disk should be created, if any"]
-    #[clap(long = "image-id", short = 'i', default_value_t)]
-    pub image: uuid::Uuid,
+    #[doc = "initial source for this disk"]
+    #[clap(long = "disk-source")]
+    pub disk_source: Option<oxide_api::types::DiskSource>,
     #[doc = "total size of the Disk in bytes"]
     #[clap(long = "size", default_value_t)]
     pub size: oxide_api::types::ByteCount,
-    #[doc = "id for snapshot from which the Disk should be created, if any"]
-    #[clap(long = "snapshot-id", short = 's', default_value_t)]
-    pub snapshot: uuid::Uuid,
 }
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdDiskCreate {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
-        let mut block_size = self.block_size.clone();
         let mut description = self.description.clone();
+        let mut disk_source = self.disk_source.clone();
         let mut disk = self.disk.clone();
         let mut organization = self.organization.clone();
         let mut project = self.project.clone();
         let mut size = self.size.clone();
-        if block_size.is_zero() && !ctx.io.can_prompt() {
-            return Err(anyhow::anyhow!(
-                "-b|--block-size required in non-interactive mode"
-            ));
-        }
-
         if description.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
                 "-D|--description required in non-interactive mode"
+            ));
+        }
+
+        if disk_source.is_none() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!(
+                "--disk-source required in non-interactive mode"
             ));
         }
 
@@ -194,17 +188,6 @@ impl crate::cmd::Command for CmdDiskCreate {
                     }
                 }
             }
-            if block_size.is_zero() {
-                match dialoguer::Input::<_>::new()
-                    .with_prompt("disk block_size")
-                    .interact_text()
-                {
-                    Ok(input) => block_size = input,
-                    Err(err) => {
-                        return Err(anyhow::anyhow!("prompt failed: {}", err));
-                    }
-                }
-            }
             if description.is_empty() {
                 match dialoguer::Input::<_>::new()
                     .with_prompt("disk description")
@@ -214,6 +197,14 @@ impl crate::cmd::Command for CmdDiskCreate {
                     Err(err) => {
                         return Err(anyhow::anyhow!("prompt failed: {}", err));
                     }
+                }
+            }
+            if disk_source.is_none() {
+                {
+                    use crate::prompt_ext::PromptExt;
+                    disk_source = Some(oxide_api::types::DiskSource::prompt(
+                        "Input a image or snapshot id for the disk source",
+                    )?);
                 }
             }
             if size.is_zero() {
@@ -230,12 +221,10 @@ impl crate::cmd::Command for CmdDiskCreate {
                 &self.organization,
                 &self.project,
                 &oxide_api::types::DiskCreate {
-                    block_size: block_size.clone(),
                     description: description.clone(),
-                    image_id: "".to_string(),
+                    disk_source: disk_source.unwrap(),
                     name: disk.clone(),
                     size: size.clone(),
-                    snapshot_id: "".to_string(),
                 },
             )
             .await?;

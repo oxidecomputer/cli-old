@@ -179,6 +179,8 @@ mod test {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_cmd_disk() {
+        let disk_source = Some(oxide_api::types::DiskSource::Snapshot("some disk source".to_string()));
+
         let tests: Vec<TestItem> = vec![
             TestItem {
                 name: "create no name".to_string(),
@@ -188,9 +190,7 @@ mod test {
                     project: "".to_string(),
                     description: "hi hi".to_string(),
                     size: Default::default(),
-                    block_size: 128,
-                    image: uuid::Uuid::new_v4(),
-                    snapshot: Default::default(),
+                    disk_source: disk_source.clone(),
                 }),
 
                 stdin: "".to_string(),
@@ -205,9 +205,7 @@ mod test {
                     project: "".to_string(),
                     description: "foo bar".to_string(),
                     size: Default::default(),
-                    block_size: 128,
-                    image: uuid::Uuid::new_v4(),
-                    snapshot: Default::default(),
+                    disk_source: disk_source.clone(),
                 }),
 
                 stdin: "".to_string(),
@@ -222,9 +220,7 @@ mod test {
                     project: "".to_string(),
                     description: "balla".to_string(),
                     size: Default::default(),
-                    block_size: 128,
-                    image: uuid::Uuid::new_v4(),
-                    snapshot: Default::default(),
+                    disk_source: disk_source.clone(),
                 }),
 
                 stdin: "".to_string(),
@@ -239,9 +235,7 @@ mod test {
                     project: "bar".to_string(),
                     description: "".to_string(),
                     size: Default::default(),
-                    block_size: 128,
-                    image: uuid::Uuid::new_v4(),
-                    snapshot: Default::default(),
+                    disk_source: disk_source.clone(),
                 }),
 
                 stdin: "".to_string(),
@@ -256,14 +250,27 @@ mod test {
                     project: "bar".to_string(),
                     description: "blah blah".to_string(),
                     size: Default::default(),
-                    block_size: 128,
-                    image: uuid::Uuid::new_v4(),
-                    snapshot: Default::default(),
+                    disk_source: disk_source.clone(),
                 }),
 
                 stdin: "".to_string(),
                 want_out: "".to_string(),
                 want_err: "--size required in non-interactive mode".to_string(),
+            },
+            TestItem {
+                name: "create no disk source".to_string(),
+                cmd: crate::cmd_disk::SubCommand::Create(crate::cmd_disk::CmdDiskCreate {
+                    disk: "things".to_string(),
+                    organization: "foo".to_string(),
+                    project: "bar".to_string(),
+                    description: "this is a disk".to_string(),
+                    size: Default::default(),
+                    disk_source: Default::default(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "".to_string(),
+                want_err: "--disk-source required in non-interactive mode".to_string(),
             },
             TestItem {
                 name: "delete no --confirm non-interactive".to_string(),
