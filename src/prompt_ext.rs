@@ -150,3 +150,57 @@ impl PromptExt for oxide_api::types::ImageSource {
         oxide_api::types::ImageSource::from_str(&input)
     }
 }
+
+impl PromptExt for oxide_api::types::DiskSource {
+    fn prompt(base: &str) -> Result<Self> {
+        let disk_source_type = oxide_api::types::DiskSourceType::prompt(base)?;
+
+        let mut value = String::new();
+        if disk_source_type != oxide_api::types::DiskSourceType::Blank {
+            value = match dialoguer::Input::<String>::new()
+                .with_prompt(&format!("{} value?", disk_source_type))
+                .interact_text()
+            {
+                Ok(i) => i,
+                Err(err) => {
+                    anyhow::bail!("prompt failed: {}", err);
+                }
+            };
+        }
+
+        Ok(match disk_source_type {
+            oxide_api::types::DiskSourceType::Blank => {
+                let value: i64 = match dialoguer::Input::<i64>::new()
+                    .with_prompt(&format!("{} value?", disk_source_type))
+                    .interact_text()
+                {
+                    Ok(i) => i,
+                    Err(err) => {
+                        anyhow::bail!("prompt failed: {}", err);
+                    }
+                };
+                oxide_api::types::DiskSource::Blank(value)
+            }
+            oxide_api::types::DiskSourceType::GlobalImage => oxide_api::types::DiskSource::GlobalImage(value),
+            oxide_api::types::DiskSourceType::Image => oxide_api::types::DiskSource::Image(value),
+            oxide_api::types::DiskSourceType::Snapshot => oxide_api::types::DiskSource::Snapshot(value),
+        })
+    }
+}
+
+impl PromptExt for oxide_api::types::DiskSourceType {
+    fn prompt(base: &str) -> Result<Self> {
+        let items = oxide_api::types::DiskSource::variants();
+
+        let index = dialoguer::Select::new().with_prompt(base).items(&items[..]).interact();
+
+        let item = match index {
+            Ok(i) => items[i].to_string(),
+            Err(err) => {
+                anyhow::bail!("prompt failed: {}", err);
+            }
+        };
+
+        oxide_api::types::DiskSourceType::from_str(&item)
+    }
+}

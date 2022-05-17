@@ -1259,6 +1259,7 @@ impl Operation {
                 "RouteTarget" => Some(("Select a route target type", true)),
                 "ByteCount" => Some((title.as_str(), false)),
                 "ImageSource" => Some(("Input a url or snapshot id for the image source", true)),
+                "DiskSource" => Some(("Input a image or snapshot id for the disk source", true)),
                 _ => None,
             };
 
