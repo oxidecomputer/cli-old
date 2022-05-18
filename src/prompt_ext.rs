@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::Result;
-use inflector::cases::titlecase::to_pascal_case;
+use inflector::cases::pascalcase::to_pascal_case;
 
 pub trait PromptExt {
     fn prompt(base: &str) -> Result<Self>
