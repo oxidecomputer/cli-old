@@ -1499,6 +1499,7 @@ dependencies = [
 name = "oxide"
 version = "0.2.5"
 dependencies = [
+ "Inflector",
  "ansi_term",
  "anyhow",
  "async-trait",

@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::Result;
+use inflector::cases::titlecase::to_title_case;
 
 pub trait PromptExt {
     fn prompt(base: &str) -> Result<Self>
@@ -49,6 +50,10 @@ impl PromptExt for oxide_api::types::RouteDestinationType {
             }
         };
 
+        // We need to convert this to TitleCase, because the variants are lowercase but
+        // our actual API call expects them to be TitleCase.
+        let item = to_title_case(&item);
+
         oxide_api::types::RouteDestinationType::from_str(&item)
     }
 }
@@ -89,6 +94,10 @@ impl PromptExt for oxide_api::types::RouteTargetType {
                 anyhow::bail!("prompt failed: {}", err);
             }
         };
+
+        // We need to convert this to TitleCase, because the variants are lowercase but
+        // our actual API call expects them to be TitleCase.
+        let item = to_title_case(&item);
 
         oxide_api::types::RouteTargetType::from_str(&item)
     }
@@ -200,6 +209,10 @@ impl PromptExt for oxide_api::types::DiskSourceType {
                 anyhow::bail!("prompt failed: {}", err);
             }
         };
+
+        // We need to convert this to TitleCase, because the variants are lowercase but
+        // our actual API call expects them to be TitleCase.
+        let item = to_title_case(&item);
 
         oxide_api::types::DiskSourceType::from_str(&item)
     }
