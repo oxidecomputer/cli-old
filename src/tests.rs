@@ -970,7 +970,7 @@ date:"#
                 "development".to_string(),
                 "new-disk".to_string(),
                 "--disk-source".to_string(),
-                "image=source".to_string(),
+                "blank=524288000".to_string(),
                 /*"--snapshot".to_string(),
                 "42583766-9318-4339-A2A2-EE286F0F5B26".to_string(),*/
                 "--size".to_string(),
@@ -994,6 +994,8 @@ date:"#
                 "--project".to_string(),
                 "development".to_string(),
                 "second-disk".to_string(),
+                "--disk-source".to_string(),
+                "blank=524288000".to_string(),
                 /*"--snapshot".to_string(),
                 "42583766-9318-4339-A2A2-EE286F0F5B26".to_string(),*/
                 "--size".to_string(),
