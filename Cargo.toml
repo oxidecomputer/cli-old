@@ -30,8 +30,8 @@ log = "=0.4.14"
 regex = "1"
 num-traits = "^0.2.14"
 open = "^2.1.1"
-#oxide-api = "0.1.0-rc.34"
-oxide-api = { path= "../oxide.rs/oxide" }
+oxide-api = "0.1.0-rc.35"
+#oxide-api = { path= "../oxide.rs/oxide" }
 parse-display = "^0.5.5"
 pulldown-cmark = "^0.9.1"
 pulldown-cmark-to-cmark = "^10.0.0"
