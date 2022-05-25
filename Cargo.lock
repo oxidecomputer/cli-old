@@ -636,9 +636,9 @@ dependencies = [
 
 [[package]]
 name = "darling"
-version = "0.13.1"
+version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0d720b8683f8dd83c65155f0530560cba68cd2bf395f6513a483caee57ff7f4"
+checksum = "a01d95850c592940db9b8194bc39f4bc0e89dee5c4265e4b1807c34a9aba453c"
 dependencies = [
  "darling_core",
  "darling_macro",
@@ -646,9 +646,9 @@ dependencies = [
 
 [[package]]
 name = "darling_core"
-version = "0.13.1"
+version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a340f241d2ceed1deb47ae36c4144b2707ec7dd0b649f894cb39bb595986324"
+checksum = "859d65a907b6852c9361e3185c862aae7fafd2887876799fa55f5f99dc40d610"
 dependencies = [
  "fnv",
  "ident_case",
@@ -660,9 +660,9 @@ dependencies = [
 
 [[package]]
 name = "darling_macro"
-version = "0.13.1"
+version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72c41b3b7352feb3211a0d743dc5700a4e3b60f51bd2b368892d1e0f9a95f44b"
+checksum = "9c972679f83bdf9c42bd905396b6c3588a843a17f0f16dfcfa3e2c5d57441835"
 dependencies = [
  "darling_core",
  "quote",
@@ -1499,6 +1499,7 @@ dependencies = [
 name = "oxide"
 version = "0.2.5"
 dependencies = [
+ "Inflector",
  "ansi_term",
  "anyhow",
  "async-trait",
@@ -1561,9 +1562,9 @@ dependencies = [
 
 [[package]]
 name = "oxide-api"
-version = "0.1.0-rc.33"
+version = "0.1.0-rc.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0682eba7d48969612065c84145b15c88ef829f9e25900925fa389f2137b70990"
+checksum = "72bcbb9eeba5b33f151bdb4999e94026e24e805f18a8dff4786117cc50f784c9"
 dependencies = [
  "anyhow",
  "bytes",
@@ -1964,9 +1965,9 @@ dependencies = [
 
 [[package]]
 name = "schemars"
-version = "0.8.8"
+version = "0.8.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6b5a3c80cea1ab61f4260238409510e814e38b4b563c06044edf91e7dc070e3"
+checksum = "1847b767a3d62d95cbf3d8a9f0e421cf57a0d8aa4f411d4b16525afb0284d4ed"
 dependencies = [
  "bytes",
  "chrono",
@@ -1980,9 +1981,9 @@ dependencies = [
 
 [[package]]
 name = "schemars_derive"
-version = "0.8.8"
+version = "0.8.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41ae4dce13e8614c46ac3c38ef1c0d668b101df6ac39817aebdaa26642ddae9b"
+checksum = "af4d7e1b012cb3d9129567661a63755ea4b8a7386d339dc945ae187e403c6743"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2055,9 +2056,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive_internals"
-version = "0.25.0"
+version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1dbab34ca63057a1f15280bdf3c39f2b1eb1b54c17e98360e511637aef7418c6"
+checksum = "85bf8229e7920a9f636479437026331ce11aa132b4dde37d121944a44d6e5f3c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2100,9 +2101,9 @@ dependencies = [
 
 [[package]]
 name = "serde_with"
-version = "1.12.0"
+version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec1e6ec4d8950e5b1e894eac0d360742f3b1407a6078a604a731c4b3f49cefbc"
+checksum = "b827f2113224f3f19a665136f006709194bdfdcb1fdc1e4b2b5cbac8e0cced54"
 dependencies = [
  "rustversion",
  "serde",
@@ -2111,9 +2112,9 @@ dependencies = [
 
 [[package]]
 name = "serde_with_macros"
-version = "1.5.1"
+version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12e47be9471c72889ebafb5e14d5ff930d89ae7a67bbdb5f8abb564f845a927e"
+checksum = "e182d6ec6f05393cc0e5ed1bf81ad6db3a8feedf8ee515ecdd369809bcce8082"
 dependencies = [
  "darling",
  "proc-macro2",

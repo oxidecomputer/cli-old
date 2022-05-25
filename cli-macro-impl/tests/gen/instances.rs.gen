@@ -94,6 +94,9 @@ pub struct CmdInstanceCreate {
     #[doc = "The network interfaces to be created for this instance."]
     #[clap(long = "network-interfaces", short = 'n')]
     pub network_interfaces: Option<oxide_api::types::InstanceNetworkInterfaceAttachment>,
+    #[doc = "User data for instance initialization systems (such as cloud-init). Must be a Base64-encoded string, as specified in RFC 4648 § 4 (+ and / characters with padding). Maximum 32 KiB unencoded data."]
+    #[clap(long = "user-data", short = 'u', default_value_t)]
+    pub user_data: String,
 }
 
 #[async_trait::async_trait]
@@ -262,6 +265,7 @@ impl crate::cmd::Command for CmdInstanceCreate {
                     name: instance.clone(),
                     ncpus: ncpus.clone(),
                     network_interfaces: self.network_interfaces.clone(),
+                    user_data: self.user_data.clone(),
                 },
             )
             .await?;

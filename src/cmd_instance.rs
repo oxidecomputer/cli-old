@@ -478,6 +478,7 @@ mod test {
                     hostname: "holla".to_string(),
                     network_interfaces: Default::default(),
                     disks: Default::default(),
+                    user_data: "some data".to_string(),
                 }),
 
                 stdin: "".to_string(),
@@ -496,6 +497,7 @@ mod test {
                     hostname: "holla".to_string(),
                     network_interfaces: Default::default(),
                     disks: Default::default(),
+                    user_data: "some data".to_string(),
                 }),
 
                 stdin: "".to_string(),
@@ -514,6 +516,7 @@ mod test {
                     hostname: "holla".to_string(),
                     network_interfaces: Default::default(),
                     disks: Default::default(),
+                    user_data: "some data".to_string(),
                 }),
 
                 stdin: "".to_string(),
@@ -532,6 +535,7 @@ mod test {
                     hostname: "".to_string(),
                     network_interfaces: Default::default(),
                     disks: Default::default(),
+                    user_data: "some data".to_string(),
                 }),
 
                 stdin: "".to_string(),
@@ -550,6 +554,7 @@ mod test {
                     hostname: "sup".to_string(),
                     network_interfaces: Default::default(),
                     disks: Default::default(),
+                    user_data: "some data".to_string(),
                 }),
 
                 stdin: "".to_string(),
@@ -568,6 +573,7 @@ mod test {
                     hostname: "sup".to_string(),
                     network_interfaces: Default::default(),
                     disks: Default::default(),
+                    user_data: "some data".to_string(),
                 }),
 
                 stdin: "".to_string(),

@@ -76,6 +76,9 @@ pub struct CmdImageCreate {
     #[doc = r" The organization that holds the project."]
     #[clap(long, short, required = true, env = "OXIDE_ORG")]
     pub organization: String,
+    #[doc = "block size in bytes"]
+    #[clap(long = "block-size", short = 'b', default_value_t)]
+    pub block_size: oxide_api::types::BlockSize,
     #[doc = "The description for the image."]
     #[clap(long = "description", short = 'D', default_value_t)]
     pub description: String,
@@ -87,11 +90,18 @@ pub struct CmdImageCreate {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdImageCreate {
     async fn run(&self, ctx: &mut crate::context::Context) -> anyhow::Result<()> {
+        let mut block_size = self.block_size.clone();
         let mut description = self.description.clone();
         let mut image = self.image.clone();
         let mut organization = self.organization.clone();
         let mut project = self.project.clone();
         let mut source = self.source.clone();
+        if block_size.is_zero() && !ctx.io.can_prompt() {
+            return Err(anyhow::anyhow!(
+                "-b|--block-size required in non-interactive mode"
+            ));
+        }
+
         if description.is_empty() && !ctx.io.can_prompt() {
             return Err(anyhow::anyhow!(
                 "-D|--description required in non-interactive mode"
@@ -176,6 +186,17 @@ impl crate::cmd::Command for CmdImageCreate {
                     }
                 }
             }
+            if block_size.is_zero() {
+                match dialoguer::Input::<_>::new()
+                    .with_prompt("image block_size")
+                    .interact_text()
+                {
+                    Ok(input) => block_size = input,
+                    Err(err) => {
+                        return Err(anyhow::anyhow!("prompt failed: {}", err));
+                    }
+                }
+            }
             if description.is_empty() {
                 match dialoguer::Input::<_>::new()
                     .with_prompt("image description")
@@ -203,6 +224,7 @@ impl crate::cmd::Command for CmdImageCreate {
                 &self.organization,
                 &self.project,
                 &oxide_api::types::ImageCreate {
+                    block_size: block_size.clone(),
                     description: description.clone(),
                     name: image.clone(),
                     source: source.unwrap(),
