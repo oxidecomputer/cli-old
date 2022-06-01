@@ -179,7 +179,9 @@ mod test {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_cmd_disk() {
-        let disk_source = Some(oxide_api::types::DiskSource::Snapshot("some disk source".to_string()));
+        let disk_source = Some(oxide_api::types::DiskSource::Snapshot {
+            snapshot_id: "some disk source".to_string(),
+        });
 
         let tests: Vec<TestItem> = vec![
             TestItem {

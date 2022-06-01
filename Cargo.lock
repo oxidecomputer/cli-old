@@ -1084,9 +1084,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.2.6"
+version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31f4c6746584866f0feabcc69893c5b51beef3831656a968ed7ae254cdc4fd03"
+checksum = "ff8670570af52249509a86f5e3e18a08c60b177071826898fde8997cf5f6bfbb"
 dependencies = [
  "bytes",
  "fnv",
@@ -1563,8 +1563,6 @@ dependencies = [
 [[package]]
 name = "oxide-api"
 version = "0.1.0-rc.35"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72bcbb9eeba5b33f151bdb4999e94026e24e805f18a8dff4786117cc50f784c9"
 dependencies = [
  "anyhow",
  "bytes",
