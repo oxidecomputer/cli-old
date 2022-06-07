@@ -179,11 +179,13 @@ impl PromptExt for oxide_api::types::DiskSource {
                         anyhow::bail!("prompt failed: {}", err);
                     }
                 };
-                oxide_api::types::DiskSource::Blank(value)
+                oxide_api::types::DiskSource::Blank { block_size: value }
             }
-            oxide_api::types::DiskSourceType::GlobalImage => oxide_api::types::DiskSource::GlobalImage(value),
-            oxide_api::types::DiskSourceType::Image => oxide_api::types::DiskSource::Image(value),
-            oxide_api::types::DiskSourceType::Snapshot => oxide_api::types::DiskSource::Snapshot(value),
+            oxide_api::types::DiskSourceType::GlobalImage => {
+                oxide_api::types::DiskSource::GlobalImage { image_id: value }
+            }
+            oxide_api::types::DiskSourceType::Image => oxide_api::types::DiskSource::Image { image_id: value },
+            oxide_api::types::DiskSourceType::Snapshot => oxide_api::types::DiskSource::Snapshot { snapshot_id: value },
         })
     }
 }
