@@ -25,6 +25,7 @@ enum SubCommand {
     Start(CmdInstanceStart),
     Stop(CmdInstanceStop),
     Reboot(CmdInstanceReboot),
+    Serial(CmdInstanceSerial),
 }
 
 #[async_trait::async_trait]
@@ -36,6 +37,7 @@ impl crate::cmd::Command for CmdInstance {
             SubCommand::Disks(cmd) => cmd.run(ctx).await,
             SubCommand::Edit(cmd) => cmd.run(ctx).await,
             SubCommand::List(cmd) => cmd.run(ctx).await,
+            SubCommand::Serial(cmd) => cmd.run(ctx).await,
             SubCommand::Ssh(cmd) => cmd.run(ctx).await,
             SubCommand::Start(cmd) => cmd.run(ctx).await,
             SubCommand::Stop(cmd) => cmd.run(ctx).await,
@@ -444,6 +446,82 @@ impl crate::cmd::Command for CmdInstanceSsh {
             ctx.io.out,
             "Cleaning up the temporary ssh key from your user account..."
         )?;
+
+        Ok(())
+    }
+}
+
+/// Read the buffered data from an instance's serial console.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment, trailing_var_arg = true)]
+pub struct CmdInstanceSerial {
+    /// The instance whose serial console we wish to view. Can be an ID or name.
+    #[clap(name = "instance", required = true)]
+    pub instance: String,
+
+    /// The project that holds the instance.
+    #[clap(long, short, required = true)]
+    pub project: String,
+
+    /// The organization that holds the project.
+    #[clap(long, short, required = true, env = "OXIDE_ORG")]
+    pub organization: String,
+
+    /// The maximum length of bytes to retrieve.
+    #[clap(long, short)]
+    pub max_bytes: Option<u64>,
+
+    /// The offset since boot (or if negative, the current end of the buffered data) from which to
+    /// retrieve output. Defaults to the most recent 16 KiB of serial console output (-16384).
+    #[clap(long, short)]
+    pub byte_offset: Option<i64>,
+
+    /// Whether to continuously read from the running instance's output.
+    #[clap(long, short)]
+    pub continuous: bool,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdInstanceSerial {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let client = ctx.api_client("")?;
+
+        let mut from_start = None;
+        let mut most_recent = None;
+        let max_bytes = self.max_bytes;
+
+        match self.byte_offset {
+            Some(x) if x >= 0 => from_start = Some(x as u64),
+            Some(x) => most_recent = Some(-x as u64),
+            None => most_recent = Some(16384),
+        }
+
+        let mut cont = true;
+        while cont {
+            let output = client
+                .instances()
+                .serial_get(
+                    from_start,
+                    &self.instance,
+                    max_bytes,
+                    most_recent,
+                    &self.organization,
+                    &self.project,
+                )
+                .await?;
+
+            std::io::stdout().write_all(&output.data)?;
+
+            cont = self.continuous;
+            most_recent = None;
+            from_start = Some(output.last_byte_offset);
+
+            if cont && output.data.is_empty() {
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+        }
+
+        println!("\x1b[0m");
 
         Ok(())
     }
