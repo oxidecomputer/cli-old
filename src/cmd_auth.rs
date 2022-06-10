@@ -2,6 +2,10 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use oauth2::basic::BasicClient;
+use oauth2::devicecode::StandardDeviceAuthorizationResponse;
+use oauth2::reqwest::async_http_client;
+use oauth2::{AuthType, AuthUrl, ClientId, DeviceAuthorizationUrl, TokenResponse, TokenUrl};
 
 /// Login, logout, and get the status of your authentication.
 ///
@@ -184,7 +188,7 @@ impl crate::cmd::Command for CmdAuthLogin {
             if !existing_token.is_empty() && interactive {
                 match dialoguer::Confirm::new()
                     .with_prompt(format!(
-                        "You're already logged into {}. Do you want to re-authenticate?",
+                        "You're already logged into {}\nDo you want to re-authenticate?",
                         host
                     ))
                     .interact()
@@ -199,22 +203,50 @@ impl crate::cmd::Command for CmdAuthLogin {
                 }
             }
 
-            // TODO: fix this url once we know the URL in the console.
-            writeln!(
-                ctx.io.err_out,
-                "Tip: you can generate an API Token here {}account",
-                host
-            )?;
+            // Do an OAuth 2.0 Device Authorization Grant dance to get a token.
+            // TODO-security: use something better than username as client ID.
+            let device_auth_url = DeviceAuthorizationUrl::new(format!("{}client/authenticate", host))?;
+            let client_id = "e6bff1ff-24fb-49dc-a54e-c6a350cd4d6c".to_string(); //env::var("USER")?;
+            let auth_client = BasicClient::new(
+                ClientId::new(client_id),
+                None,
+                AuthUrl::new(format!("{}authorize", host))?,
+                Some(TokenUrl::new(format!("{}client/token", host))?),
+            )
+            .set_auth_type(AuthType::RequestBody)
+            .set_device_authorization_url(device_auth_url);
 
-            token = match dialoguer::Input::<String>::new()
-                .with_prompt("Paste your authentication token")
-                .interact_text()
-            {
-                Ok(input) => input,
-                Err(err) => {
-                    return Err(anyhow!("prompt failed: {}", err));
-                }
-            };
+            let details: StandardDeviceAuthorizationResponse = auth_client
+                .exchange_device_code()?
+                .request_async(async_http_client)
+                .await?;
+
+            if let Some(uri) = details.verification_uri_complete() {
+                writeln!(
+                    ctx.io.out,
+                    "Opening {} in your browser.\n\
+                     Please verify user code: {}\n",
+                    details.verification_uri().to_string(),
+                    details.user_code().secret().to_string()
+                )?;
+                ctx.browser(host, uri.secret())?;
+            } else {
+                writeln!(
+                    ctx.io.out,
+                    "Open this URL in your browser:\n{}\n\
+                     And enter the code: {}\n",
+                    details.verification_uri().to_string(),
+                    details.user_code().secret().to_string()
+                )?;
+            }
+
+            token = auth_client
+                .exchange_device_access_token(&details)
+                .request_async(async_http_client, tokio::time::sleep, None)
+                .await?
+                .access_token()
+                .secret()
+                .to_string();
         }
 
         // Set the token in the config file.
