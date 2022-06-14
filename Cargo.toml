@@ -14,7 +14,7 @@ atty = "^0.2.14"
 byte-unit = "4.0.14"
 chrono = { version = "^0.4", features = ["serde"] }
 chrono-humanize = "^0.2.1"
-clap = { version = "^3.1.8", features = ["cargo", "derive", "env", "unicode"] }
+clap = { version = "^3.2.2", features = ["cargo", "derive", "env", "unicode"] }
 clap_complete = { version = "^3.0.6" }
 cli-macro = { path = "cli-macro" }
 colored_json = "^2.1.0"
