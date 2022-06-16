@@ -104,7 +104,7 @@ start-cockroachdb: ## Start CockroachDB.
 	@echo "Waiting for CockroachDB to start..."
 	@sleep 5
 
-OMICRON_DOCKER_VERSION:=main
+OMICRON_DOCKER_VERSION:=4bf842c2f90bfee758feef503fa6302d7ca4a5e3
 
 .PHONY: start-omicron
 start-omicron: start-cockroachdb ## Start Omicron.
