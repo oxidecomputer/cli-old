@@ -1,9 +1,11 @@
-use crate::ssh::{get_default_ssh_key, get_github_ssh_keys, SSHKeyAlgorithm, SSHKeyPair};
+use crate::ssh::{get_default_ssh_key, get_github_ssh_keys, SSHKeyAlgorithm};
 
 use oxide_api::types::{NameSortMode, SshKeyCreate};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Parser;
+use sshkeys::PublicKey;
+use std::path::PathBuf;
 
 /// Manage SSH keys.
 #[derive(Parser, Debug, Clone)]
@@ -41,9 +43,13 @@ pub struct CmdSSHKeyAdd {
     #[clap(long, short)]
     pub generate: bool,
 
-    /// SSH key type to use.
-    #[clap(long, short, default_value_t)]
-    pub algorithm: SSHKeyAlgorithm,
+    /// SSH key type to generate.
+    #[clap(long = "type", short = 't', default_value_t)]
+    pub key_type: SSHKeyAlgorithm,
+
+    /// File containing the SSH public key.
+    #[clap(long, short)]
+    pub file: Option<PathBuf>,
 
     /// The name of the SSH key.
     #[clap(long, short)]
@@ -57,14 +63,17 @@ pub struct CmdSSHKeyAdd {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyAdd {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let pubkey = if self.generate {
+        let (pubkey, path) = if self.generate {
             todo!("generate a key pair and write both halves to files");
             //let keypair = SSHKeyPair::generate(&self.algorithm)?;
             //writeln!(ctx.io.out, "Your SSH key pair is: {:?}", keypair)?;
             //keypair.public_key()?
+        } else if let Some(ref path) = self.file {
+            (PublicKey::from_path(path)?, path.clone())
         } else {
-            get_default_ssh_key(&self.algorithm)?
+            get_default_ssh_key(&self.key_type)?
         };
+        writeln!(ctx.io.out, "Read SSH public key from {}", path.display())?;
 
         let name = if let Some(name) = &self.name {
             name.clone()
@@ -74,30 +83,38 @@ impl crate::cmd::Command for CmdSSHKeyAdd {
                 .interact_text()?
         };
 
-        let description = if let Some(description) = &self.description {
+        let comment = match pubkey.comment {
+            Some(ref c) => c,
+            None => "",
+        };
+
+        let description = if let Some(ref description) = self.description {
             description.clone()
         } else {
             dialoguer::Input::<String>::new()
                 .with_prompt("SSH key description")
-                .default(
-                    pubkey
-                        .comment
-                        .as_ref()
-                        .map(|c| c.clone())
-                        .unwrap_or_else(|| "".to_string()),
-                )
+                .default(comment.to_string())
                 .interact_text()?
         };
 
         let client = ctx.api_client("")?;
         let params = SshKeyCreate {
-            name,
+            name: name.clone(),
             description,
             public_key: pubkey.to_string(),
         };
         client.sshkeys().post(&params).await?;
 
-        writeln!(ctx.io.out, "Added SSH public key: {}", pubkey)?;
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Added SSH public key {}: {} {}",
+            cs.success_icon(),
+            name,
+            pubkey.key_type,
+            pubkey.fingerprint(),
+        )?;
+
         Ok(())
     }
 }
@@ -116,7 +133,15 @@ impl crate::cmd::Command for CmdSSHKeyDelete {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let client = ctx.api_client("")?;
         client.sshkeys().delete_key(&self.name).await?;
-        writeln!(ctx.io.out, "Deleted SSH key {}", self.name)?;
+
+        let cs = ctx.io.color_scheme();
+        writeln!(
+            ctx.io.out,
+            "{} Deleted SSH key {}",
+            cs.success_icon_with_color(ansi_term::Color::Red),
+            self.name
+        )?;
+
         Ok(())
     }
 }
@@ -125,6 +150,14 @@ impl crate::cmd::Command for CmdSSHKeyDelete {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSSHKeyList {
+    /// Maximum number of SSH keys to list.
+    #[clap(long, short, default_value = "30")]
+    pub limit: u32,
+
+    /// Make additional HTTP requests to fetch all pages.
+    #[clap(long)]
+    pub paginate: bool,
+
     /// Output format.
     #[clap(long, short)]
     pub format: Option<crate::types::FormatOutput>,
@@ -132,10 +165,18 @@ pub struct CmdSSHKeyList {
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyList {
-    // TODO: support pagination
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        if self.limit < 1 {
+            return Err(anyhow!("--limit must be greater than 0"));
+        }
+
         let client = ctx.api_client("")?;
-        let results = client.sshkeys().get_all(NameSortMode::NameAscending).await?;
+        let results = if self.paginate {
+            client.sshkeys().get_all(NameSortMode::NameAscending).await?
+        } else {
+            client.sshkeys().get_page(self.limit, "", NameSortMode::NameAscending).await?
+        };
+
         let format = ctx.format(&self.format)?;
         ctx.io.write_output_for_vec(&format, &results)?;
         Ok(())
@@ -168,27 +209,49 @@ impl crate::cmd::Command for CmdSSHKeySyncFromGithub {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let cs = ctx.io.color_scheme();
 
-        let keys = get_github_ssh_keys(&self.github_username).await?;
-
-        for key in keys {
-            // TODO: add the key to Oxide.
-            writeln!(
-                ctx.io.out,
-                "{} Added key `{} {}`\n\t`{}`",
-                cs.success_icon(),
-                key.key_type.name,
-                key.fingerprint(),
-                key,
-            )?;
-
-            // TODO: print if a key already exists.
+        if self.remove_unsynced_keys {
+            todo!("make the overwrite flag work");
         }
 
-        // TODO: make the overwrite flag work.
+        let keys = get_github_ssh_keys(&self.github_username).await?;
+        let names = match keys.len() {
+            0 => vec![],
+            1 => vec![self.github_username.clone()],
+            _ => keys
+                .iter()
+                .enumerate()
+                .map(|(i, _key)| format!("{}-{}", self.github_username, i))
+                .collect::<Vec<String>>(),
+        };
+
+        let client = ctx.api_client("")?;
+        for (key, name) in keys.into_iter().zip(names) {
+            let comment = match key.comment {
+                Some(ref c) => c.clone(),
+                None => format!("From GitHub user {}", self.github_username),
+            };
+            let params = SshKeyCreate {
+                name: name.clone(),
+                description: comment,
+                public_key: key.to_string(),
+            };
+
+            // TODO: warn if a key already exists.
+            client.sshkeys().post(&params).await?;
+
+            writeln!(
+                ctx.io.out,
+                "{} Added SSH public key {}: {} {}",
+                cs.success_icon(),
+                name,
+                key.key_type,
+                key.fingerprint(),
+            )?;
+        }
 
         writeln!(
             ctx.io.out,
-            "{} Oxide SSH keys synced with GitHub user `{}`!",
+            "{} Oxide SSH keys synced with GitHub user {}!",
             cs.success_icon(),
             self.github_username
         )?;
