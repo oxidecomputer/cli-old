@@ -1,7 +1,11 @@
+use crate::ssh::{get_default_ssh_key, get_github_ssh_keys, SSHKeyAlgorithm, SSHKeyPair};
+
+use oxide_api::types::{NameSortMode, SshKeyCreate};
+
 use anyhow::Result;
 use clap::Parser;
 
-/// Manage ssh keys.
+/// Manage SSH keys.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSSHKey {
@@ -29,57 +33,121 @@ impl crate::cmd::Command for CmdSSHKey {
     }
 }
 
-/// Add an ssh key to your Oxide account.
+/// Add an SSH key to your Oxide account.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdSSHKeyAdd {}
+pub struct CmdSSHKeyAdd {
+    /// Generate a new SSH key.
+    #[clap(long, short)]
+    pub generate: bool,
+
+    /// SSH key type to use.
+    #[clap(long, short, default_value_t)]
+    pub algorithm: SSHKeyAlgorithm,
+
+    /// The name of the SSH key.
+    #[clap(long, short)]
+    pub name: Option<String>,
+
+    /// Description of the SSH key.
+    #[clap(long, short = 'D')]
+    pub description: Option<String>,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyAdd {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        // Let's generate a key.
-        let key = crate::ssh::SSHKeyPair::generate(&crate::ssh::SSHKeyAlgorithm::Ed25519)?;
+        let pubkey = if self.generate {
+            todo!("generate a key pair and write both halves to files");
+            //let keypair = SSHKeyPair::generate(&self.algorithm)?;
+            //writeln!(ctx.io.out, "Your SSH key pair is: {:?}", keypair)?;
+            //keypair.public_key()?
+        } else {
+            get_default_ssh_key(&self.algorithm)?
+        };
 
-        writeln!(ctx.io.out, "Your SSH key is: {:?}", key)?;
+        let name = if let Some(name) = &self.name {
+            name.clone()
+        } else {
+            dialoguer::Input::<String>::new()
+                .with_prompt("SSH key name")
+                .interact_text()?
+        };
 
-        let pubkey = key.public_key()?;
+        let description = if let Some(description) = &self.description {
+            description.clone()
+        } else {
+            dialoguer::Input::<String>::new()
+                .with_prompt("SSH key description")
+                .default(
+                    pubkey
+                        .comment
+                        .as_ref()
+                        .map(|c| c.clone())
+                        .unwrap_or_else(|| "".to_string()),
+                )
+                .interact_text()?
+        };
 
-        writeln!(ctx.io.out, "Your SSH public key is: {:?}", pubkey)?;
+        let client = ctx.api_client("")?;
+        let params = SshKeyCreate {
+            name,
+            description,
+            public_key: pubkey.to_string(),
+        };
+        client.sshkeys().post(&params).await?;
 
+        writeln!(ctx.io.out, "Added SSH public key: {}", pubkey)?;
         Ok(())
     }
 }
 
-/// Delete an ssh key from your Oxide account.
+/// Delete an SSH key from your Oxide account.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdSSHKeyDelete {}
+pub struct CmdSSHKeyDelete {
+    /// The name of the SSH key to delete.
+    #[clap(required = true)]
+    pub name: String,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyDelete {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        todo!()
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let client = ctx.api_client("")?;
+        client.sshkeys().delete_key(&self.name).await?;
+        writeln!(ctx.io.out, "Deleted SSH key {}", self.name)?;
+        Ok(())
     }
 }
 
-/// List ssh keys in your Oxide account.
+/// List SSH keys in your Oxide account.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
-pub struct CmdSSHKeyList {}
+pub struct CmdSSHKeyList {
+    /// Output format.
+    #[clap(long, short)]
+    pub format: Option<crate::types::FormatOutput>,
+}
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyList {
-    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
-        todo!()
+    // TODO: support pagination
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let client = ctx.api_client("")?;
+        let results = client.sshkeys().get_all(NameSortMode::NameAscending).await?;
+        let format = ctx.format(&self.format)?;
+        ctx.io.write_output_for_vec(&format, &results)?;
+        Ok(())
     }
 }
 
-/// Sync your public ssh keys from GitHub to your Oxide account.
+/// Sync your public SSH keys from GitHub to your Oxide account.
 ///
-/// This command will retrieve your public ssh keys from GitHub and add them
+/// This command will retrieve your public SSH keys from GitHub and add them
 /// to your Oxide account.
 ///
-/// You will not need to authenticate with GitHub as your public ssh keys are
+/// You will not need to authenticate with GitHub as your public SSH keys are
 /// public information.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
@@ -90,7 +158,7 @@ pub struct CmdSSHKeySyncFromGithub {
 
     /// Remove any keys from your Oxide account that are not in your GitHub account.
     /// This is useful if you want to use your GitHub account as the ultimate source
-    /// of your ssh keys.
+    /// of your SSH keys.
     #[clap(long = "overwrite")]
     pub remove_unsynced_keys: bool,
 }
@@ -100,7 +168,7 @@ impl crate::cmd::Command for CmdSSHKeySyncFromGithub {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let cs = ctx.io.color_scheme();
 
-        let keys = crate::ssh::get_github_ssh_keys(&self.github_username).await?;
+        let keys = get_github_ssh_keys(&self.github_username).await?;
 
         for key in keys {
             // TODO: add the key to Oxide.
@@ -120,7 +188,7 @@ impl crate::cmd::Command for CmdSSHKeySyncFromGithub {
 
         writeln!(
             ctx.io.out,
-            "{} Oxide ssh keys synced with GitHub user `{}`!",
+            "{} Oxide SSH keys synced with GitHub user `{}`!",
             cs.success_icon(),
             self.github_username
         )?;
