@@ -107,7 +107,7 @@ start-cockroachdb: ## Start CockroachDB.
 OMICRON_DOCKER_VERSION:=main
 
 .PHONY: start-omicron
-start-omicron: start-cockroachdb ## Start Omicron.
+start-omicron: #start-cockroachdb ## Start Omicron.
 	@echo "+ $@"
 	@docker rm -f nexus || true
 	@docker rm -f sled-agent || true
@@ -118,7 +118,7 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--net host \
 		--entrypoint=omicron-dev \
 		ghcr.io/oxidecomputer/omicron:$(OMICRON_DOCKER_VERSION) \
-			db-populate --database-url "postgresql://root@0.0.0.0:26257/omicron?sslmode=disable"
+			db-run
 	@echo "Starting nexus..."
 	docker run -d \
 		--restart=always \
