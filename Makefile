@@ -92,10 +92,10 @@ build: Cargo.toml $(wildcard src/*.rs) ## Build the Rust crate.
 .PHONY: start-cockroachdb
 start-cockroachdb: ## Start CockroachDB.
 	@echo "+ $@"
-	@docker rm -f cockroachdb || true
+	@docker rm -f defaultdb || true
 	docker run -d \
 		--restart=always \
-		--name=cockroachdb \
+		--name=defaultdb \
 		--hostname=cockroachdb \
 		-p 0.0.0.0:26257:26257 \
 		-p 0.0.0.0:1234:8080  \
