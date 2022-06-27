@@ -102,7 +102,6 @@ start-cockroachdb: ## Start CockroachDB.
 		cockroachdb/cockroach start-single-node \
 			--insecure
 	@echo "Waiting for CockroachDB to start..."
-	@sleep 5
 
 OMICRON_DOCKER_VERSION:=main
 
