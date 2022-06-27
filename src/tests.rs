@@ -771,7 +771,7 @@ date:"#
                 "--ncpus".to_string(),
                 "1".to_string(),
                 "--memory".to_string(),
-                "1024".to_string(),
+                "1073741824".to_string(),
                 "--hostname".to_string(),
                 "my-db".to_string(),
                 "--description".to_string(),
@@ -796,7 +796,7 @@ date:"#
                 "--ncpus".to_string(),
                 "1".to_string(),
                 "--memory".to_string(),
-                "1024".to_string(),
+                "1073741824".to_string(),
                 "--hostname".to_string(),
                 "my-app".to_string(),
                 "--description".to_string(),
@@ -819,7 +819,7 @@ date:"#
                 "development".to_string(),
                 "my-app".to_string(),
             ],
-            want_out: r#"memory                 | 1024"#
+            want_out: r#"memory                 | 1073741824"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -977,7 +977,7 @@ date:"#
                 /*"--snapshot".to_string(),
                 "42583766-9318-4339-A2A2-EE286F0F5B26".to_string(),*/
                 "--size".to_string(),
-                "1024".to_string(),
+                "1073741824".to_string(),
                 "-D".to_string(),
                 "My new disk".to_string(),
             ],
@@ -1002,7 +1002,7 @@ date:"#
                 /*"--snapshot".to_string(),
                 "42583766-9318-4339-A2A2-EE286F0F5B26".to_string(),*/
                 "--size".to_string(),
-                "1024".to_string(),
+                "1073741824".to_string(),
                 "-D".to_string(),
                 "My second new disk".to_string(),
             ],
@@ -1065,9 +1065,9 @@ date:"#
                 "--project".to_string(),
                 "development".to_string(),
                 "new-disk".to_string(),
-                "my-db".to_string(),
+                "my-app".to_string(),
             ],
-            want_out: "✔ Attached disk new-disk to instance my-db in project maze-war/development".to_string(),
+            want_out: "✔ Attached disk new-disk to instance my-app in project maze-war/development".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -1144,9 +1144,9 @@ date:"#
                 "--project".to_string(),
                 "development".to_string(),
                 "new-disk".to_string(),
-                "my-db".to_string(),
+                "my-app".to_string(),
             ],
-            want_out: "✔ Detached disk new-disk from instance my-db in project maze-war/development".to_string(),
+            want_out: "✔ Detached disk new-disk from instance my-app in project maze-war/development".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
