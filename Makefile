@@ -102,7 +102,7 @@ start-cockroachdb: ## Start CockroachDB.
 		cockroachdb/cockroach start-single-node \
 			--insecure --http-addr=:0 --store /var/tmp/omicron_tmp/.tmpM8KpTf/data --listen-addr 0.0.0.1:32221 --listening-url-file /var/tmp/omicron_tmp/.tmpM8KpTf/listen-url
 	@echo "Waiting for CockroachDB to start..."
-	@sleep 5
+	@sleep 1m
 
 OMICRON_DOCKER_VERSION:=main
 
