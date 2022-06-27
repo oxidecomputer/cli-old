@@ -99,7 +99,7 @@ start-cockroachdb: ## Start CockroachDB.
 		--hostname=cockroachdb \
 		-p 0.0.0.0:26257:26257 \
 		-p 0.0.0.0:1234:8080  \
-		cockroachdb/cockroach start-single-node \
+		cockroachdb/cockroach:v21.2.1 start-single-node \
 			--insecure
 	@echo "Waiting for CockroachDB to start..."
 
