@@ -97,12 +97,12 @@ start-cockroachdb: ## Start CockroachDB.
 		--restart=always \
 		--name=cockroachdb \
 		--hostname=cockroachdb \
-		-p 0.0.0.0:32221:32221 \
+		-p 0.0.0.0:26257:26257 \
 		-p 0.0.0.0:1234:8080  \
 		cockroachdb/cockroach start-single-node \
-			--insecure --http-addr=:0 --store /var/tmp/omicron_tmp/.tmpM8KpTf/data --listen-addr 0.0.0.0:32221 --listening-url-file /var/tmp/omicron_tmp/.tmpM8KpTf/listen-url
+			--insecure --http-addr=:0 --store /var/tmp/omicron_tmp/.tmpM8KpTf/data --listen-addr 0.0.0.0:26257 --listening-url-file /var/tmp/omicron_tmp/.tmpM8KpTf/listen-url
 	@echo "Waiting for CockroachDB to start..."
-	@sleep 1m
+	@sleep 5
 
 OMICRON_DOCKER_VERSION:=main
 
@@ -118,7 +118,7 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--net host \
 		--entrypoint=omicron-dev \
 		ghcr.io/oxidecomputer/omicron:$(OMICRON_DOCKER_VERSION) \
-			db-populate --database-url "postgresql://root@0.0.0.0:32221/omicron?sslmode=disable"
+			db-populate --database-url "postgresql://root@0.0.0.0:26257/omicron?sslmode=disable"
 	@echo "Starting nexus..."
 	docker run -d \
 		--restart=always \
