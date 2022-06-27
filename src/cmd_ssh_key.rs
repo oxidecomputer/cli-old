@@ -43,7 +43,7 @@ pub struct CmdSSHKeyAdd {
     #[clap(long, short)]
     pub generate: bool,
 
-    /// SSH key type to generate.
+    /// SSH key type to use or generate.
     #[clap(long = "type", short = 't', default_value_t)]
     pub key_type: SSHKeyAlgorithm,
 
