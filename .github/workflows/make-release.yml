@@ -12,10 +12,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0.8.0'
+      - name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v0.8.0"
         with:
-          credentials_json: '${{ secrets.GOOGLE_CLOUD_DL_SA }}'
+          credentials_json: "${{ secrets.GOOGLE_CLOUD_DL_SA }}"
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.6.0
         with:
@@ -23,9 +23,9 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
-            override: true
-            components: rustfmt, clippy
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
       - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: Install deps
         shell: bash
@@ -68,7 +68,7 @@ jobs:
           mkdir -p releases/$(basename $(pwd))
           cp -r cross releases/$(basename $(pwd))/${VERSION}
           cp cross/README.md cross/${{matrix.os}}-${{github.ref_name}}-README.md
-      - name: 'upload binary files'
+      - name: "upload binary files"
         id: upload-files
         uses: google-github-actions/upload-cloud-storage@v0.10.2
         with:
@@ -85,10 +85,10 @@ jobs:
     name: illumos
     steps:
       - uses: actions/checkout@v2
-      - name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0.8.0'
+      - name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v0.8.0"
         with:
-          credentials_json: '${{ secrets.GOOGLE_CLOUD_DL_SA }}'
+          credentials_json: "${{ secrets.GOOGLE_CLOUD_DL_SA }}"
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.6.0
         with:
@@ -96,9 +96,9 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
-            override: true
-            components: rustfmt, clippy
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
       - name: Install deps
         shell: bash
         run: |
@@ -112,7 +112,7 @@ jobs:
         shell: bash
         run: |
           cp cross/README.md cross/illumos-${{github.ref_name}}-README.md
-      - name: 'upload binary files'
+      - name: "upload binary files"
         id: upload-files
         uses: google-github-actions/upload-cloud-storage@v0.10.2
         with:
@@ -133,18 +133,18 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
-            override: true
-            components: rustfmt, clippy
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
       - uses: actions/download-artifact@v3
         with:
-          name:  ubuntu-latest-${{github.ref_name}}-README.md
+          name: ubuntu-latest-${{github.ref_name}}-README.md
       - uses: actions/download-artifact@v3
         with:
-          name:  macos-latest-${{github.ref_name}}-README.md
+          name: macos-latest-${{github.ref_name}}-README.md
       - uses: actions/download-artifact@v3
         with:
-          name:  illumos-${{github.ref_name}}-README.md
+          name: illumos-${{github.ref_name}}-README.md
       - name: combine readmes
         shell: bash
         run: |

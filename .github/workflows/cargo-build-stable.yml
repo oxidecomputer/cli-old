@@ -3,21 +3,21 @@ on:
     branches:
       - main
     paths:
-      - '**.rs'
+      - "**.rs"
       - Cargo.toml
       - Cargo.lock
       - .github/workflows/cargo-build.yml
-      - 'rust-toolchain'
-      - 'rust-toolchain.toml'
+      - "rust-toolchain"
+      - "rust-toolchain.toml"
   pull_request:
     paths:
-      - '**.rs'
+      - "**.rs"
       - Cargo.toml
       - Cargo.lock
       - .github/workflows/cargo-build.yml
-      - 'rust-toolchain'
-      - 'rust-toolchain.toml'
-name: cargo build (stable)
+      - "rust-toolchain"
+      - "rust-toolchain.toml"
+name: cargo build (nightly)
 jobs:
   cargobuild:
     name: cargo build
@@ -27,9 +27,9 @@ jobs:
       - name: Install latest rust
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
-            override: true
-            components: rustfmt, clippy
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
       - name: Cache cargo registry
         uses: actions/cache@v3
         with:
