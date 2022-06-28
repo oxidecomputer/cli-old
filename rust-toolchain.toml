@@ -1,0 +1,7 @@
+[toolchain]
+# TODO(https://github.com/oxidecomputer/cli/issues/205) Pinned to nightly to
+# avoid an OOM during tests; we should return to stable when this issue is resolved.
+#
+# See also: .github/workflows/cargo-test.yml, which also uses nightly.
+channel = "nightly-2022-06-26"
+profile = "minimal"
