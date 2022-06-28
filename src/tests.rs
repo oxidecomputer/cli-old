@@ -318,7 +318,7 @@ date:"#
         TestItem {
             name: "list racks".to_string(),
             args: vec!["oxide".to_string(), "racks".to_string(), "list".to_string()],
-            want_out: "| no-name | no description |"
+            want_out: "--------------------------------------+--------------+---------------"
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -327,7 +327,7 @@ date:"#
         TestItem {
             name: "get rack".to_string(),
             args: vec!["oxide".to_string(), "rack".to_string(), "view".to_string(), ctx.test_rack_id.to_string()],
-            want_out: "description   | no description"
+            want_out: "time_modified"
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -336,7 +336,7 @@ date:"#
         TestItem {
             name: "list sleds".to_string(),
             args: vec!["oxide".to_string(), "sleds".to_string(), "list".to_string()],
-            want_out: "| no-name | no description |"
+            want_out: "--------------------------------------+-----------------+--------------+---------------"
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -345,7 +345,7 @@ date:"#
         TestItem {
             name: "get sled".to_string(),
             args: vec!["oxide".to_string(), "sleds".to_string(), "get".to_string(), ctx.test_sled_id.to_string()],
-            want_out: "name            | no-name"
+            want_out: "time_modified"
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,
@@ -1087,7 +1087,7 @@ date:"#
                 "my-db".to_string(),
             ],
             want_out:
-                "new-disk | My new disk"
+                "----+------+-------------+------------+-------------+----------+------------+------+-------------+-------+--------------+---------------"
                     .to_string(),
             want_err: "".to_string(),
             want_code: 0,
