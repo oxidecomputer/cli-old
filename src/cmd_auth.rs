@@ -204,13 +204,13 @@ impl crate::cmd::Command for CmdAuthLogin {
             }
 
             // Do an OAuth 2.0 Device Authorization Grant dance to get a token.
-            let device_auth_url = DeviceAuthorizationUrl::new(format!("{}client/authenticate", host))?;
+            let device_auth_url = DeviceAuthorizationUrl::new(format!("{}device/auth", host))?;
             let client_id = ctx.config.get("", "client_id")?;
             let auth_client = BasicClient::new(
                 ClientId::new(client_id),
                 None,
                 AuthUrl::new(format!("{}authorize", host))?,
-                Some(TokenUrl::new(format!("{}client/token", host))?),
+                Some(TokenUrl::new(format!("{}device/token", host))?),
             )
             .set_auth_type(AuthType::RequestBody)
             .set_device_authorization_url(device_auth_url);
