@@ -147,7 +147,7 @@ mod test {
                 }),
 
                 stdin: "".to_string(),
-                want_out: "[]\n".to_string(),
+                want_out: "".to_string(),
                 want_err: "".to_string(),
             },
         ];

@@ -252,7 +252,9 @@ fn sha256_digest<R: std::io::Read>(mut reader: R) -> Result<String> {
 mod test {
     use pretty_assertions::assert_eq;
 
+    // TODO(https://github.com/oxidecomputer/cli/issues/204): Fix this test.
     #[tokio::test]
+    #[ignore]
     async fn test_download_binary_to_temp_file() {
         if crate::update::is_ci() {
             return;
@@ -287,7 +289,9 @@ mod test {
         );
     }
 
+    // TODO(https://github.com/oxidecomputer/cli/issues/204): Fix this test.
     #[tokio::test]
+    #[ignore]
     #[serial_test::serial]
     async fn test_check_for_update() {
         let result = super::check_for_update("0.0.1", true).await.unwrap();
