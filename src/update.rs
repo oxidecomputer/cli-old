@@ -63,10 +63,6 @@ pub async fn check_for_update(current_version: &str, force: bool) -> Result<Opti
 
 /// If we should check for an update to the cli.
 fn should_check_for_update() -> bool {
-    if !get_env_var("KITTYCAD_NO_UPDATE_NOTIFIER").is_empty() {
-        return false;
-    }
-
     !is_ci() && atty::is(atty::Stream::Stdout) && atty::is(atty::Stream::Stderr)
 }
 
