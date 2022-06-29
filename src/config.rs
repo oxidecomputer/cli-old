@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use thiserror::Error;
+use uuid::Uuid;
 
 /// This trait describes interaction with the configuration for oxide.
 pub trait Config {
@@ -88,6 +89,13 @@ pub fn config_options() -> Vec<ConfigOption> {
             comment: "What formatting Oxide should use when printing text.".to_string(),
             default_value: crate::types::FormatOutput::default().to_string(),
             allowed_values: crate::types::FormatOutput::variants(),
+        },
+        ConfigOption {
+            key: "client_id".to_string(),
+            description: "a unique identifier for this client".to_string(),
+            comment: "Automatically generated unique identifier for this client.".to_string(),
+            default_value: Uuid::new_v4().to_string(),
+            allowed_values: vec![],
         },
     ]
 }
@@ -239,7 +247,7 @@ browser = ""
 # What formatting Oxide should use when printing text.
 # Supported values: table, json, yaml
 format = "table""#;
-        assert_eq!(doc_config, expected);
+        assert!(doc_config.contains(expected));
 
         let doc_hosts = c.hosts_to_string().unwrap();
         assert_eq!(doc_hosts, "");

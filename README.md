@@ -6,10 +6,21 @@ The instructions below refer to instructions for contributing to the repo.
 
 For the CLI docs for end users refer to: https://docs.oxide.computer/cli/manual
 
-To authenticate today, use the spoof method token: `oxide-spoof-001de000-05e4-4000-8000-000000004007`
-
 If you are running nexus locally without `https://` make sure you denote that in
 the URL you pass to `OXIDE_HOST` or to `oxide auth login`.
+
+### Authentication
+
+To authenticate today, you can use the spoof token:
+`oxide-spoof-001de000-05e4-4000-8000-000000004007`
+
+You can get a non-spoof access token with `oxide auth login`.
+That will contact `OXIDE_HOST` and attempt an OAuth 2.0 Device
+Authorization Grant. The CLI will attempt to open a browser window
+with which you can login (via SAML or other IdP method) and type in
+or verify the user code printed in the terminal. After a successful
+login and code verification, a token associated with the logged-in
+user will be granted and stored in the config file.
 
 ### Installing
 

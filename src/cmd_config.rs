@@ -256,7 +256,7 @@ mod test {
                 Ok(()) => {
                     let stdout = std::fs::read_to_string(stdout_path).unwrap();
                     let stderr = std::fs::read_to_string(stderr_path).unwrap();
-                    assert_eq!(stdout, t.want_out, "test {}", t.name);
+                    assert!(stdout.contains(&t.want_out), "test {}", t.name);
                     assert!(stderr.is_empty(), "test {}", t.name);
                 }
                 Err(err) => {

@@ -3,6 +3,7 @@ use std::env;
 use anyhow::Result;
 use thiserror::Error;
 
+use crate::cmd_auth::parse_host;
 use crate::config_file::get_env_var;
 
 const OXIDE_HOST: &str = "OXIDE_HOST";
@@ -70,7 +71,8 @@ impl crate::config::Config for EnvConfig<'_> {
 
     fn default_host_with_source(&self) -> Result<(String, String)> {
         if let Ok(host) = env::var(OXIDE_HOST) {
-            Ok((host, OXIDE_HOST.to_string()))
+            let host = parse_host(&host)?;
+            Ok((host.to_string(), OXIDE_HOST.to_string()))
         } else {
             self.config.default_host_with_source()
         }

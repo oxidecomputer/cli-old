@@ -29,6 +29,7 @@ Inflector = "^0.11.4"
 log = "=0.4.14"
 regex = "1"
 num-traits = "^0.2.14"
+oauth2 = "4.1"
 open = "^2.1.1"
 oxide-api = "0.1.0-rc.38"
 #oxide-api = { path= "../oxide.rs/oxide" }
