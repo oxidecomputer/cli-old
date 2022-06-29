@@ -105,7 +105,7 @@ impl AsyncTestContext for MainContext {
 
 // TODO(https://github.com/oxidecomputer/cli/issues/204): Fix this test.
 #[test_context(MainContext)]
-#[ignore]
+//#[ignore]
 #[tokio::test]
 #[serial_test::serial]
 async fn test_main(ctx: &mut MainContext) {
@@ -1565,9 +1565,9 @@ date:"#
                 "--router".to_string(),
                 "my-router".to_string(),
                 "--destination".to_string(),
-                "ip_net=10.0.2.1/24".to_string(),
+                "ip=10.0.2.1".to_string(),
                 "--target".to_string(),
-                "inetgw=thing".to_string(),
+                "ip=10.0.2.1".to_string(),
                 "my-route".to_string(),
 
             ],
@@ -1592,7 +1592,7 @@ date:"#
                 "--router".to_string(),
                 "my-router".to_string(),
             ],
-            want_out: "target        | inetgw=thing".to_string(),
+            want_out: "target        | ip=10.0.2.1".to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()
@@ -1615,9 +1615,9 @@ date:"#
                 "--router".to_string(),
                 "my-router".to_string(),
                 "--destination".to_string(),
-                "ip_net=10.0.2.1/24".to_string(),
+                "ip=10.0.2.2".to_string(),
                 "--target".to_string(),
-                "inetgw=blah".to_string(),
+                "ip=10.0.2.2".to_string(),
             ],
             want_out: "✔ Edited route my-route in maze-war/development".to_string(),
             want_err: "".to_string(),
@@ -1639,7 +1639,7 @@ date:"#
                 "--router".to_string(),
                 "my-router".to_string(),
             ],
-            want_out: r#"my-route | My route with new description for testing | ip_net=10.0.2.1/24 | custom"#.to_string(),
+            want_out: r#"my-route | My route with new description for testing | ip=10.0.2.2 | custom"#.to_string(),
             want_err: "".to_string(),
             want_code: 0,
             ..Default::default()

@@ -119,6 +119,7 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--entrypoint=omicron-dev \
 		ghcr.io/oxidecomputer/omicron:$(OMICRON_DOCKER_VERSION) \
 			db-populate --database-url "postgresql://root@0.0.0.0:26257/omicron?sslmode=disable"
+	@sleep 5m
 	@echo "Starting nexus..."
 	docker run -d \
 		--restart=always \
