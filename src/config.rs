@@ -247,7 +247,7 @@ browser = ""
 # What formatting Oxide should use when printing text.
 # Supported values: table, json, yaml
 format = "table""#;
-        assert_eq!(doc_config, expected);
+        assert!(doc_config.contains(expected));
 
         let doc_hosts = c.hosts_to_string().unwrap();
         assert_eq!(doc_hosts, "");

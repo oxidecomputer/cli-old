@@ -88,26 +88,9 @@ mod test {
         assert_eq!(aliases.get("alias_3"), ("".to_string(), false));
 
         // Print the config.
-        let expected = r#"# What editor oxide should run when creating text, etc. If blank, will refer to environment.
-editor = ""
-
-# When to interactively prompt. This is a global config that cannot be overridden by hostname.
-# Supported values: enabled, disabled
-prompt = "enabled"
-
-# A pager program to send command output to, e.g. "less". Set the value to "cat" to disable the pager.
-pager = ""
-
-# What web browser oxide should use when opening URLs. If blank, will refer to environment.
-browser = ""
-
-# What formatting Oxide should use when printing text.
-# Supported values: table, json, yaml
-format = "table"
-
-[aliases]
+        let expected = r#"[aliases]
 alias1 = "value1 thing foo"
 alias2 = "value2 single""#;
-        assert_eq!(c.config_to_string().unwrap(), expected);
+        assert!(c.config_to_string().unwrap().contains(expected));
     }
 }
