@@ -72,14 +72,3 @@ jobs:
           OXIDE_TEST_HOST: http://localhost:8888
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           RUST_BACKTRACE: 1
-
-      - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          version: '0.15.0'
-          args: '--all'
-        env:
-          OXIDE_TEST_TOKEN: ${{secrets.OXIDE_TOKEN}}
-          OXIDE_TEST_HOST: http://localhost:8888
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          RUST_BACKTRACE: 1
