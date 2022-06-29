@@ -291,7 +291,7 @@ mod test {
 
     // TODO(https://github.com/oxidecomputer/cli/issues/204): Fix this test.
     #[tokio::test]
-    //#[ignore]
+    #[ignore]
     #[serial_test::serial]
     async fn test_check_for_update() {
         let result = super::check_for_update("0.0.1", true).await.unwrap();

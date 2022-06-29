@@ -138,7 +138,6 @@ start-omicron: start-cockroachdb ## Start Omicron.
 		--entrypoint=sled-agent-sim \
 		ghcr.io/oxidecomputer/omicron:$(OMICRON_DOCKER_VERSION) \
 			B100B75C-D2EF-415F-A07E-D3915470913D 0.0.0.0:12345 0.0.0.0:12221
-	@sleep 5m
 
 .PHONY: gen-docs
 gen-docs: gen-md gen-man ## Generate all the docs.
