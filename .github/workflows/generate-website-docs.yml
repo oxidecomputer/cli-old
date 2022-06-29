@@ -1,5 +1,7 @@
 on:
   push:
+    branches:
+      - main
     tags:
       - v*
   pull_request:
@@ -19,9 +21,9 @@ jobs:
       - name: Install latest rust
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
-            override: true
-            components: rustfmt, clippy
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
       - name: Cache cargo registry
         uses: actions/cache@v3
         with:
@@ -48,8 +50,8 @@ jobs:
       # Checkout the docs repo since we will want to update the files there.
       - uses: actions/checkout@v2
         with:
-          repository: 'oxidecomputer/docs'
-          path: 'docs'
+          repository: "oxidecomputer/docs"
+          path: "docs"
           token: ${{secrets.PAT_GITHUB}}
       - name: move docs to oxide docs
         shell: bash
@@ -75,4 +77,3 @@ jobs:
               --base main || true
         env:
           GITHUB_TOKEN: ${{secrets.PAT_GITHUB}}
-
