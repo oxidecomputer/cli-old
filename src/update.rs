@@ -254,7 +254,7 @@ mod test {
 
     // TODO(https://github.com/oxidecomputer/cli/issues/204): Fix this test.
     #[tokio::test]
-    //#[ignore]
+    #[ignore]
     async fn test_download_binary_to_temp_file() {
         if crate::update::is_ci() {
             return;
