@@ -126,6 +126,15 @@ use slog::Drain;
 ///
 /// OXIDE_CONFIG_DIR: the directory where oxide will store configuration files.
 /// Default: "$XDG_CONFIG_HOME/oxide" or "$HOME/.config/oxide".
+/// 
+/// Authentication
+///
+/// You can get an access token running `oxide auth login`. This will contact `OXIDE_HOST`
+/// and attempt an OAuth 2.0 Device Authorization Grant. 
+/// The CLI will attempt to open a browser window with which you can login 
+/// (via SAML or other IdP method) and type in or verify the user code printed in the terminal.
+///  After a successful login and code verification, a token associated with the logged-in
+/// user will be granted and stored in the config file.
 #[derive(Parser, Debug, Clone)]
 #[clap(version = clap::crate_version!(), author = clap::crate_authors!("\n"))]
 struct Opts {
