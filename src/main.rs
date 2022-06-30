@@ -133,7 +133,7 @@ use slog::Drain;
 /// and attempt an OAuth 2.0 Device Authorization Grant. 
 /// The CLI will attempt to open a browser window with which you can login 
 /// (via SAML or other IdP method) and type in or verify the user code printed in the terminal.
-///  After a successful login and code verification, a token associated with the logged-in
+/// After a successful login and code verification, a token associated with the logged-in
 /// user will be granted and stored in the config file.
 #[derive(Parser, Debug, Clone)]
 #[clap(version = clap::crate_version!(), author = clap::crate_authors!("\n"))]
