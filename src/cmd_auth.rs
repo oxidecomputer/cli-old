@@ -228,7 +228,7 @@ impl crate::cmd::Command for CmdAuthLogin {
                     details.verification_uri().to_string(),
                     details.user_code().secret().to_string()
                 )?;
-                ctx.browser(host, uri.secret())?;
+                let _ = ctx.browser(host, uri.secret());
             } else {
                 writeln!(
                     ctx.io.out,
