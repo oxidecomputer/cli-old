@@ -225,17 +225,17 @@ impl crate::cmd::Command for CmdAuthLogin {
                     ctx.io.out,
                     "Opening {} in your browser.\n\
                      Please verify user code: {}\n",
-                    details.verification_uri().to_string(),
-                    details.user_code().secret().to_string()
+                    uri.secret(),
+                    details.user_code().secret()
                 )?;
-                ctx.browser(host, uri.secret())?;
+                let _ = ctx.browser(host, uri.secret());
             } else {
                 writeln!(
                     ctx.io.out,
                     "Open this URL in your browser:\n{}\n\
                      And enter the code: {}\n",
-                    details.verification_uri().to_string(),
-                    details.user_code().secret().to_string()
+                    **details.verification_uri(),
+                    details.user_code().secret()
                 )?;
             }
 
