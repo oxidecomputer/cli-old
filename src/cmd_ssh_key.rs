@@ -1,11 +1,11 @@
-use crate::ssh::{get_default_ssh_key, get_github_ssh_keys, SSHKeyAlgorithm};
-
-use oxide_api::types::{NameSortMode, SshKeyCreate};
+use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use oxide_api::types::{NameSortMode, SshKeyCreate};
 use sshkeys::PublicKey;
-use std::path::PathBuf;
+
+use crate::ssh::{get_github_ssh_keys, SSHKeyAlgorithm};
 
 /// Manage SSH keys.
 #[derive(Parser, Debug, Clone)]
@@ -19,6 +19,7 @@ pub struct CmdSSHKey {
 enum SubCommand {
     Add(CmdSSHKeyAdd),
     Delete(CmdSSHKeyDelete),
+    Generate(CmdSSHKeyGenerate),
     List(CmdSSHKeyList),
     SyncFromGithub(CmdSSHKeySyncFromGithub),
 }
@@ -29,6 +30,7 @@ impl crate::cmd::Command for CmdSSHKey {
         match &self.subcmd {
             SubCommand::Add(cmd) => cmd.run(ctx).await,
             SubCommand::Delete(cmd) => cmd.run(ctx).await,
+            SubCommand::Generate(cmd) => cmd.run(ctx).await,
             SubCommand::List(cmd) => cmd.run(ctx).await,
             SubCommand::SyncFromGithub(cmd) => cmd.run(ctx).await,
         }
@@ -39,17 +41,9 @@ impl crate::cmd::Command for CmdSSHKey {
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdSSHKeyAdd {
-    /// Generate a new SSH key.
-    #[clap(long, short)]
-    pub generate: bool,
-
-    /// SSH key type to use or generate.
-    #[clap(long = "type", short = 't', default_value_t)]
-    pub key_type: SSHKeyAlgorithm,
-
     /// File containing the SSH public key.
-    #[clap(long, short)]
-    pub file: Option<PathBuf>,
+    #[clap(required = true)]
+    pub file: PathBuf,
 
     /// The name of the SSH key.
     #[clap(long, short)]
@@ -63,17 +57,7 @@ pub struct CmdSSHKeyAdd {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyAdd {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let (pubkey, path) = if self.generate {
-            todo!("generate a key pair and write both halves to files");
-            //let keypair = SSHKeyPair::generate(&self.algorithm)?;
-            //writeln!(ctx.io.out, "Your SSH key pair is: {:?}", keypair)?;
-            //keypair.public_key()?
-        } else if let Some(ref path) = self.file {
-            (PublicKey::from_path(path)?, path.clone())
-        } else {
-            get_default_ssh_key(&self.key_type)?
-        };
-        writeln!(ctx.io.out, "Read SSH public key from {}", path.display())?;
+        let pubkey = PublicKey::from_path(&self.file)?;
 
         let name = if let Some(name) = &self.name {
             name.clone()
@@ -83,14 +67,13 @@ impl crate::cmd::Command for CmdSSHKeyAdd {
                 .interact_text()?
         };
 
-        let comment = match pubkey.comment {
-            Some(ref c) => c,
-            None => "",
-        };
-
         let description = if let Some(ref description) = self.description {
             description.clone()
         } else {
+            let comment = match pubkey.comment {
+                Some(ref c) => c,
+                None => "",
+            };
             dialoguer::Input::<String>::new()
                 .with_prompt("SSH key description")
                 .default(comment.to_string())
@@ -146,6 +129,22 @@ impl crate::cmd::Command for CmdSSHKeyDelete {
     }
 }
 
+/// Generate a new SSH key and add it to your Oxide account.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdSSHKeyGenerate {
+    /// SSH key type to generate.
+    #[clap(long = "type", short = 't', default_value_t)]
+    pub key_type: SSHKeyAlgorithm,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdSSHKeyGenerate {
+    async fn run(&self, _ctx: &mut crate::context::Context) -> Result<()> {
+        todo!("generate a key pair, write both halves to files, and add the public key");
+    }
+}
+
 /// List SSH keys in your Oxide account.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
@@ -174,7 +173,10 @@ impl crate::cmd::Command for CmdSSHKeyList {
         let results = if self.paginate {
             client.sshkeys().get_all(NameSortMode::NameAscending).await?
         } else {
-            client.sshkeys().get_page(self.limit, "", NameSortMode::NameAscending).await?
+            client
+                .sshkeys()
+                .get_page(self.limit, "", NameSortMode::NameAscending)
+                .await?
         };
 
         let format = ctx.format(&self.format)?;

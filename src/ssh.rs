@@ -1,29 +1,11 @@
 use std::io::BufRead;
-use std::path::PathBuf;
 
-use anyhow::{anyhow, Context, Result};
-use dirs::home_dir;
+use anyhow::Result;
 use parse_display::{Display, FromStr};
 use ring::{
     rand,
     signature::{EcdsaKeyPair, Ed25519KeyPair, KeyPair, ECDSA_P256_SHA256_FIXED_SIGNING},
 };
-
-/// Retrieve the default public SSH key stored in `~/.ssh`.
-/// If successful, return the public key and the path from which it was read.
-pub fn get_default_ssh_key(algorithm: &SSHKeyAlgorithm) -> Result<(sshkeys::PublicKey, PathBuf)> {
-    let path = match home_dir() {
-        Some(home) => home.join(".ssh").join(match algorithm {
-            SSHKeyAlgorithm::Ecdsa => "id_ecdsa.pub",
-            SSHKeyAlgorithm::Ed25519 => "id_ed25519.pub",
-            SSHKeyAlgorithm::Rsa => "id_rsa.pub",
-        }),
-        None => return Err(anyhow!("could not find home directory")),
-    };
-    sshkeys::PublicKey::from_path(path.clone())
-        .with_context(|| format!("failed to read SSH public key from {}", path.display()))
-        .map(|pubkey| (pubkey, path))
-}
 
 /// Retrieve the public SSH keys for a specific github user.
 pub async fn get_github_ssh_keys(gh_handle: &str) -> Result<Vec<sshkeys::PublicKey>> {
