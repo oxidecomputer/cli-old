@@ -140,6 +140,7 @@ impl crate::cmd::Command for CmdAuthLogin {
         if self.with_token {
             // Read from stdin.
             ctx.io.stdin.read_to_string(&mut token)?;
+            token = token.trim_end_matches('\n').to_string();
         }
 
         let mut interactive = false;
