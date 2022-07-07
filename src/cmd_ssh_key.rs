@@ -1,11 +1,10 @@
-use std::path::PathBuf;
+use std::{io::BufRead, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use oxide_api::types::{NameSortMode, SshKeyCreate};
+use parse_display::{Display, FromStr};
 use sshkeys::PublicKey;
-
-use crate::ssh::{get_github_ssh_keys, SSHKeyAlgorithm};
 
 /// Manage SSH keys.
 #[derive(Parser, Debug, Clone)]
@@ -129,6 +128,20 @@ impl crate::cmd::Command for CmdSSHKeyDelete {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, FromStr, Display)]
+#[display(style = "kebab-case")]
+pub enum SSHKeyAlgorithm {
+    Rsa,
+    Ed25519,
+    Ecdsa,
+}
+
+impl Default for SSHKeyAlgorithm {
+    fn default() -> SSHKeyAlgorithm {
+        SSHKeyAlgorithm::Ed25519
+    }
+}
+
 /// Generate a new SSH key and add it to your Oxide account.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
@@ -206,6 +219,27 @@ pub struct CmdSSHKeySyncFromGithub {
     pub remove_unsynced_keys: bool,
 }
 
+/// Retrieve the public SSH keys for a specific github user.
+async fn get_github_ssh_keys(gh_handle: &str) -> Result<Vec<sshkeys::PublicKey>> {
+    let resp = reqwest::get(&format!("https://github.com/{}.keys", gh_handle)).await?;
+    let body = resp.bytes().await?;
+
+    let reader = std::io::BufReader::new(body.as_ref());
+    let lines: Vec<_> = reader.lines().collect();
+
+    let mut keys: Vec<sshkeys::PublicKey> = Vec::new();
+    for l in lines {
+        let line = l?;
+        // Parse the key.
+        let key = sshkeys::PublicKey::from_string(&line)?;
+
+        // Add the key to the list.
+        keys.push(key);
+    }
+
+    Ok(keys)
+}
+
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeySyncFromGithub {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
@@ -259,5 +293,14 @@ impl crate::cmd::Command for CmdSSHKeySyncFromGithub {
         )?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[tokio::test]
+    async fn test_get_github_ssh_keys() {
+        let result = super::get_github_ssh_keys("jessfraz").await;
+        assert!(!result.expect("failed to get keys from GitHub").is_empty());
     }
 }
