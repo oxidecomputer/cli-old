@@ -390,8 +390,179 @@ impl crate::cmd::Command for CmdSSHKeySyncFromGithub {
 
 #[cfg(test)]
 mod test {
+    use pretty_assertions::assert_eq;
+    use ssh_key::Algorithm;
+    use test_context::{test_context, AsyncTestContext};
+
+    use crate::cmd::Command;
+
+    // TODO: factor common test structs and harnesses.
+    // TODO: regexp or template matching of stdout & stderr.
+
+    pub struct TestItem {
+        name: String,
+        cmd: super::SubCommand,
+        stdin: String,
+        want_out: String,
+        want_err: String,
+    }
+
+    struct TContext {
+        orig_oxide_host: Result<String, std::env::VarError>,
+        orig_oxide_token: Result<String, std::env::VarError>,
+    }
+
+    #[async_trait::async_trait]
+    impl AsyncTestContext for TContext {
+        async fn setup() -> TContext {
+            let orig = TContext {
+                orig_oxide_host: std::env::var("OXIDE_HOST"),
+                orig_oxide_token: std::env::var("OXIDE_TOKEN"),
+            };
+
+            // Set our test values.
+            let test_host =
+                std::env::var("OXIDE_TEST_HOST").expect("you need to set OXIDE_TEST_HOST to where the api is running");
+
+            let test_token = std::env::var("OXIDE_TEST_TOKEN").expect("OXIDE_TEST_TOKEN is required");
+            std::env::set_var("OXIDE_HOST", test_host);
+            std::env::set_var("OXIDE_TOKEN", test_token);
+
+            orig
+        }
+
+        async fn teardown(self) {
+            // Put the original env var back.
+            if let Ok(ref val) = self.orig_oxide_host {
+                std::env::set_var("OXIDE_HOST", val);
+            } else {
+                std::env::remove_var("OXIDE_HOST");
+            }
+
+            if let Ok(ref val) = self.orig_oxide_token {
+                std::env::set_var("OXIDE_TOKEN", val);
+            } else {
+                std::env::remove_var("OXIDE_TOKEN");
+            }
+        }
+    }
+
+    #[test_context(TContext)]
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_cmd_ssh_key() {
+        let tests: Vec<TestItem> = vec![
+            TestItem {
+                name: "empty key list".to_string(),
+                cmd: super::SubCommand::List(super::CmdSSHKeyList {
+                    limit: 1,
+                    paginate: false,
+                    format: Some(crate::types::FormatOutput::Json),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "[]".to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "generate and add a key".to_string(),
+                cmd: super::SubCommand::Generate(super::CmdSSHKeyGenerate {
+                    private_key_file: "/tmp/foo".into(),
+                    key_type: Algorithm::Ed25519,
+                    key_size: None,
+                    comment: "Foo!".to_string(),
+                    password: Some("password".to_string()),
+                    name: Some("foo".to_string()),
+                    description: Some("a freshly generated key".to_string()),
+                }),
+
+                stdin: "".to_string(),
+                want_out: r#"Private key saved in /tmp/foo
+Public key saved in /tmp/foo.pub
+✔ Added SSH public key foo: ssh-ed25519 SHA256:"#
+                    .to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "non-empty key list".to_string(),
+                cmd: super::SubCommand::List(super::CmdSSHKeyList {
+                    limit: 1,
+                    paginate: false,
+                    format: Some(crate::types::FormatOutput::Json),
+                }),
+
+                stdin: "".to_string(),
+                want_out: r#"[
+  {
+    "description": "a freshly generated key","#
+                    .to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "delete key".to_string(),
+                cmd: super::SubCommand::Delete(super::CmdSSHKeyDelete {
+                    name: "foo".to_string(),
+                }),
+
+                stdin: "".to_string(),
+                want_out: r#"✔ Deleted SSH key foo"#.to_string(),
+                want_err: "".to_string(),
+            },
+            TestItem {
+                name: "empty key list redux".to_string(),
+                cmd: super::SubCommand::List(super::CmdSSHKeyList {
+                    limit: 1,
+                    paginate: false,
+                    format: Some(crate::types::FormatOutput::Json),
+                }),
+
+                stdin: "".to_string(),
+                want_out: "[]".to_string(),
+                want_err: "".to_string(),
+            },
+        ];
+
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        for t in tests {
+            let (mut io, stdout_path, stderr_path) = crate::iostreams::IoStreams::test();
+            if !t.stdin.is_empty() {
+                io.stdin = Box::new(std::io::Cursor::new(t.stdin));
+            }
+            // We need to also turn off the fancy terminal colors.
+            // This ensures it also works in GitHub actions/any CI.
+            io.set_color_enabled(false);
+            io.set_never_prompt(true);
+            let mut ctx = crate::context::Context {
+                config: &mut c,
+                io,
+                debug: false,
+            };
+
+            let cmd = super::CmdSSHKey { subcmd: t.cmd };
+            match cmd.run(&mut ctx).await {
+                Ok(()) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert!(stderr.is_empty(), "test {}: {}", t.name, stderr);
+                    assert!(stdout.contains(&t.want_out), "test {}: stdout mismatch", t.name);
+                }
+                Err(err) => {
+                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
+                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
+                    assert_eq!(stdout, t.want_out, "test {}", t.name);
+                    if !err.to_string().contains(&t.want_err) {
+                        assert_eq!(err.to_string(), t.want_err, "test {}: err mismatch", t.name);
+                    }
+                    assert!(stderr.is_empty(), "test {}: {}", t.name, stderr);
+                }
+            }
+        }
+    }
+
     #[tokio::test]
     async fn test_get_github_ssh_keys() {
+        // TODO: use a proper test account, not Jess's.
         let result = super::get_github_ssh_keys("jessfraz").await;
         assert!(!result.expect("failed to get keys from GitHub").is_empty());
     }
