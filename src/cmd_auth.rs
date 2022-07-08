@@ -632,6 +632,7 @@ mod test {
                     }
                 }
                 Err(err) => {
+                    dbg!(&err);
                     let stdout = std::fs::read_to_string(stdout_path).unwrap();
                     let stderr = std::fs::read_to_string(stderr_path).unwrap();
                     assert_eq!(stdout, t.want_out, "test {}", t.name);
