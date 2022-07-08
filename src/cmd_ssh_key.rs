@@ -173,9 +173,11 @@ fn parse_algorithm(algorithm: &str) -> Result<Algorithm> {
         "rsa" => Ok(Algorithm::Rsa {
             hash: Default::default(),
         }),
-        _ => Err(anyhow!("supported types are `ecdsa`, `ed25512`, and `rsa`")),
+        _ => Err(anyhow!("supported types are `ecdsa`, `ed25519`, and `rsa`")),
     }
 }
+
+const DEFAULT_RSA_KEY_SIZE: usize = 3072;
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyGenerate {
@@ -201,7 +203,7 @@ impl crate::cmd::Command for CmdSSHKeyGenerate {
             }
             Algorithm::Rsa { .. } => {
                 // Generating large RSA keys can be quite slow, so use a spinner
-                let bits = self.key_size.unwrap_or(3072);
+                let bits = self.key_size.unwrap_or(DEFAULT_RSA_KEY_SIZE);
                 let spinner = ctx
                     .io
                     .start_process_indicator_with_label(&format!(" Generating {} bit RSA key", bits));
