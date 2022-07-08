@@ -51,7 +51,7 @@ slog-async = "2"
 slog-scope = "4"
 slog-stdlog = "4"
 slog-term = "2"
-ssh-key = { version = "^0.4.2", features = ["ed25519", "p256", "rsa"] }
+ssh-key = { version = "^0.4.2", features = ["encryption", "ed25519", "p256", "rsa"] }
 tabwriter = "^1.2.1"
 tabled = { version = "^0.5.0", features = ["color"] }
 termbg = "^0.4.0"

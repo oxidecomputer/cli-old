@@ -149,6 +149,12 @@ pub struct CmdSSHKeyGenerate {
     #[clap(long, short, default_value_t)]
     pub comment: String,
 
+    /// Password for encrypting the private key. An empty password
+    /// creates an unencrypted private key. Note that there is NO WAY
+    /// to recover a lost password.
+    #[clap(long, short)]
+    pub password: Option<String>,
+
     /// The name of the SSH key.
     #[clap(long, short)]
     pub name: Option<String>,
@@ -174,7 +180,7 @@ fn parse_algorithm(algorithm: &str) -> Result<Algorithm> {
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdSSHKeyGenerate {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
-        let private_key = match self.key_type {
+        let mut private_key = match self.key_type {
             Algorithm::Ecdsa { mut curve } => {
                 // Note that ssh_key can currently only generate P256 keys
                 if let Some(bits) = self.key_size {
@@ -185,12 +191,12 @@ impl crate::cmd::Command for CmdSSHKeyGenerate {
                         _ => return Err(anyhow!("ECDSA key length must be 256")),
                     };
                 }
-                let keypair = EcdsaKeypair::random(OsRng, curve)?;
+                let keypair = EcdsaKeypair::random(&mut OsRng, curve)?;
                 PrivateKey::new(KeypairData::Ecdsa(keypair), &self.comment)?
             }
             Algorithm::Ed25519 => {
                 // Ed255129 keys are always fixed length, so ignore key_size
-                let keypair = Ed25519Keypair::random(OsRng);
+                let keypair = Ed25519Keypair::random(&mut OsRng);
                 PrivateKey::new(KeypairData::Ed25519(keypair), &self.comment)?
             }
             Algorithm::Rsa { .. } => {
@@ -199,18 +205,34 @@ impl crate::cmd::Command for CmdSSHKeyGenerate {
                 let spinner = ctx
                     .io
                     .start_process_indicator_with_label(&format!(" Generating {} bit RSA key", bits));
-                let keypair = RsaKeypair::random(OsRng, bits)?;
+                let keypair = RsaKeypair::random(&mut OsRng, bits)?;
                 spinner.map(|spinner| spinner.stop());
                 PrivateKey::new(KeypairData::Rsa(keypair), &self.comment)?
             }
             _ => unimplemented!("generate a random {} key", self.key_type),
         };
+
+        let password = if let Some(ref password) = self.password {
+            password.clone()
+        } else {
+            dialoguer::Password::new()
+                .allow_empty_password(true)
+                .with_prompt("Enter password (empty for no password)")
+                .with_confirmation("Enter same password again", "Passwords do not match. Please try again.")
+                .interact()?
+        };
+        if !password.is_empty() {
+            private_key = private_key.encrypt(&mut OsRng, password)?;
+        }
+
         private_key.write_openssh_file(&self.private_key_file, LineEnding::default())?;
+        writeln!(ctx.io.out, "Private key saved in {}", self.private_key_file.display())?;
 
         let public_key = private_key.public_key();
         let mut public_key_file = self.private_key_file.clone();
         public_key_file.set_extension("pub");
         public_key.write_openssh_file(&public_key_file)?;
+        writeln!(ctx.io.out, "Public key saved in {}", public_key_file.display())?;
 
         let name = self.name.clone();
         let description = self.description.clone();
