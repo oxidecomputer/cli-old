@@ -255,6 +255,9 @@ mod test {
     use pretty_assertions::assert_eq;
 
     // TODO(https://github.com/oxidecomputer/cli/issues/204): Fix this test.
+    // This test seems to be broken because dl.oxide.computer responds with
+    // <?xml version='1.0' encoding='UTF-8'?><Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>
+    // for any release.
     #[tokio::test]
     #[ignore]
     async fn test_download_binary_to_temp_file() {
@@ -291,9 +294,7 @@ mod test {
         );
     }
 
-    // TODO(https://github.com/oxidecomputer/cli/issues/204): Fix this test.
     #[tokio::test]
-    #[ignore]
     #[serial_test::serial]
     async fn test_check_for_update() {
         let result = super::check_for_update("0.0.1", true).await.unwrap();

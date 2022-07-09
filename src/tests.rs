@@ -104,6 +104,7 @@ impl AsyncTestContext for MainContext {
 }
 
 // TODO(https://github.com/oxidecomputer/cli/issues/204): Fix this test.
+// Currently breaks trying to get `test_sled_id` in the test context setup.
 #[test_context(MainContext)]
 #[ignore]
 #[tokio::test]

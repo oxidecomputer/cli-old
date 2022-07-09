@@ -532,7 +532,6 @@ mod test {
         want_err: String,
     }
 
-    // TODO(https://github.com/oxidecomputer/cli/issues/204): Fix this test.
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     #[serial_test::serial]
     async fn test_cmd_auth() {
