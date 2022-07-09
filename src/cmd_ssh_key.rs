@@ -208,7 +208,9 @@ impl crate::cmd::Command for CmdSSHKeyGenerate {
                     .io
                     .start_process_indicator_with_label(&format!(" Generating {} bit RSA key", bits));
                 let keypair = RsaKeypair::random(&mut OsRng, bits)?;
-                spinner.map(|spinner| spinner.stop());
+                if let Some(spinner) = spinner {
+                    spinner.stop();
+                }
                 PrivateKey::new(KeypairData::Rsa(keypair), &self.comment)?
             }
             _ => unimplemented!("generate a random {} key", self.key_type),
