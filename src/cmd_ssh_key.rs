@@ -435,7 +435,7 @@ mod test {
         }
 
         async fn teardown(self) {
-            /*// Put the original env var back.
+            // Put the original env var back.
             if let Ok(ref val) = self.orig_oxide_host {
                 std::env::set_var("OXIDE_HOST", val);
             } else {
@@ -446,7 +446,7 @@ mod test {
                 std::env::set_var("OXIDE_TOKEN", val);
             } else {
                 std::env::remove_var("OXIDE_TOKEN");
-            }*/
+            }
         }
     }
 
@@ -546,7 +546,7 @@ Public key saved in /tmp/foo.pub
                     assert!(stdout.contains(&t.want_out), "test {}: stdout mismatch", t.name);
                 }
                 Err(err) => {
-                    assert!(false, "test {}: {}", t.name, err.to_string());
+                    assert!(false, "test {}: {}", t.name, err.backtrace());
                 }
             }
         }
