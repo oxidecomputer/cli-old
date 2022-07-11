@@ -59,10 +59,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: start omicron locally
+      - name: Start omicron locally
         shell: bash
         run: |
           make start-omicron
+          docker logs nexus
 
       - name: Run cargo test
         run: |

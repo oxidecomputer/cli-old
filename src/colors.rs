@@ -144,6 +144,7 @@ impl ColorScheme {
 #[cfg(test)]
 mod test {
     use pretty_assertions::assert_eq;
+    use serial_test::serial;
     use test_context::{test_context, TestContext};
 
     use super::*;
@@ -195,7 +196,7 @@ mod test {
 
     #[test_context(Context)]
     #[test]
-    #[serial_test::serial]
+    #[serial]
     fn test_env_color_disabled() {
         let tests = vec![
             TestItem {
@@ -247,6 +248,7 @@ mod test {
 
     #[test_context(Context)]
     #[test]
+    #[serial]
     fn test_env_color_forced() {
         let tests = vec![
             TestItem {
