@@ -10,6 +10,108 @@
     "version": "0.0.1"
   },
   "paths": {
+    "/device/auth": {
+      "post": {
+        "tags": [
+          "hidden"
+        ],
+        "summary": "Start an OAuth 2.0 Device Authorization Grant",
+        "description": "This endpoint is designed to be accessed from an *unauthenticated* API client. It generates and records a `device_code` and `user_code` which must be verified and confirmed prior to a token being granted.",
+        "operationId": "device_auth_request",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceAuthRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/confirm": {
+      "post": {
+        "tags": [
+          "hidden"
+        ],
+        "summary": "Confirm an OAuth 2.0 Device Authorization Grant",
+        "description": "This endpoint is designed to be accessed by the user agent (browser), not the client requesting the token. So we do not actually return the token here; it will be returned in response to the poll on `/device/token`.",
+        "operationId": "device_auth_confirm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceAuthVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Null",
+                  "type": "string",
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/device/token": {
+      "post": {
+        "tags": [
+          "hidden"
+        ],
+        "summary": "Request a device access token",
+        "description": "This endpoint should be polled by the client until the user code is verified and the grant is confirmed.",
+        "operationId": "device_access_token",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceAccessTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/hardware/racks": {
       "get": {
         "tags": [
@@ -694,7 +796,7 @@
         }
       }
     },
-    "/ip-pools/{pool_name}/ranges/delete": {
+    "/ip-pools/{pool_name}/ranges/remove": {
       "post": {
         "tags": [
           "ip-pools"
@@ -829,6 +931,17 @@
             "style": "simple"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "default": {
             "description": "",
@@ -2828,7 +2941,7 @@
         }
       }
     },
-    "/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/serial": {
+    "/organizations/{organization_name}/projects/{project_name}/instances/{instance_name}/serial-console": {
       "get": {
         "tags": [
           "instances"
@@ -3685,7 +3798,7 @@
     "/organizations/{organization_name}/projects/{project_name}/vpcs/{vpc_name}/firewall/rules": {
       "get": {
         "tags": [
-          "firewall"
+          "vpcs"
         ],
         "summary": "List firewall rules for a VPC.",
         "operationId": "vpc_firewall_rules_get",
@@ -3739,7 +3852,7 @@
       },
       "put": {
         "tags": [
-          "firewall"
+          "vpcs"
         ],
         "summary": "Replace the firewall rules for a VPC",
         "operationId": "vpc_firewall_rules_put",
@@ -5744,7 +5857,7 @@
           "silos"
         ],
         "summary": "Create a new SAML identity provider for a silo.",
-        "operationId": "silo_saml_idp_create",
+        "operationId": "silo_saml_idp_fetch",
         "parameters": [
           {
             "in": "path",
@@ -5793,7 +5906,7 @@
           "silos"
         ],
         "summary": "GET a silo's SAML identity provider",
-        "operationId": "silo_saml_idp_fetch",
+        "operationId": "silo_saml_idp_create",
         "parameters": [
           {
             "in": "path",
@@ -5823,6 +5936,105 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SamlIdentityProvider"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/system/user": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "List the built-in system users",
+        "operationId": "system_user_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "description": "Maximum number of items returned by a single call",
+            "schema": {
+              "nullable": true,
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page_token",
+            "description": "Token returned by previous call to retrieve the subsequent page",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "sort_by",
+            "schema": {
+              "$ref": "#/components/schemas/NameSortMode"
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserBuiltinResultsPage"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "x-dropshot-pagination": true
+      }
+    },
+    "/system/user/{user_name}": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Fetch a specific built-in system user",
+        "operationId": "system_user_view",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_name",
+            "description": "The built-in user's unique name.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Name"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserBuiltin"
                 }
               }
             }
@@ -5967,105 +6179,6 @@
         },
         "x-dropshot-pagination": true
       }
-    },
-    "/users_builtin": {
-      "get": {
-        "tags": [
-          "system"
-        ],
-        "summary": "List the built-in system users",
-        "operationId": "builtin_users_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "limit",
-            "description": "Maximum number of items returned by a single call",
-            "schema": {
-              "nullable": true,
-              "type": "integer",
-              "format": "uint32",
-              "minimum": 1
-            },
-            "style": "form"
-          },
-          {
-            "in": "query",
-            "name": "page_token",
-            "description": "Token returned by previous call to retrieve the subsequent page",
-            "schema": {
-              "nullable": true,
-              "type": "string"
-            },
-            "style": "form"
-          },
-          {
-            "in": "query",
-            "name": "sort_by",
-            "schema": {
-              "$ref": "#/components/schemas/NameSortMode"
-            },
-            "style": "form"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserBuiltinResultsPage"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
-          }
-        },
-        "x-dropshot-pagination": true
-      }
-    },
-    "/users_builtin/{user_name}": {
-      "get": {
-        "tags": [
-          "system"
-        ],
-        "summary": "Fetch a specific built-in system user",
-        "operationId": "builtin_users_get_user",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "user_name",
-            "description": "The built-in user's unique name.",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Name"
-            },
-            "style": "simple"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserBuiltin"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
-          }
-        }
-      }
     }
   },
   "components": {
@@ -6127,6 +6240,49 @@
         "required": [
           "private_key",
           "public_cert"
+        ]
+      },
+      "DeviceAccessTokenRequest": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "device_code": {
+            "type": "string"
+          },
+          "grant_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "device_code",
+          "grant_type"
+        ]
+      },
+      "DeviceAuthRequest": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "client_id"
+        ]
+      },
+      "DeviceAuthVerify": {
+        "type": "object",
+        "properties": {
+          "user_code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_code"
         ]
       },
       "Digest": {
@@ -8906,6 +9062,14 @@
             "description": "timestamp when this resource was last modified",
             "type": "string",
             "format": "date-time"
+          },
+          "user_provision_type": {
+            "description": "User provision type",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserProvisionType"
+              }
+            ]
           }
         },
         "required": [
@@ -8914,7 +9078,8 @@
           "id",
           "name",
           "time_created",
-          "time_modified"
+          "time_modified",
+          "user_provision_type"
         ]
       },
       "SiloCreate": {
@@ -8929,12 +9094,16 @@
           },
           "name": {
             "$ref": "#/components/schemas/Name"
+          },
+          "user_provision_type": {
+            "$ref": "#/components/schemas/UserProvisionType"
           }
         },
         "required": [
           "description",
           "discoverable",
-          "name"
+          "name",
+          "user_provision_type"
         ]
       },
       "SiloResultsPage": {
@@ -9317,12 +9486,17 @@
         "description": "Client view of a [`User`]",
         "type": "object",
         "properties": {
+          "display_name": {
+            "description": "Human-readable name that can identify the user",
+            "type": "string"
+          },
           "id": {
             "type": "string",
             "format": "uuid"
           }
         },
         "required": [
+          "display_name",
           "id"
         ]
       },
@@ -9385,6 +9559,14 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "UserProvisionType": {
+        "description": "How users will be provisioned in a silo during authentication.",
+        "type": "string",
+        "enum": [
+          "fixed",
+          "jit"
         ]
       },
       "UserResultsPage": {
@@ -10306,6 +10488,13 @@
       }
     },
     {
+      "name": "hardware",
+      "description": "These operations pertain to hardware inventory and management. Racks are the unit of expansion of an Oxide deployment. Racks are in turn composed of sleds, switches, power supplies, and a cabled backplane.",
+      "externalDocs": {
+        "url": "http://oxide.computer/docs/#xxx"
+      }
+    },
+    {
       "name": "hidden",
       "description": "TODO operations that will not ship to customers",
       "externalDocs": {
@@ -10411,8 +10600,8 @@
       }
     },
     {
-      "name": "silos",
-      "description": "Silos represent a logical partition of users and resources.",
+      "name": "session",
+      "description": "Information pertaining to the current session.",
       "externalDocs": {
         "url": "http://oxide.computer/docs/#xxx"
       }
@@ -10420,6 +10609,13 @@
     {
       "name": "sleds",
       "description": "This tag should be moved into hardware",
+      "externalDocs": {
+        "url": "http://oxide.computer/docs/#xxx"
+      }
+    },
+    {
+      "name": "silos",
+      "description": "Silos represent a logical partition of users and resources.",
       "externalDocs": {
         "url": "http://oxide.computer/docs/#xxx"
       }

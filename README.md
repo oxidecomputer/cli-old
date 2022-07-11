@@ -32,6 +32,9 @@ Updating the API spec is as simple as updating the [`spec.json`](spec.json) file
 you `cargo build`. It likely might need some tender love and care to make it a nice command like the other generated ones
 if it is out of the ordinary.
 
+**Important: Currently we are transitioning to use progenitor as a client generator instead of the current client generator.**
+**This means that as a temporary work around the spec.json file must be copied from oxide.rs and you must make sure all tags don't change**
+
 Only `create`, `edit`, `view/get`, `list`, `delete` commands are generated. The rest are bespoke and any generation lead to something
 that seemed harder to maintain over time. But if you are brave you can try.
 
@@ -73,4 +76,3 @@ Then, simply run `make`. Binaries will be available in `cross/`.
 If you want to only build one of the cross targets, supply the `CROSS_TARGETS` environment variable:
 
     CROSS_TARGETS=x86_64-unknown-linux-musl make
-
