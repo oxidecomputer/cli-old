@@ -407,7 +407,6 @@ mod test {
         cmd: super::SubCommand,
         stdin: String,
         want_out: String,
-        want_err: String,
     }
 
     struct TContext {
@@ -426,8 +425,10 @@ mod test {
             // Set our test values.
             let test_host =
                 std::env::var("OXIDE_TEST_HOST").expect("you need to set OXIDE_TEST_HOST to where the api is running");
-
             let test_token = std::env::var("OXIDE_TEST_TOKEN").expect("OXIDE_TEST_TOKEN is required");
+            assert!(!test_host.is_empty());
+            assert!(!test_token.is_empty());
+
             std::env::set_var("OXIDE_HOST", test_host);
             std::env::set_var("OXIDE_TOKEN", test_token);
 
@@ -464,7 +465,6 @@ mod test {
 
                 stdin: "".to_string(),
                 want_out: "[]".to_string(),
-                want_err: "".to_string(),
             },
             TestItem {
                 name: "generate and add a key".to_string(),
@@ -483,7 +483,6 @@ mod test {
 Public key saved in /tmp/foo.pub
 ✔ Added SSH public key foo: ssh-ed25519 SHA256:"#
                     .to_string(),
-                want_err: "".to_string(),
             },
             TestItem {
                 name: "non-empty key list".to_string(),
@@ -498,7 +497,6 @@ Public key saved in /tmp/foo.pub
   {
     "description": "a freshly generated key","#
                     .to_string(),
-                want_err: "".to_string(),
             },
             TestItem {
                 name: "delete key".to_string(),
@@ -508,7 +506,6 @@ Public key saved in /tmp/foo.pub
 
                 stdin: "".to_string(),
                 want_out: r#"✔ Deleted SSH key foo"#.to_string(),
-                want_err: "".to_string(),
             },
             TestItem {
                 name: "empty key list redux".to_string(),
@@ -520,7 +517,6 @@ Public key saved in /tmp/foo.pub
 
                 stdin: "".to_string(),
                 want_out: "[]".to_string(),
-                want_err: "".to_string(),
             },
         ];
 
@@ -551,14 +547,7 @@ Public key saved in /tmp/foo.pub
                     assert!(stdout.contains(&t.want_out), "test {}: stdout mismatch", t.name);
                 }
                 Err(err) => {
-                    dbg!(&err);
-                    let stdout = std::fs::read_to_string(stdout_path).unwrap();
-                    let stderr = std::fs::read_to_string(stderr_path).unwrap();
-                    assert!(stdout.contains(&t.want_out), "test {}", t.name);
-                    if !err.to_string().contains(&t.want_err) {
-                        assert_eq!(err.to_string(), t.want_err, "test {}: err mismatch", t.name);
-                    }
-                    assert!(stderr.is_empty(), "test {}: {}", t.name, stderr);
+                    assert!(false, "test {}: {}", t.name, err.to_string());
                 }
             }
         }
