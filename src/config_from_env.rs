@@ -70,7 +70,7 @@ impl crate::config::Config for EnvConfig<'_> {
     }
 
     fn default_host_with_source(&self) -> Result<(String, String)> {
-        if let Ok(host) = env::var(OXIDE_HOST) {
+        if let Ok(host) = dbg!(env::var(OXIDE_HOST)) {
             let host = parse_host(&host)?;
             Ok((host.to_string(), OXIDE_HOST.to_string()))
         } else {

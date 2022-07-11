@@ -546,7 +546,7 @@ Public key saved in /tmp/foo.pub
                     assert!(stdout.contains(&t.want_out), "test {}: stdout mismatch", t.name);
                 }
                 Err(err) => {
-                    assert!(false, "test {}: {}", t.name, err.backtrace());
+                    assert!(false, "test {}: {}", t.name, err.to_string());
                 }
             }
         }
