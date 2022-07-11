@@ -184,10 +184,11 @@ impl crate::cmd::Command for CmdSSHKeyGenerate {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
         let mut private_key = match self.key_type {
             Algorithm::Ecdsa { mut curve } => {
-                // Note that ssh_key can currently only generate P256 keys
                 if let Some(bits) = self.key_size {
                     curve = match bits {
                         256 => EcdsaCurve::NistP256,
+                        // Note that ssh_key can currently only generate P256 keys.
+                        // Uncomment the lines below if and when that changes.
                         //384 => EcdsaCurve::NistP384,
                         //521 => EcdsaCurve::NistP521,
                         _ => return Err(anyhow!("ECDSA key length must be 256")),
