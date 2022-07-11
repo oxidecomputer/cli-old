@@ -551,9 +551,10 @@ Public key saved in /tmp/foo.pub
                     assert!(stdout.contains(&t.want_out), "test {}: stdout mismatch", t.name);
                 }
                 Err(err) => {
+                    dbg!(&err);
                     let stdout = std::fs::read_to_string(stdout_path).unwrap();
                     let stderr = std::fs::read_to_string(stderr_path).unwrap();
-                    assert_eq!(stdout, t.want_out, "test {}", t.name);
+                    assert!(stdout.contains(&t.want_out), "test {}", t.name);
                     if !err.to_string().contains(&t.want_err) {
                         assert_eq!(err.to_string(), t.want_err, "test {}: err mismatch", t.name);
                     }
