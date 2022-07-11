@@ -393,7 +393,6 @@ impl crate::cmd::Command for CmdSSHKeySyncFromGithub {
 
 #[cfg(test)]
 mod test {
-    use pretty_assertions::assert_eq;
     use ssh_key::Algorithm;
     use test_context::{test_context, AsyncTestContext};
 
