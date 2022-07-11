@@ -54,7 +54,7 @@ impl Context<'_> {
         // Use the host passed in if it's set.
         // Otherwise, use the default host.
         let host = if hostname.is_empty() {
-            dbg!(self.config.default_host()?)
+            self.config.default_host()?
         } else {
             hostname.to_string()
         };
