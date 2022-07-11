@@ -435,7 +435,7 @@ mod test {
         }
 
         async fn teardown(self) {
-            /*// Put the original env var back.
+            // Put the original env var back.
             if let Ok(ref val) = self.orig_oxide_host {
                 std::env::set_var("OXIDE_HOST", val);
             } else {
@@ -446,12 +446,13 @@ mod test {
                 std::env::set_var("OXIDE_TOKEN", val);
             } else {
                 std::env::remove_var("OXIDE_TOKEN");
-            }*/
+            }
         }
     }
 
     #[test_context(TContext)]
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    #[serial_test::serial]
     async fn test_cmd_ssh_key() {
         let tests: Vec<TestItem> = vec![
             TestItem {
