@@ -1664,7 +1664,7 @@ impl Operation {
                 #[clap(short, long)]
                 pub web: bool,
 
-                /// Output format.
+                /// Display output in json, yaml, or table format.
                 #[clap(long, short)]
                 pub format: Option<crate::types::FormatOutput>,
             }
@@ -1778,7 +1778,7 @@ impl Operation {
                 #[clap(long)]
                 pub paginate: bool,
 
-                /// Output format.
+                /// Display output in json, yaml, or table format.
                 #[clap(long, short)]
                 pub format: Option<crate::types::FormatOutput>,
             }
