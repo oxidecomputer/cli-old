@@ -27,7 +27,7 @@ pub struct CmdImageList {
     #[doc = r" Make additional HTTP requests to fetch all pages."]
     #[clap(long)]
     pub paginate: bool,
-    #[doc = r" Output format."]
+    #[doc = r" Display output in json, yaml, or table format."]
     #[clap(long, short)]
     pub format: Option<crate::types::FormatOutput>,
 }
@@ -261,7 +261,7 @@ pub struct CmdImageView {
     #[doc = "Open the image in the browser."]
     #[clap(short, long)]
     pub web: bool,
-    #[doc = r" Output format."]
+    #[doc = r" Display output in json, yaml, or table format."]
     #[clap(long, short)]
     pub format: Option<crate::types::FormatOutput>,
 }
