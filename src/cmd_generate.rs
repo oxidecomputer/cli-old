@@ -35,32 +35,20 @@ impl crate::cmd::Command for CmdGenerate {
 pub struct JsonArg {
     #[serde(skip_serializing_if = "Option::is_none")]
     short: Option<String>,
-
     #[serde(skip_serializing_if = "Option::is_none")]
     long: Option<String>,
-
     #[serde(skip_serializing_if = "Option::is_none")]
     help: Option<String>,
 }
-
-// impl From<Arg<'_>> for JsonArg {
-//     fn from(arg: Arg) -> Self {
-//         JsonArg {
-//             short: arg.get_short().map(|char| char.to_string()),
-//             long: arg.get_long().map(String::from),
-//         }
-//     }
-// }
 
 /// CLI docs in JSON format
 #[derive(Serialize, Debug)]
 pub struct JsonDoc {
     title: String,
     excerpt: String,
-
     #[serde(skip_serializing_if = "Option::is_none")]
     about: Option<String>,
-
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     args: Vec<JsonArg>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     subcommands: Vec<JsonDoc>,
