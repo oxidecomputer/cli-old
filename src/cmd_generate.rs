@@ -2,6 +2,7 @@ use std::{fs, io::Write};
 
 use anyhow::{Context, Result};
 use clap::{Command, CommandFactory, Parser};
+use serde::Serialize;
 
 /// Generate various documentation files for the oxide command line.
 #[derive(Parser, Debug, Clone)]
@@ -15,6 +16,7 @@ pub struct CmdGenerate {
 enum SubCommand {
     Markdown(CmdGenerateMarkdown),
     ManPages(CmdGenerateManPages),
+    Json(CmdGenerateJson),
 }
 
 #[async_trait::async_trait]
@@ -23,7 +25,71 @@ impl crate::cmd::Command for CmdGenerate {
         match &self.subcmd {
             SubCommand::Markdown(cmd) => cmd.run(ctx).await,
             SubCommand::ManPages(cmd) => cmd.run(ctx).await,
+            SubCommand::Json(cmd) => cmd.run(ctx).await,
         }
+    }
+}
+
+/// CLI docs in JSON format
+#[derive(Serialize, Debug)]
+pub struct JsonDoc {
+    title: String,
+    excerpt: String,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    subcommands: Vec<JsonDoc>,
+}
+
+/// Generate markdown documentation.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdGenerateJson {
+    /// Path directory where you want to output the generated files.
+    #[clap(short = 'D', long, default_value = "")]
+    pub dir: String,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdGenerateJson {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let mut app: Command = crate::Opts::command();
+        app._build_all();
+
+        // Make sure the output directory exists.
+        if !self.dir.is_empty() {
+            fs::create_dir_all(&self.dir).with_context(|| format!("failed to create directory {}", self.dir))?;
+        }
+
+        let title = app.get_name().to_string();
+        let filename = format!("{}.json", title);
+
+        let json = self.generate(ctx, &app)?;
+        let pretty_json = serde_json::to_string_pretty(&json)?;
+
+        if self.dir.is_empty() {
+            writeln!(ctx.io.out, "{}", pretty_json)?;
+        } else {
+            let p = std::path::Path::new(&self.dir).join(filename);
+            let mut file = std::fs::File::create(p)?;
+            file.write_all(pretty_json.as_bytes())?;
+        }
+
+        Ok(())
+    }
+}
+
+impl CmdGenerateJson {
+    fn generate(&self, ctx: &mut crate::context::Context, app: &Command) -> Result<JsonDoc> {
+        let title = app.get_name().to_string().replace('_', " ");
+        let excerpt = app.get_about().unwrap_or_default().to_string();
+
+        Ok(JsonDoc {
+            title,
+            excerpt,
+            subcommands: app
+                .get_subcommands()
+                .filter_map(|subcmd| self.generate(ctx, subcmd).ok())
+                .collect(),
+        })
     }
 }
 
