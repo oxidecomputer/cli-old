@@ -30,11 +30,38 @@ impl crate::cmd::Command for CmdGenerate {
     }
 }
 
+/// Arg to CLI command for the JSON doc
+#[derive(Serialize, Debug)]
+pub struct JsonArg {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    short: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    long: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    help: Option<String>,
+}
+
+// impl From<Arg<'_>> for JsonArg {
+//     fn from(arg: Arg) -> Self {
+//         JsonArg {
+//             short: arg.get_short().map(|char| char.to_string()),
+//             long: arg.get_long().map(String::from),
+//         }
+//     }
+// }
+
 /// CLI docs in JSON format
 #[derive(Serialize, Debug)]
 pub struct JsonDoc {
     title: String,
     excerpt: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    about: Option<String>,
+
+    args: Vec<JsonArg>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     subcommands: Vec<JsonDoc>,
 }
@@ -78,14 +105,24 @@ impl crate::cmd::Command for CmdGenerateJson {
 }
 
 impl CmdGenerateJson {
-    fn generate(&self, ctx: &mut crate::context::Context, app: &Command) -> Result<JsonDoc> {
-        let title = app.get_name().to_string().replace('_', " ");
-        let excerpt = app.get_about().unwrap_or_default().to_string();
+    fn generate(&self, ctx: &mut crate::context::Context, cmd: &Command) -> Result<JsonDoc> {
+        let title = cmd.get_name().to_string().replace('_', " ");
+        let excerpt = cmd.get_about().unwrap_or_default().to_string();
 
         Ok(JsonDoc {
             title,
             excerpt,
-            subcommands: app
+            about: cmd.get_long_about().map(String::from),
+            args: cmd
+                .get_arguments()
+                .filter(|arg| arg.get_short().is_some() || arg.get_long().is_some())
+                .map(|arg| JsonArg {
+                    short: arg.get_short().map(|char| char.to_string()),
+                    long: arg.get_long().map(String::from),
+                    help: arg.get_help().map(String::from),
+                })
+                .collect(),
+            subcommands: cmd
                 .get_subcommands()
                 .filter_map(|subcmd| self.generate(ctx, subcmd).ok())
                 .collect(),
