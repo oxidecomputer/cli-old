@@ -292,10 +292,7 @@ fn test_app() -> clap::Command<'static> {
 mod test {
     use pretty_assertions::assert_eq;
 
-    use crate::{
-        cmd::Command,
-        cmd_generate::{JsonArg, JsonDoc},
-    };
+    use crate::cmd::Command;
 
     #[test]
     fn test_generate_json() {
@@ -312,115 +309,100 @@ mod test {
         let cmd = crate::cmd_generate::CmdGenerateJson { dir: "".to_string() };
         let app = crate::cmd_generate::test_app();
 
+        let json = cmd.generate(&mut ctx, &app).unwrap();
+
         assert_eq!(
-            cmd.generate(&mut ctx, &app).unwrap(),
-            JsonDoc {
-                title: "git".to_string(),
-                excerpt: "A fictional versioning CLI".to_string(),
-                about: None,
-                args: vec![
-                    JsonArg {
-                        short: None,
-                        long: Some("help".to_string()),
-                        help: Some("Print help information".to_string()),
-                    },
-                    JsonArg {
-                        short: None,
-                        long: Some("version".to_string()),
-                        help: Some("Print version information".to_string()),
-                    },
-                ],
-                subcommands: vec![
-                    JsonDoc {
-                        title: "clone".to_string(),
-                        excerpt: "Clones repos".to_string(),
-                        about: None,
-                        args: vec![
-                            JsonArg {
-                                short: None,
-                                long: Some("help".to_string()),
-                                help: Some("Print help information".to_string()),
-                            },
-                            JsonArg {
-                                short: None,
-                                long: Some("version".to_string()),
-                                help: Some("Print version information".to_string()),
-                            },
-                        ],
-                        subcommands: vec![],
-                    },
-                    JsonDoc {
-                        title: "push".to_string(),
-                        excerpt: "pushes things".to_string(),
-                        about: None,
-                        args: vec![
-                            JsonArg {
-                                short: None,
-                                long: Some("help".to_string()),
-                                help: Some("Print help information".to_string()),
-                            },
-                            JsonArg {
-                                short: None,
-                                long: Some("version".to_string()),
-                                help: Some("Print version information".to_string()),
-                            },
-                        ],
-                        subcommands: vec![],
-                    },
-                    JsonDoc {
-                        title: "add".to_string(),
-                        excerpt: "adds things".to_string(),
-                        about: None,
-                        args: vec![
-                            JsonArg {
-                                short: None,
-                                long: Some("help".to_string()),
-                                help: Some("Print help information".to_string()),
-                            },
-                            JsonArg {
-                                short: None,
-                                long: Some("version".to_string()),
-                                help: Some("Print version information".to_string()),
-                            },
-                        ],
-                        subcommands: vec![JsonDoc {
-                            title: "new".to_string(),
-                            excerpt: "subcommand for adding new stuff".to_string(),
-                            about: None,
-                            args: vec![
-                                JsonArg {
-                                    short: None,
-                                    long: Some("help".to_string()),
-                                    help: Some("Print help information".to_string()),
-                                },
-                                JsonArg {
-                                    short: None,
-                                    long: Some("version".to_string()),
-                                    help: Some("Print version information".to_string()),
-                                },
-                            ],
-                            subcommands: vec![JsonDoc {
-                                title: "foo".to_string(),
-                                excerpt: "sub subcommand".to_string(),
-                                about: None,
-                                args: vec![
-                                    JsonArg {
-                                        short: None,
-                                        long: Some("help".to_string()),
-                                        help: Some("Print help information".to_string()),
-                                    },
-                                    JsonArg {
-                                        short: None,
-                                        long: Some("version".to_string()),
-                                        help: Some("Print version information".to_string()),
-                                    },
-                                ],
-                                subcommands: vec![],
-                            },],
-                        },],
-                    },
-                ],
+            serde_json::to_string_pretty(&json).unwrap(),
+            r#"{
+  "title": "git",
+  "excerpt": "A fictional versioning CLI",
+  "args": [
+    {
+      "long": "help",
+      "help": "Print help information"
+    },
+    {
+      "long": "version",
+      "help": "Print version information"
+    }
+  ],
+  "subcommands": [
+    {
+      "title": "clone",
+      "excerpt": "Clones repos",
+      "args": [
+        {
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "long": "version",
+          "help": "Print version information"
+        }
+      ]
+    },
+    {
+      "title": "push",
+      "excerpt": "pushes things",
+      "args": [
+        {
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "long": "version",
+          "help": "Print version information"
+        }
+      ]
+    },
+    {
+      "title": "add",
+      "excerpt": "adds things",
+      "args": [
+        {
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "long": "version",
+          "help": "Print version information"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "new",
+          "excerpt": "subcommand for adding new stuff",
+          "args": [
+            {
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "long": "version",
+              "help": "Print version information"
             }
+          ],
+          "subcommands": [
+            {
+              "title": "foo",
+              "excerpt": "sub subcommand",
+              "args": [
+                {
+                  "long": "help",
+                  "help": "Print help information"
+                },
+                {
+                  "long": "version",
+                  "help": "Print version information"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}"#
         );
     }
 
