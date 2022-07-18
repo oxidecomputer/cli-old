@@ -31,7 +31,7 @@ impl crate::cmd::Command for CmdGenerate {
 }
 
 /// Arg to CLI command for the JSON doc
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 pub struct JsonArg {
     #[serde(skip_serializing_if = "Option::is_none")]
     short: Option<String>,
@@ -42,7 +42,7 @@ pub struct JsonArg {
 }
 
 /// CLI docs in JSON format
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 pub struct JsonDoc {
     title: String,
     excerpt: String,
@@ -292,7 +292,137 @@ fn test_app() -> clap::Command<'static> {
 mod test {
     use pretty_assertions::assert_eq;
 
-    use crate::cmd::Command;
+    use crate::{
+        cmd::Command,
+        cmd_generate::{JsonArg, JsonDoc},
+    };
+
+    #[test]
+    fn test_generate_json() {
+        let mut config = crate::config::new_blank_config().unwrap();
+        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
+
+        let (io, _stdout_path, _stderr_path) = crate::iostreams::IoStreams::test();
+        let mut ctx = crate::context::Context {
+            config: &mut c,
+            io,
+            debug: false,
+        };
+
+        let cmd = crate::cmd_generate::CmdGenerateJson { dir: "".to_string() };
+        let app = crate::cmd_generate::test_app();
+
+        assert_eq!(
+            cmd.generate(&mut ctx, &app).unwrap(),
+            JsonDoc {
+                title: "git".to_string(),
+                excerpt: "A fictional versioning CLI".to_string(),
+                about: None,
+                args: vec![
+                    JsonArg {
+                        short: None,
+                        long: Some("help".to_string()),
+                        help: Some("Print help information".to_string()),
+                    },
+                    JsonArg {
+                        short: None,
+                        long: Some("version".to_string()),
+                        help: Some("Print version information".to_string()),
+                    },
+                ],
+                subcommands: vec![
+                    JsonDoc {
+                        title: "clone".to_string(),
+                        excerpt: "Clones repos".to_string(),
+                        about: None,
+                        args: vec![
+                            JsonArg {
+                                short: None,
+                                long: Some("help".to_string()),
+                                help: Some("Print help information".to_string()),
+                            },
+                            JsonArg {
+                                short: None,
+                                long: Some("version".to_string()),
+                                help: Some("Print version information".to_string()),
+                            },
+                        ],
+                        subcommands: vec![],
+                    },
+                    JsonDoc {
+                        title: "push".to_string(),
+                        excerpt: "pushes things".to_string(),
+                        about: None,
+                        args: vec![
+                            JsonArg {
+                                short: None,
+                                long: Some("help".to_string()),
+                                help: Some("Print help information".to_string()),
+                            },
+                            JsonArg {
+                                short: None,
+                                long: Some("version".to_string()),
+                                help: Some("Print version information".to_string()),
+                            },
+                        ],
+                        subcommands: vec![],
+                    },
+                    JsonDoc {
+                        title: "add".to_string(),
+                        excerpt: "adds things".to_string(),
+                        about: None,
+                        args: vec![
+                            JsonArg {
+                                short: None,
+                                long: Some("help".to_string()),
+                                help: Some("Print help information".to_string()),
+                            },
+                            JsonArg {
+                                short: None,
+                                long: Some("version".to_string()),
+                                help: Some("Print version information".to_string()),
+                            },
+                        ],
+                        subcommands: vec![JsonDoc {
+                            title: "new".to_string(),
+                            excerpt: "subcommand for adding new stuff".to_string(),
+                            about: None,
+                            args: vec![
+                                JsonArg {
+                                    short: None,
+                                    long: Some("help".to_string()),
+                                    help: Some("Print help information".to_string()),
+                                },
+                                JsonArg {
+                                    short: None,
+                                    long: Some("version".to_string()),
+                                    help: Some("Print version information".to_string()),
+                                },
+                            ],
+                            subcommands: vec![JsonDoc {
+                                title: "foo".to_string(),
+                                excerpt: "sub subcommand".to_string(),
+                                about: None,
+                                args: vec![
+                                    JsonArg {
+                                        short: None,
+                                        long: Some("help".to_string()),
+                                        help: Some("Print help information".to_string()),
+                                    },
+                                    JsonArg {
+                                        short: None,
+                                        long: Some("version".to_string()),
+                                        help: Some("Print version information".to_string()),
+                                    },
+                                ],
+                                subcommands: vec![],
+                            },],
+                        },],
+                    },
+                ],
+            }
+        );
+    }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_generate_markdown() {
