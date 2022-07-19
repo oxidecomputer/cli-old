@@ -1746,6 +1746,7 @@ dependencies = [
  "data-encoding",
  "dialoguer",
  "dirs",
+ "expectorate",
  "futures",
  "git_rev",
  "heck 0.4.0",
@@ -1776,6 +1777,7 @@ dependencies = [
  "slog-stdlog",
  "slog-term",
  "ssh-key",
+ "subprocess",
  "tabled",
  "tabwriter",
  "tempfile",
@@ -2787,6 +2789,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "subprocess"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c2e86926081dda636c546d8c5e641661049d7562a68f5488be4a1f7f66f6086"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]

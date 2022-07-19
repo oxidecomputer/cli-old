@@ -85,7 +85,7 @@ impl crate::cmd::Command for CmdGenerateJson {
         } else {
             let p = std::path::Path::new(&self.dir).join(filename);
             let mut file = std::fs::File::create(p)?;
-            file.write_all(pretty_json.as_bytes())?;
+            write!(file, "{}\n", pretty_json)?;
         }
 
         Ok(())
@@ -290,120 +290,21 @@ fn test_app() -> clap::Command<'static> {
 
 #[cfg(test)]
 mod test {
+    use expectorate::assert_contents;
     use pretty_assertions::assert_eq;
+    use subprocess::{Exec, Redirection};
 
     use crate::cmd::Command;
 
+    /// Keep `docs/oxide.json` up to date. It's used by the docs site.
     #[test]
     fn test_generate_json() {
-        let mut config = crate::config::new_blank_config().unwrap();
-        let mut c = crate::config_from_env::EnvConfig::inherit_env(&mut config);
-
-        let (io, _stdout_path, _stderr_path) = crate::iostreams::IoStreams::test();
-        let mut ctx = crate::context::Context {
-            config: &mut c,
-            io,
-            debug: false,
-        };
-
-        let cmd = crate::cmd_generate::CmdGenerateJson { dir: "".to_string() };
-        let app = crate::cmd_generate::test_app();
-
-        let json = cmd.generate(&mut ctx, &app).unwrap();
-
-        assert_eq!(
-            serde_json::to_string_pretty(&json).unwrap(),
-            r#"{
-  "title": "git",
-  "excerpt": "A fictional versioning CLI",
-  "args": [
-    {
-      "long": "help",
-      "help": "Print help information"
-    },
-    {
-      "long": "version",
-      "help": "Print version information"
-    }
-  ],
-  "subcommands": [
-    {
-      "title": "clone",
-      "excerpt": "Clones repos",
-      "args": [
-        {
-          "long": "help",
-          "help": "Print help information"
-        },
-        {
-          "long": "version",
-          "help": "Print version information"
-        }
-      ]
-    },
-    {
-      "title": "push",
-      "excerpt": "pushes things",
-      "args": [
-        {
-          "long": "help",
-          "help": "Print help information"
-        },
-        {
-          "long": "version",
-          "help": "Print version information"
-        }
-      ]
-    },
-    {
-      "title": "add",
-      "excerpt": "adds things",
-      "args": [
-        {
-          "long": "help",
-          "help": "Print help information"
-        },
-        {
-          "long": "version",
-          "help": "Print version information"
-        }
-      ],
-      "subcommands": [
-        {
-          "title": "new",
-          "excerpt": "subcommand for adding new stuff",
-          "args": [
-            {
-              "long": "help",
-              "help": "Print help information"
-            },
-            {
-              "long": "version",
-              "help": "Print version information"
-            }
-          ],
-          "subcommands": [
-            {
-              "title": "foo",
-              "excerpt": "sub subcommand",
-              "args": [
-                {
-                  "long": "help",
-                  "help": "Print help information"
-                },
-                {
-                  "long": "version",
-                  "help": "Print version information"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}"#
-        );
+        let output = Exec::shell("cargo run -- generate json")
+            .stdout(Redirection::Pipe)
+            .capture()
+            .unwrap()
+            .stdout_str();
+        assert_contents("docs/oxide.json", &output);
     }
 
     #[tokio::test(flavor = "multi_thread")]
