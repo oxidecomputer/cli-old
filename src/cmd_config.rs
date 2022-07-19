@@ -7,8 +7,6 @@ use clap::Parser;
 /// Current respected settings:
 /// - editor: the text editor program to use for authoring text
 /// - prompt: toggle interactive prompting in the terminal (default: "enabled")
-// Remove
-// /// - pager: the terminal pager program to send standard output to
 /// - browser: the web browser to use for opening URLs
 /// - format: the formatting style for command output
 #[derive(Parser, Debug, Clone)]
