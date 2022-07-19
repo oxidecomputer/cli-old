@@ -76,3 +76,9 @@ Then, simply run `make`. Binaries will be available in `cross/`.
 If you want to only build one of the cross targets, supply the `CROSS_TARGETS` environment variable:
 
     CROSS_TARGETS=x86_64-unknown-linux-musl make
+
+### Docs
+
+The data powering the CLI docs at [docs.oxide.computer/cli](https://docs.oxide.computer/cli) is produced by the `oxide generate` CLI command. This command takes a positional argument specifying the output format. The options are `json`, `markdown`, and `man-pages`. `json` produces a single file, while `markdown` and `man-pages` produce a file for every command and subcommand.
+
+We version a copy of the generated JSON in this repo at [docs/oxide.json](docs/oxide.json) so any revision can be fetched by the docs site at build time. The test `test_generate_json` will fail if `docs/oxide.json` has not been updated with the CLI changes on a given branch. To update the file, run `cargo run -- generate json -D docs` or run `test_generate_json` with `EXPECTORATE=overwrite` set.
