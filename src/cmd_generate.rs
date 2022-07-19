@@ -31,7 +31,7 @@ impl crate::cmd::Command for CmdGenerate {
 }
 
 /// Arg to CLI command for the JSON doc
-#[derive(Serialize, Debug, PartialEq)]
+#[derive(Serialize, Debug, PartialEq, Eq)]
 pub struct JsonArg {
     #[serde(skip_serializing_if = "Option::is_none")]
     short: Option<String>,
@@ -42,7 +42,7 @@ pub struct JsonArg {
 }
 
 /// CLI docs in JSON format
-#[derive(Serialize, Debug, PartialEq)]
+#[derive(Serialize, Debug, PartialEq, Eq)]
 pub struct JsonDoc {
     title: String,
     excerpt: String,
@@ -85,7 +85,7 @@ impl crate::cmd::Command for CmdGenerateJson {
         } else {
             let p = std::path::Path::new(&self.dir).join(filename);
             let mut file = std::fs::File::create(p)?;
-            write!(file, "{}\n", pretty_json)?;
+            writeln!(file, "{}", pretty_json)?;
         }
 
         Ok(())
