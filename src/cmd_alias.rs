@@ -228,23 +228,18 @@ pub fn valid_command(args: &str) -> bool {
         }
 
         match subcmd.clone().try_get_matches_from(args) {
-            Ok(_) => {
-                // If we get here, we have a valid command.
-                return true;
-            }
+            // If we get here, we have a valid command.
+            Ok(_) => return true,
+            // These come from here: https://docs.rs/clap/latest/clap/enum.ErrorKind.html#variant.DisplayHelp
+            // We basically want to ignore any errors that are valid commands but invalid args.
             Err(err) => {
-                return match err.kind() {
-                    // These come from here: https://docs.rs/clap/latest/clap/enum.ErrorKind.html#variant.DisplayHelp
-                    // We basically want to ignore any errors that are valid commands but invalid args.
-                    clap::ErrorKind::DisplayHelp => true,
-                    clap::ErrorKind::DisplayVersion => true,
-                    clap::ErrorKind::MissingRequiredArgument => true,
-                    clap::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand => true,
-                    _ => {
-                        // If we get here, we have an invalid command.
-                        false
-                    }
-                };
+                return matches!(
+                    err.kind(),
+                    clap::ErrorKind::DisplayHelp
+                        | clap::ErrorKind::DisplayVersion
+                        | clap::ErrorKind::MissingRequiredArgument
+                        | clap::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand
+                )
             }
         }
     }

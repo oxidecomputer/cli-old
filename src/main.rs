@@ -282,10 +282,10 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         let scope_guard = slog_scope::set_global_logger(logger);
         scope_guard.cancel_reset();
 
-        let _log_guard = slog_stdlog::init_with_level(log::Level::Debug).unwrap();
+        slog_stdlog::init_with_level(log::Level::Debug).unwrap();
     }
 
-    let result = match opts.subcmd {
+    match opts.subcmd {
         SubCommand::Alias(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Api(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Auth(cmd) => run_cmd(&cmd, ctx).await,
@@ -309,9 +309,7 @@ async fn do_main(mut args: Vec<String>, ctx: &mut crate::context::Context<'_>) -
         SubCommand::Update(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Version(cmd) => run_cmd(&cmd, ctx).await,
         SubCommand::Vpc(cmd) => run_cmd(&cmd, ctx).await,
-    };
-
-    result
+    }
 }
 
 async fn run_cmd(cmd: &impl crate::cmd::Command, ctx: &mut context::Context<'_>) -> Result<i32> {

@@ -13,7 +13,7 @@ pub struct CmdOpen {
 }
 
 /// The type of shortcut to open.
-#[derive(PartialEq, Debug, Clone, FromStr, Display)]
+#[derive(PartialEq, Eq, Debug, Clone, FromStr, Display)]
 #[display(style = "kebab-case")]
 pub enum OpenShortcut {
     /// Open the Oxide documentation in your browser.
