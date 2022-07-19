@@ -54,7 +54,7 @@ pub struct JsonDoc {
     subcommands: Vec<JsonDoc>,
 }
 
-/// Generate markdown documentation.
+/// Generate CLI docs in a single JSON file.
 #[derive(Parser, Debug, Clone)]
 #[clap(verbatim_doc_comment)]
 pub struct CmdGenerateJson {

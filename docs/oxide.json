@@ -685,7 +685,7 @@
         },
         {
           "title": "json",
-          "excerpt": "Generate markdown documentation.",
+          "excerpt": "Generate CLI docs in a single JSON file.",
           "args": [
             {
               "short": "D",
