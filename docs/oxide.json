@@ -1,0 +1,3498 @@
+{
+  "title": "oxide",
+  "excerpt": "Work seamlessly with Oxide from the command line",
+  "about": "Work seamlessly with Oxide from the command line.\n\nEnvironment variables that can be used with oxide. Additionally to those listed below, some flags have a corresponding environment variable. For example, most of the time, the `--organization,-o` flag is mapped to the `OXIDE_ORG` environment variable.\n\nOXIDE_TOKEN: an authentication token for Oxide API requests. Setting this avoids being prompted to authenticate and takes precedence over previously stored credentials.\n\nOXIDE_HOST: specify the Oxide hostname for commands that would otherwise assume the \"api.oxide.computer\" host.\n\nOXIDE_BROWSER, BROWSER (in order of precedence): the web browser to use for opening links.\n\nDEBUG: set to any value to enable verbose output to standard error.\n\nNO_COLOR: set to any value to avoid printing ANSI escape sequences for color output.\n\nCLICOLOR: set to \"0\" to disable printing ANSI colors in output.\n\nCLICOLOR_FORCE: set to a value other than \"0\" to keep ANSI colors in output even when the output is piped.\n\nOXIDE_FORCE_TTY: set to any value to force terminal-style output even when the output is redirected. When the value is a number, it is interpreted as the number of columns available in the viewport. When the value is a percentage, it will be applied against the number of columns available in the current viewport.\n\nOXIDE_NO_UPDATE_NOTIFIER: set to any value to disable update notifications. By default, oxide checks for new releases once every 24 hours and displays an upgrade notice on standard error if a newer version was found.\n\nOXIDE_CONFIG_DIR: the directory where oxide will store configuration files. Default: \"$XDG_CONFIG_HOME/oxide\" or \"$HOME/.config/oxide\".\n\nAuthentication\n\nYou can get an access token running `oxide auth login`. This will contact `OXIDE_HOST` and attempt an OAuth 2.0 Device Authorization Grant. The CLI will attempt to open a browser window with which you can login (via SAML or other IdP method) and type in or verify the user code printed in the terminal. After a successful login and code verification, a token associated with the logged-in user will be granted and stored in the config file.",
+  "args": [
+    {
+      "short": "h",
+      "long": "help",
+      "help": "Print help information"
+    },
+    {
+      "short": "V",
+      "long": "version",
+      "help": "Print version information"
+    },
+    {
+      "short": "d",
+      "long": "debug",
+      "help": "Print debug info"
+    }
+  ],
+  "subcommands": [
+    {
+      "title": "alias",
+      "excerpt": "Create command shortcuts.",
+      "about": "Create command shortcuts.\n\nAliases can be used to make shortcuts for oxide commands or to compose multiple commands.\nRun \"oxide help alias set\" to learn more.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "set",
+          "excerpt": "Create a shortcut for an oxide command.",
+          "about": "Create a shortcut for an oxide command.\n\nDefine a word that will expand to a full oxide command when invoked.\n\nThe expansion may specify additional arguments and flags. If the expansion includes\npositional placeholders such as \"$1\", extra arguments that follow the alias will be\ninserted appropriately. Otherwise, extra arguments will be appended to the expanded\ncommand.\n\nUse \"-\" as expansion argument to read the expansion string from standard input. This\nis useful to avoid quoting issues when defining expansions.\n\nIf the expansion starts with \"!\" or if \"--shell\" was given, the expansion is a shell\nexpression that will be evaluated through the \"sh\" interpreter when the alias is\ninvoked. This allows for chaining multiple commands via piping and redirection.",
+          "args": [
+            {
+              "short": "s",
+              "long": "shell",
+              "help": "Declare an alias to be passed through a shell interpreter"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete an alias.",
+          "args": [
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "list",
+          "excerpt": "List your aliases.",
+          "about": "List your aliases.\n\nThis command prints out all of the aliases oxide is configured to use.",
+          "args": [
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "api",
+      "excerpt": "Makes an authenticated HTTP request to the Oxide API and prints the response.",
+      "about": "Makes an authenticated HTTP request to the Oxide API and prints the response.\n\nThe endpoint argument should be a path of a Oxide API endpoint.\n\nThe default HTTP request method is \"GET\" normally and \"POST\" if any parameters\nwere added. Override the method with `--method`.\n\nPass one or more `-f/--raw-field` values in \"key=value\" format to add static string\nparameters to the request payload. To add non-string or otherwise dynamic values, see\n`--field` below. Note that adding request parameters will automatically switch the\nrequest method to POST. To send the parameters as a GET query string instead, use\n`--method GET`.\n\nThe `-F/--field` flag has magic type conversion based on the format of the value:\n\n- literal values \"true\", \"false\", \"null\", and integer/float numbers get converted to\n  appropriate JSON types;\n- if the value starts with \"@\", the rest of the value is interpreted as a\n  filename to read the value from. Pass \"-\" to read from standard input.\n\nRaw request body may be passed from the outside via a file specified by `--input`.\nPass \"-\" to read from standard input. In this mode, parameters specified via\n`--field` flags are serialized into URL query parameters.\n\nIn `--paginate` mode, all pages of results will sequentially be requested until\nthere are no more pages of results.",
+      "args": [
+        {
+          "short": "X",
+          "long": "method",
+          "help": "The HTTP method for the request"
+        },
+        {
+          "long": "paginate",
+          "help": "Make additional HTTP requests to fetch all pages of results"
+        },
+        {
+          "short": "F",
+          "long": "field",
+          "help": "Add a typed parameter in key=value format"
+        },
+        {
+          "short": "f",
+          "long": "raw-field",
+          "help": "Add a string parameter in key=value format"
+        },
+        {
+          "long": "input",
+          "help": "The file to use as body for the HTTP request (use \"-\" to read from standard input)"
+        },
+        {
+          "short": "i",
+          "long": "include",
+          "help": "Include HTTP response headers in the output"
+        },
+        {
+          "short": "H",
+          "long": "header",
+          "help": "Add a HTTP request header in `key:value` format"
+        },
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ]
+    },
+    {
+      "title": "auth",
+      "excerpt": "Login, logout, and get the status of your authentication.",
+      "about": "Login, logout, and get the status of your authentication.\n\nManage `oxide`'s authentication state.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "login",
+          "excerpt": "Authenticate with an Oxide host.",
+          "about": "Authenticate with an Oxide host.\n\nAlternatively, pass in a token on standard input by using `--with-token`.\n\n    # start interactive setup\n    $ oxide auth login\n\n    # authenticate against a specific Oxide instance by reading the token from a file\n    $ oxide auth login --with-token --host oxide.internal < mytoken.txt\n\n    # authenticate with a specific Oxide instance\n    $ oxide auth login --host oxide.internal\n\n    # authenticate with an insecure Oxide instance (not recommended)\n    $ oxide auth login --host http://oxide.internal",
+          "args": [
+            {
+              "long": "with-token",
+              "help": "Read token from standard input"
+            },
+            {
+              "short": "H",
+              "long": "host",
+              "help": "The host of the Oxide instance to authenticate with. This assumes the instance is an `https://` url, if not otherwise specified as `http://`"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "logout",
+          "excerpt": "Log out of an Oxide host.",
+          "about": "Log out of an Oxide host.\n\nThis command removes the authentication configuration for a host either specified\ninteractively or via `--host`.\n\n    $ oxide auth logout\n    # => select what host to log out of via a prompt\n\n    $ oxide auth logout --host oxide.internal\n    # => log out of specified host",
+          "args": [
+            {
+              "short": "H",
+              "long": "host",
+              "help": "The hostname of the Oxide instance to log out of"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "status",
+          "excerpt": "Verifies and displays information about your authentication state.",
+          "about": "Verifies and displays information about your authentication state.\n\nThis command will test your authentication state for each Oxide host that `oxide`\nknows about and report on any issues.",
+          "args": [
+            {
+              "short": "t",
+              "long": "show-token",
+              "help": "Display the auth token"
+            },
+            {
+              "short": "H",
+              "long": "host",
+              "help": "Check a specific hostname's auth status"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "completion",
+      "excerpt": "Generate shell completion scripts.",
+      "about": "Generate shell completion scripts.\n\nWhen installing Oxide CLI through a package manager, it's possible that\nno additional shell configuration is necessary to gain completion support. For\nHomebrew, see <https://docs.brew.sh/Shell-Completion>.\n\nIf you need to set up completions manually, follow the instructions below. The exact\nconfig file locations might vary based on your system. Make sure to restart your\nshell before testing whether completions are working.\n\n### bash\n\nFirst, ensure that you install `bash-completion` using your package manager.\n\nAfter, add this to your `~/.bash_profile`:\n\n    eval \"$(oxide completion -s bash)\"\n\n### zsh\nGenerate a `_oxide` completion script and put it somewhere in your `$fpath`:\n\n    oxide completion -s zsh > /usr/local/share/zsh/site-functions/_oxide\n\nEnsure that the following is present in your `~/.zshrc`:\n\n    autoload -U compinit\n    compinit -i\n\nZsh version 5.7 or later is recommended.\n\n### fish\n\nGenerate a `oxide.fish` completion script:\n\n    oxide completion -s fish > ~/.config/fish/completions/oxide.fish\n\n### PowerShell\n\nOpen your profile script with:\n\n    mkdir -Path (Split-Path -Parent $profile) -ErrorAction SilentlyContinue\n    notepad $profile\n\nAdd the line and save the file:\n\n    Invoke-Expression -Command $(oxide completion -s powershell | Out-String)",
+      "args": [
+        {
+          "short": "s",
+          "long": "shell",
+          "help": "Shell type: {bash|zsh|fish|powershell}"
+        },
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ]
+    },
+    {
+      "title": "config",
+      "excerpt": "Manage configuration for oxide.",
+      "about": "Manage configuration for oxide.\n\nCurrent respected settings:\n- editor: the text editor program to use for authoring text\n- prompt: toggle interactive prompting in the terminal (default: \"enabled\")\n- browser: the web browser to use for opening URLs\n- format: the formatting style for command output",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "set",
+          "excerpt": "Update configuration with a value for the given key.",
+          "args": [
+            {
+              "short": "H",
+              "long": "host",
+              "help": "Set per-host setting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "list",
+          "excerpt": "Print a list of configuration keys and values.",
+          "args": [
+            {
+              "short": "H",
+              "long": "host",
+              "help": "Get per-host configuration"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "get",
+          "excerpt": "Print the value of a given configuration key.",
+          "args": [
+            {
+              "short": "H",
+              "long": "host",
+              "help": "Get per-host setting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "disk",
+      "excerpt": "Create, list, edit, view, and delete disks.",
+      "about": "Create, list, edit, view, and delete disks.\n\nAdditionally, attach and detach disks to an instance.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "attach",
+          "excerpt": "Attach a disk to an instance.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the disk and instance"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "detach",
+          "excerpt": "Detach a disk from an instance.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the disk and instance"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "edit",
+          "excerpt": "Edit disk settings.",
+          "args": [
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "list",
+          "excerpt": "List disks.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the disks"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "create",
+          "excerpt": "Create a new disk.",
+          "about": "Create a new disk.\n\nTo create a disk interactively, use `oxide disk create` with no arguments.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the disk"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The description for the disk"
+            },
+            {
+              "long": "disk-source",
+              "help": "initial source for this disk"
+            },
+            {
+              "long": "size",
+              "help": "total size of the Disk in bytes"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View disk.",
+          "about": "View disk.\n\nDisplay information about an Oxide disk.\n\nWith `--web`, open the disk in a web browser instead.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the disk"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the disk in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete disk.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project to delete the disk from"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm deletion without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "generate",
+      "excerpt": "Generate various documentation files for the oxide command line.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "markdown",
+          "excerpt": "Generate markdown documentation.",
+          "args": [
+            {
+              "short": "D",
+              "long": "dir",
+              "help": "Path directory where you want to output the generated files"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "man-pages",
+          "excerpt": "Generate manual pages.",
+          "args": [
+            {
+              "short": "D",
+              "long": "dir",
+              "help": "Path directory where you want to output the generated files"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "json",
+          "excerpt": "Generate markdown documentation.",
+          "args": [
+            {
+              "short": "D",
+              "long": "dir",
+              "help": "Path directory where you want to output the generated files"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "image",
+      "excerpt": "Create, list, view, and delete images.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "global",
+          "excerpt": "Create, list, view, and delete global images.",
+          "args": [
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ],
+          "subcommands": [
+            {
+              "title": "list",
+              "excerpt": "List images.",
+              "args": [
+                {
+                  "short": "p",
+                  "long": "project",
+                  "help": "The project that holds the images"
+                },
+                {
+                  "short": "o",
+                  "long": "organization",
+                  "help": "The organization that holds the project"
+                },
+                {
+                  "short": "s",
+                  "long": "sort-by",
+                  "help": "The order in which to sort the results"
+                },
+                {
+                  "short": "l",
+                  "long": "limit",
+                  "help": "Maximum number of items to list"
+                },
+                {
+                  "long": "paginate",
+                  "help": "Make additional HTTP requests to fetch all pages"
+                },
+                {
+                  "short": "f",
+                  "long": "format",
+                  "help": "Display output in json, yaml, or table format"
+                },
+                {
+                  "short": "h",
+                  "long": "help",
+                  "help": "Print help information"
+                },
+                {
+                  "short": "d",
+                  "long": "debug",
+                  "help": "Print debug info"
+                }
+              ]
+            },
+            {
+              "title": "create",
+              "excerpt": "Create a new image.",
+              "about": "Create a new image.\n\nTo create a image interactively, use `oxide image create` with no arguments.",
+              "args": [
+                {
+                  "short": "p",
+                  "long": "project",
+                  "help": "The project that holds the image"
+                },
+                {
+                  "short": "o",
+                  "long": "organization",
+                  "help": "The organization that holds the project"
+                },
+                {
+                  "short": "b",
+                  "long": "block-size",
+                  "help": "block size in bytes"
+                },
+                {
+                  "short": "D",
+                  "long": "description",
+                  "help": "The description for the image"
+                },
+                {
+                  "short": "s",
+                  "long": "source",
+                  "help": "The source of the image's contents"
+                },
+                {
+                  "short": "h",
+                  "long": "help",
+                  "help": "Print help information"
+                },
+                {
+                  "short": "d",
+                  "long": "debug",
+                  "help": "Print debug info"
+                }
+              ]
+            },
+            {
+              "title": "view",
+              "excerpt": "View image.",
+              "about": "View image.\n\nDisplay information about an Oxide image.\n\nWith `--web`, open the image in a web browser instead.",
+              "args": [
+                {
+                  "short": "p",
+                  "long": "project",
+                  "help": "The project that holds the image"
+                },
+                {
+                  "short": "o",
+                  "long": "organization",
+                  "help": "The organization that holds the project"
+                },
+                {
+                  "short": "w",
+                  "long": "web",
+                  "help": "Open the image in the browser"
+                },
+                {
+                  "short": "f",
+                  "long": "format",
+                  "help": "Display output in json, yaml, or table format"
+                },
+                {
+                  "short": "h",
+                  "long": "help",
+                  "help": "Print help information"
+                },
+                {
+                  "short": "d",
+                  "long": "debug",
+                  "help": "Print debug info"
+                }
+              ]
+            },
+            {
+              "title": "delete",
+              "excerpt": "Delete image.",
+              "args": [
+                {
+                  "short": "p",
+                  "long": "project",
+                  "help": "The project to delete the image from"
+                },
+                {
+                  "short": "o",
+                  "long": "organization",
+                  "help": "The organization that holds the project"
+                },
+                {
+                  "long": "confirm",
+                  "help": "Confirm deletion without prompting"
+                },
+                {
+                  "short": "h",
+                  "long": "help",
+                  "help": "Print help information"
+                },
+                {
+                  "short": "d",
+                  "long": "debug",
+                  "help": "Print debug info"
+                }
+              ]
+            },
+            {
+              "title": "help",
+              "excerpt": "Print this message or the help of the given subcommand(s)",
+              "args": [
+                {
+                  "short": "d",
+                  "long": "debug",
+                  "help": "Print debug info"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "list",
+          "excerpt": "List images.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the images"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "create",
+          "excerpt": "Create a new image.",
+          "about": "Create a new image.\n\nTo create a image interactively, use `oxide image create` with no arguments.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the image"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "b",
+              "long": "block-size",
+              "help": "block size in bytes"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The description for the image"
+            },
+            {
+              "short": "s",
+              "long": "source",
+              "help": "The source of the image's contents"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View image.",
+          "about": "View image.\n\nDisplay information about an Oxide image.\n\nWith `--web`, open the image in a web browser instead.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the image"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the image in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete image.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project to delete the image from"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm deletion without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "instance",
+      "excerpt": "Create, list, edit, view, and delete instances.",
+      "about": "Create, list, edit, view, and delete instances.\n\nAdditionally, start, stop, and reboot instances.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "disks",
+          "excerpt": "List the disks attached to an instance.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the instance"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization to view the project"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Output format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "edit",
+          "excerpt": "Edit instance settings.",
+          "args": [
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "ssh",
+          "excerpt": "SSH into an instance.",
+          "about": "SSH into an instance.\n\nThis command is a thin wrapper around the **ssh(1)** command that takes care of\nauthentication and the translation of the instance name into an IP address.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the instance"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "u",
+              "long": "user",
+              "help": "The ssh user. This defaults to `$USER` on the host the command is run on"
+            },
+            {
+              "long": "ssh-flag",
+              "help": "Additional flags to be passed to **ssh(1)**. It is recommended that flags be passed using an assignment operator and quotes. Example: `--ssh-flag \"-L 80:localhost:80\"`"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "start",
+          "excerpt": "Start an instance.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the instance"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "stop",
+          "excerpt": "Stop an instance.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the instance"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm stop without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "reboot",
+          "excerpt": "Reboot an instance.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the instance"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm reboot without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "serial",
+          "excerpt": "Read the buffered data from an instance's serial console.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the instance"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "m",
+              "long": "max-bytes",
+              "help": "The maximum length of bytes to retrieve"
+            },
+            {
+              "short": "b",
+              "long": "byte-offset",
+              "help": "The offset since boot (or if negative, the current end of the buffered data) from which to retrieve output. Defaults to the most recent 16 KiB of serial console output (-16384)"
+            },
+            {
+              "short": "c",
+              "long": "continuous",
+              "help": "Whether to continuously read from the running instance's output"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "list",
+          "excerpt": "List instances.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the instances"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "create",
+          "excerpt": "Create a new instance.",
+          "about": "Create a new instance.\n\nTo create a instance interactively, use `oxide instance create` with no arguments.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the instance"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The description for the instance"
+            },
+            {
+              "long": "disks",
+              "help": "The disks to be created or attached for this instance"
+            },
+            {
+              "long": "hostname",
+              "help": "The hostname that holds the instance"
+            },
+            {
+              "short": "m",
+              "long": "memory",
+              "help": "A count of bytes, typically used either for memory or storage capacity"
+            },
+            {
+              "short": "c",
+              "long": "ncpus",
+              "help": "The number of CPUs in an Instance"
+            },
+            {
+              "short": "n",
+              "long": "network-interfaces",
+              "help": "The network interfaces to be created for this instance"
+            },
+            {
+              "short": "u",
+              "long": "user-data",
+              "help": "User data for instance initialization systems (such as cloud-init). Must be a Base64-encoded string, as specified in RFC 4648 § 4 (+ and / characters with padding). Maximum 32 KiB unencoded data"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View instance.",
+          "about": "View instance.\n\nDisplay information about an Oxide instance.\n\nWith `--web`, open the instance in a web browser instead.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the instance"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the instance in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete instance.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project to delete the instance from"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm deletion without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "open",
+      "excerpt": "Shortcut to open the Oxide documentation or Console in your browser.",
+      "about": "Shortcut to open the Oxide documentation or Console in your browser.\n\nIf no arguments are given, the default is to open the Oxide documentation.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ]
+    },
+    {
+      "title": "org",
+      "excerpt": "Create, list, edit, view, and delete organizations.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "list",
+          "excerpt": "List organizations.",
+          "args": [
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "create",
+          "excerpt": "Create a new organization.",
+          "about": "Create a new organization.\n\nTo create a organization interactively, use `oxide organization create` with no arguments.",
+          "args": [
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The description for the organization"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View organization.",
+          "about": "View organization.\n\nDisplay information about an Oxide organization.\n\nWith `--web`, open the organization in a web browser instead.",
+          "args": [
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the organization in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "edit",
+          "excerpt": "Edit organization settings.",
+          "args": [
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The new description for the organization"
+            },
+            {
+              "short": "n",
+              "long": "name",
+              "help": "The new name for the organization"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete organization.",
+          "args": [
+            {
+              "long": "confirm",
+              "help": "Confirm deletion without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "project",
+      "excerpt": "Create, list, edit, view, and delete projects.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "list",
+          "excerpt": "List projects.",
+          "args": [
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "create",
+          "excerpt": "Create a new project.",
+          "about": "Create a new project.\n\nTo create a project interactively, use `oxide project create` with no arguments.",
+          "args": [
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The description for the project"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View project.",
+          "about": "View project.\n\nDisplay information about an Oxide project.\n\nWith `--web`, open the project in a web browser instead.",
+          "args": [
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the project in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "edit",
+          "excerpt": "Edit project settings.",
+          "args": [
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The new description for the project"
+            },
+            {
+              "short": "n",
+              "long": "name",
+              "help": "The new name for the project"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete project.",
+          "args": [
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm deletion without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "rack",
+      "excerpt": "Manage racks.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "list",
+          "excerpt": "List racks.",
+          "args": [
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View rack.",
+          "about": "View rack.\n\nDisplay information about an Oxide rack.\n\nWith `--web`, open the rack in a web browser instead.",
+          "args": [
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the rack in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "role",
+      "excerpt": "Manage built-in roles.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "list",
+          "excerpt": "List roles.",
+          "args": [
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View role.",
+          "about": "View role.\n\nDisplay information about an Oxide role.\n\nWith `--web`, open the role in a web browser instead.",
+          "args": [
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the role in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "route",
+      "excerpt": "Create, list, edit, view, and delete routes.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "list",
+          "excerpt": "List routes.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the routes"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "r",
+              "long": "router",
+              "help": "The router that holds the routes"
+            },
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the routes"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "create",
+          "excerpt": "Create a new route.",
+          "about": "Create a new route.\n\nTo create a route interactively, use `oxide route create` with no arguments.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the route"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "r",
+              "long": "router",
+              "help": "The router that holds the route"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the route"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The description for the route"
+            },
+            {
+              "long": "destination",
+              "help": "A `RouteDestination` is used to match traffic with a routing rule, on the destination of that traffic"
+            },
+            {
+              "short": "t",
+              "long": "target",
+              "help": "A `RouteTarget` describes the possible locations that traffic matching a route destination can be sent"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View route.",
+          "about": "View route.\n\nDisplay information about an Oxide route.\n\nWith `--web`, open the route in a web browser instead.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the route"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "r",
+              "long": "router",
+              "help": "The router that holds the route"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the route"
+            },
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the route in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "edit",
+          "excerpt": "Edit route settings.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the route"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "r",
+              "long": "router",
+              "help": "The router that holds the route"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the route"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The new description for the route"
+            },
+            {
+              "long": "destination",
+              "help": "A `RouteDestination` is used to match traffic with a routing rule, on the destination of that traffic"
+            },
+            {
+              "short": "n",
+              "long": "name",
+              "help": "The new name for the route"
+            },
+            {
+              "short": "t",
+              "long": "target",
+              "help": "A `RouteTarget` describes the possible locations that traffic matching a route destination can be sent"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete route.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project to delete the route from"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "r",
+              "long": "router",
+              "help": "The router that holds the route"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the route"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm deletion without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "router",
+      "excerpt": "Create, list, edit, view, and delete routers.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "list",
+          "excerpt": "List routers.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the routers"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the routers"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "create",
+          "excerpt": "Create a new router.",
+          "about": "Create a new router.\n\nTo create a router interactively, use `oxide router create` with no arguments.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the router"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the router"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The description for the router"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View router.",
+          "about": "View router.\n\nDisplay information about an Oxide router.\n\nWith `--web`, open the router in a web browser instead.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the router"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the router"
+            },
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the router in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "edit",
+          "excerpt": "Edit router settings.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the router"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the router"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The new description for the router"
+            },
+            {
+              "short": "n",
+              "long": "name",
+              "help": "The new name for the router"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete router.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project to delete the router from"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the router"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm deletion without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "sled",
+      "excerpt": "Manage sleds.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "list",
+          "excerpt": "List sleds.",
+          "args": [
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View sled.",
+          "about": "View sled.\n\nDisplay information about an Oxide sled.\n\nWith `--web`, open the sled in a web browser instead.",
+          "args": [
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the sled in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "snapshot",
+      "excerpt": "Create, list, view, and delete snapshots.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "list",
+          "excerpt": "List snapshots.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the snapshots"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "create",
+          "excerpt": "Create a new snapshot.",
+          "about": "Create a new snapshot.\n\nTo create a snapshot interactively, use `oxide snapshot create` with no arguments.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the snapshot"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The description for the snapshot"
+            },
+            {
+              "long": "disk",
+              "help": "The name of the disk to be snapshotted"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View snapshot.",
+          "about": "View snapshot.\n\nDisplay information about an Oxide snapshot.\n\nWith `--web`, open the snapshot in a web browser instead.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the snapshot"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the snapshot in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete snapshot.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project to delete the snapshot from"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm deletion without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "ssh-key",
+      "excerpt": "Manage SSH keys.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "add",
+          "excerpt": "Add an SSH key to your Oxide account.",
+          "args": [
+            {
+              "short": "n",
+              "long": "name",
+              "help": "The name of the SSH key"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "Description of the SSH key"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete an SSH key from your Oxide account.",
+          "args": [
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "generate",
+          "excerpt": "Generate a new SSH keypair and add the public key to your Oxide account.",
+          "args": [
+            {
+              "short": "t",
+              "long": "type",
+              "help": "SSH key type to generate"
+            },
+            {
+              "short": "b",
+              "long": "bits",
+              "help": "Number of bits in the key to generate"
+            },
+            {
+              "short": "c",
+              "long": "comment",
+              "help": "Comment for the SSH key"
+            },
+            {
+              "short": "p",
+              "long": "password",
+              "help": "Password for encrypting the private key. An empty password creates an unencrypted private key. Note that there is NO WAY to recover a lost password"
+            },
+            {
+              "short": "n",
+              "long": "name",
+              "help": "The name of the SSH key"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "Description of the SSH key"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "list",
+          "excerpt": "List SSH keys in your Oxide account.",
+          "args": [
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of SSH keys to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Output format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "sync-from-github",
+          "excerpt": "Sync your public SSH keys from GitHub to your Oxide account.",
+          "about": "Sync your public SSH keys from GitHub to your Oxide account.\n\nThis command will retrieve your public SSH keys from GitHub and add them\nto your Oxide account.\n\nYou will not need to authenticate with GitHub as your public SSH keys are\npublic information.",
+          "args": [
+            {
+              "long": "overwrite",
+              "help": "Remove any keys from your Oxide account that are not in your GitHub account. This is useful if you want to use your GitHub account as the ultimate source of your SSH keys"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "subnet",
+      "excerpt": "Create, list, edit, view, and delete subnets.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "list",
+          "excerpt": "List subnets.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the subnets"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the subnets"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "create",
+          "excerpt": "Create a new subnet.",
+          "about": "Create a new subnet.\n\nTo create a subnet interactively, use `oxide subnet create` with no arguments.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the subnet"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the subnet"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The description for the subnet"
+            },
+            {
+              "short": "4",
+              "long": "ipv4-block",
+              "help": "The IPv4 address range for this subnet"
+            },
+            {
+              "short": "6",
+              "long": "ipv6-block",
+              "help": "The IPv6 address range for this subnet"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View subnet.",
+          "about": "View subnet.\n\nDisplay information about an Oxide subnet.\n\nWith `--web`, open the subnet in a web browser instead.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the subnet"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the subnet"
+            },
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the subnet in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "edit",
+          "excerpt": "Edit subnet settings.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the subnet"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the subnet"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The new description for the subnet"
+            },
+            {
+              "short": "n",
+              "long": "name",
+              "help": "The new name for the subnet"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete subnet.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project to delete the subnet from"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "v",
+              "long": "vpc",
+              "help": "The VPC that holds the subnet"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm deletion without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "update",
+      "excerpt": "Update the current running binary to the latest version.",
+      "about": "Update the current running binary to the latest version.\n\nThis function will return an error if the current binary is under Homebrew or if\nthe running version is already the latest version.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ]
+    },
+    {
+      "title": "version",
+      "excerpt": "Prints the version of the program.",
+      "args": [
+        {
+          "short": "w",
+          "long": "web",
+          "help": "Open the version in the browser"
+        },
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ]
+    },
+    {
+      "title": "vpc",
+      "excerpt": "Create, list, edit, view, and delete VPCs.",
+      "args": [
+        {
+          "short": "h",
+          "long": "help",
+          "help": "Print help information"
+        },
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ],
+      "subcommands": [
+        {
+          "title": "list",
+          "excerpt": "List VPCs.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the VPCs"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "s",
+              "long": "sort-by",
+              "help": "The order in which to sort the results"
+            },
+            {
+              "short": "l",
+              "long": "limit",
+              "help": "Maximum number of items to list"
+            },
+            {
+              "long": "paginate",
+              "help": "Make additional HTTP requests to fetch all pages"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "create",
+          "excerpt": "Create a new VPC.",
+          "about": "Create a new VPC.\n\nTo create a VPC interactively, use `oxide vpc create` with no arguments.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the VPC"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The description for the VPC"
+            },
+            {
+              "long": "dns-name",
+              "help": "Names must begin with a lower case ASCII letter, be composed exclusively of lowercase ASCII, uppercase ASCII, numbers, and '-', and may not end with a '-'"
+            },
+            {
+              "short": "i",
+              "long": "ipv6-prefix",
+              "help": "The IPv6 prefix for this VPC"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "view",
+          "excerpt": "View VPC.",
+          "about": "View VPC.\n\nDisplay information about an Oxide VPC.\n\nWith `--web`, open the VPC in a web browser instead.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the VPC"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "w",
+              "long": "web",
+              "help": "Open the VPC in the browser"
+            },
+            {
+              "short": "f",
+              "long": "format",
+              "help": "Display output in json, yaml, or table format"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "edit",
+          "excerpt": "Edit VPC settings.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project that holds the VPC"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "short": "D",
+              "long": "description",
+              "help": "The new description for the VPC"
+            },
+            {
+              "long": "dns-name",
+              "help": "The new DNS name for the VPC"
+            },
+            {
+              "short": "n",
+              "long": "name",
+              "help": "The new name for the VPC"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "delete",
+          "excerpt": "Delete VPC.",
+          "args": [
+            {
+              "short": "p",
+              "long": "project",
+              "help": "The project to delete the VPC from"
+            },
+            {
+              "short": "o",
+              "long": "organization",
+              "help": "The organization that holds the project"
+            },
+            {
+              "long": "confirm",
+              "help": "Confirm deletion without prompting"
+            },
+            {
+              "short": "h",
+              "long": "help",
+              "help": "Print help information"
+            },
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        },
+        {
+          "title": "help",
+          "excerpt": "Print this message or the help of the given subcommand(s)",
+          "args": [
+            {
+              "short": "d",
+              "long": "debug",
+              "help": "Print debug info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "help",
+      "excerpt": "Print this message or the help of the given subcommand(s)",
+      "args": [
+        {
+          "short": "d",
+          "long": "debug",
+          "help": "Print debug info"
+        }
+      ]
+    }
+  ]
+}

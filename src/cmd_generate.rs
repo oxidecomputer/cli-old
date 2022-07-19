@@ -2,6 +2,7 @@ use std::{fs, io::Write};
 
 use anyhow::{Context, Result};
 use clap::{Command, CommandFactory, Parser};
+use serde::Serialize;
 
 /// Generate various documentation files for the oxide command line.
 #[derive(Parser, Debug, Clone)]
@@ -15,6 +16,7 @@ pub struct CmdGenerate {
 enum SubCommand {
     Markdown(CmdGenerateMarkdown),
     ManPages(CmdGenerateManPages),
+    Json(CmdGenerateJson),
 }
 
 #[async_trait::async_trait]
@@ -23,7 +25,96 @@ impl crate::cmd::Command for CmdGenerate {
         match &self.subcmd {
             SubCommand::Markdown(cmd) => cmd.run(ctx).await,
             SubCommand::ManPages(cmd) => cmd.run(ctx).await,
+            SubCommand::Json(cmd) => cmd.run(ctx).await,
         }
+    }
+}
+
+/// Arg to CLI command for the JSON doc
+#[derive(Serialize, Debug, PartialEq)]
+pub struct JsonArg {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    short: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    long: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    help: Option<String>,
+}
+
+/// CLI docs in JSON format
+#[derive(Serialize, Debug, PartialEq)]
+pub struct JsonDoc {
+    title: String,
+    excerpt: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    about: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    args: Vec<JsonArg>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    subcommands: Vec<JsonDoc>,
+}
+
+/// Generate markdown documentation.
+#[derive(Parser, Debug, Clone)]
+#[clap(verbatim_doc_comment)]
+pub struct CmdGenerateJson {
+    /// Path directory where you want to output the generated files.
+    #[clap(short = 'D', long, default_value = "")]
+    pub dir: String,
+}
+
+#[async_trait::async_trait]
+impl crate::cmd::Command for CmdGenerateJson {
+    async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        let mut app: Command = crate::Opts::command();
+        app._build_all();
+
+        // Make sure the output directory exists.
+        if !self.dir.is_empty() {
+            fs::create_dir_all(&self.dir).with_context(|| format!("failed to create directory {}", self.dir))?;
+        }
+
+        let title = app.get_name().to_string();
+        let filename = format!("{}.json", title);
+
+        let json = self.generate(ctx, &app)?;
+        let pretty_json = serde_json::to_string_pretty(&json)?;
+
+        if self.dir.is_empty() {
+            writeln!(ctx.io.out, "{}", pretty_json)?;
+        } else {
+            let p = std::path::Path::new(&self.dir).join(filename);
+            let mut file = std::fs::File::create(p)?;
+            write!(file, "{}\n", pretty_json)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl CmdGenerateJson {
+    fn generate(&self, ctx: &mut crate::context::Context, cmd: &Command) -> Result<JsonDoc> {
+        let title = cmd.get_name().to_string().replace('_', " ");
+        let excerpt = cmd.get_about().unwrap_or_default().to_string();
+
+        Ok(JsonDoc {
+            title,
+            excerpt,
+            about: cmd.get_long_about().map(String::from),
+            args: cmd
+                .get_arguments()
+                .filter(|arg| arg.get_short().is_some() || arg.get_long().is_some())
+                .map(|arg| JsonArg {
+                    short: arg.get_short().map(|char| char.to_string()),
+                    long: arg.get_long().map(String::from),
+                    help: arg.get_help().map(String::from),
+                })
+                .collect(),
+            subcommands: cmd
+                .get_subcommands()
+                .filter_map(|subcmd| self.generate(ctx, subcmd).ok())
+                .collect(),
+        })
     }
 }
 
@@ -199,9 +290,22 @@ fn test_app() -> clap::Command<'static> {
 
 #[cfg(test)]
 mod test {
+    use expectorate::assert_contents;
     use pretty_assertions::assert_eq;
+    use subprocess::{Exec, Redirection};
 
     use crate::cmd::Command;
+
+    /// Keep `docs/oxide.json` up to date. It's used by the docs site.
+    #[test]
+    fn test_generate_json() {
+        let output = Exec::shell("cargo run -- generate json")
+            .stdout(Redirection::Pipe)
+            .capture()
+            .unwrap()
+            .stdout_str();
+        assert_contents("docs/oxide.json", &output);
+    }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_generate_markdown() {
