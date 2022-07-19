@@ -30,7 +30,8 @@ jobs:
     name: cargo test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
+      - run: git rev-parse HEAD
       - name: Install latest rust
         uses: actions-rs/toolchain@v1
         with:
