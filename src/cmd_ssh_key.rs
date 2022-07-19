@@ -453,7 +453,7 @@ mod test {
     #[test_context(TContext)]
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     #[serial_test::serial]
-    async fn test_cmd_ssh_key() {
+    async fn test_cmd_ssh_key(_ctx: &mut TContext) {
         let tests: Vec<TestItem> = vec![
             TestItem {
                 name: "empty key list".to_string(),
