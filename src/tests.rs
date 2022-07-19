@@ -222,6 +222,7 @@ async fn test_main(ctx: &mut MainContext) {
             name: "api /session/me".to_string(),
             args: vec!["oxide".to_string(), "api".to_string(), "/session/me".to_string()],
             want_out: r#"{
+  "display_name": "privileged",
   "id": "001de000-05e4-4000-8000-000000004007"
 }"#
             .to_string(),
@@ -233,6 +234,7 @@ async fn test_main(ctx: &mut MainContext) {
             name: "api session/me (no leading /)".to_string(),
             args: vec!["oxide".to_string(), "api".to_string(), "session/me".to_string()],
             want_out: r#"{
+  "display_name": "privileged",
   "id": "001de000-05e4-4000-8000-000000004007"
 }"#
             .to_string(),
@@ -250,6 +252,7 @@ async fn test_main(ctx: &mut MainContext) {
                 "Origin: https://example.com".to_string(),
             ],
             want_out: r#"{
+  "display_name": "privileged",
   "id": "001de000-05e4-4000-8000-000000004007"
 }"#
             .to_string(),
@@ -269,6 +272,7 @@ async fn test_main(ctx: &mut MainContext) {
                 "Another: thing".to_string(),
             ],
             want_out: r#"{
+  "display_name": "privileged",
   "id": "001de000-05e4-4000-8000-000000004007"
 }"#
             .to_string(),
@@ -284,10 +288,7 @@ async fn test_main(ctx: &mut MainContext) {
                 "session/me".to_string(),
                 "--include".to_string(),
             ],
-            want_out: r#"HTTP/1.1 200 OK
-content-length:  "45"
-content-type:    "application/json"
-date:"#
+            want_out: r#"HTTP/1.1 200 OK"#
                 .to_string(),
             want_err: "".to_string(),
             want_code: 0,

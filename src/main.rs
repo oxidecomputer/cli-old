@@ -104,9 +104,6 @@ use slog::Drain;
 ///
 /// DEBUG: set to any value to enable verbose output to standard error.
 ///
-/// OXIDE_PAGER, PAGER (in order of precedence): a terminal paging program to send
-/// standard output to, e.g. "less".
-///
 /// NO_COLOR: set to any value to avoid printing ANSI escape sequences for color output.
 ///
 /// CLICOLOR: set to "0" to disable printing ANSI colors in output.
@@ -125,12 +122,12 @@ use slog::Drain;
 ///
 /// OXIDE_CONFIG_DIR: the directory where oxide will store configuration files.
 /// Default: "$XDG_CONFIG_HOME/oxide" or "$HOME/.config/oxide".
-/// 
+///
 /// Authentication
 ///
 /// You can get an access token running `oxide auth login`. This will contact `OXIDE_HOST`
-/// and attempt an OAuth 2.0 Device Authorization Grant. 
-/// The CLI will attempt to open a browser window with which you can login 
+/// and attempt an OAuth 2.0 Device Authorization Grant.
+/// The CLI will attempt to open a browser window with which you can login
 /// (via SAML or other IdP method) and type in or verify the user code printed in the terminal.
 /// After a successful login and code verification, a token associated with the logged-in
 /// user will be granted and stored in the config file.

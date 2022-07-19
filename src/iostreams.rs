@@ -1,9 +1,5 @@
-use std::{collections::HashMap, env, process::Command};
-
 use anyhow::{anyhow, Result};
 use terminal_size::{terminal_size, Height, Width};
-
-use crate::config_file::get_env_var;
 
 const DEFAULT_WIDTH: i32 = 80;
 
@@ -29,9 +25,6 @@ pub struct IoStreams {
     terminal_width_override: i32,
     tty_size: fn() -> Result<(i32, i32)>,
 
-    pager_command: String,
-    pager_process: Option<std::process::Child>,
-
     never_prompt: bool,
 
     pub tmp_file_override: Option<std::fs::File>,
@@ -53,11 +46,6 @@ impl IoStreams {
     #[allow(dead_code)]
     pub fn detect_terminal_theme(&mut self) -> String {
         if !self.color_enabled() {
-            self.terminal_theme = "none".to_string();
-            return self.terminal_theme.to_string();
-        }
-
-        if self.pager_process.is_some() {
             self.terminal_theme = "none".to_string();
             return self.terminal_theme.to_string();
         }
@@ -143,64 +131,6 @@ impl IoStreams {
         }
 
         atty::is(atty::Stream::Stderr)
-    }
-
-    #[allow(dead_code)]
-    pub fn set_pager(&mut self, pager_command: String) {
-        self.pager_command = pager_command;
-    }
-
-    #[cfg(test)]
-    pub fn get_pager(&self) -> String {
-        self.pager_command.to_string()
-    }
-
-    #[allow(dead_code)]
-    pub fn start_pager(&mut self) -> Result<()> {
-        if self.pager_command.is_empty() || self.pager_command == "cat" || !self.is_stdout_tty() {
-            return Ok(());
-        }
-
-        let pager_args = shlex::split(&self.pager_command).unwrap_or_default();
-        if pager_args.is_empty() {
-            return Err(anyhow!("pager command is empty"));
-        }
-
-        // Remove PAGER from env.
-        let mut filtered_env: HashMap<String, String> = env::vars().filter(|&(ref k, _)| k != "PAGER").collect();
-
-        if !filtered_env.contains_key("LESS") {
-            filtered_env.insert("LESS".to_string(), "FRX".to_string());
-        }
-
-        if !filtered_env.contains_key("LV") {
-            filtered_env.insert("LV".to_string(), "-c".to_string());
-        }
-
-        // TODO: fix this, either make the pager stuff work or remove it everwhere, see
-        // OXIDE_PAGER.
-        let pager_cmd = Command::new(pager_args.first().unwrap())
-            .args(pager_args.iter().skip(1))
-            .env_clear()
-            .envs(&filtered_env)
-            .spawn()
-            .expect("failed to execute pager child");
-
-        self.pager_process = Some(pager_cmd);
-
-        Ok(())
-    }
-
-    #[allow(dead_code)]
-    pub fn stop_pager(&mut self) -> Result<()> {
-        if self.pager_process.is_none() {
-            return Ok(());
-        }
-
-        let mut pager_process = self.pager_process.take().unwrap();
-        let _ = pager_process.kill();
-
-        Ok(())
     }
 
     pub fn can_prompt(&self) -> bool {
@@ -388,9 +318,7 @@ impl IoStreams {
             terminal_width_override: 0,
 
             tty_size,
-            pager_command: get_env_var("PAGER"),
 
-            pager_process: None,
             never_prompt: false,
             tmp_file_override: None,
         };

@@ -7,7 +7,6 @@ use clap::Parser;
 /// Current respected settings:
 /// - editor: the text editor program to use for authoring text
 /// - prompt: toggle interactive prompting in the terminal (default: "enabled")
-/// - pager: the terminal pager program to send standard output to
 /// - browser: the web browser to use for opening URLs
 /// - format: the formatting style for command output
 #[derive(Parser, Debug, Clone)]
@@ -172,7 +171,7 @@ mod test {
             TestItem {
                 name: "list empty".to_string(),
                 cmd: crate::cmd_config::SubCommand::List(crate::cmd_config::CmdConfigList { host: "".to_string() }),
-                want_out: "editor=\nprompt=enabled\npager=\nbrowser=\nformat=table\n".to_string(),
+                want_out: "editor=\nprompt=enabled\nbrowser=\nformat=table\n".to_string(),
                 want_err: "".to_string(),
             },
             TestItem {
@@ -235,7 +234,7 @@ mod test {
             TestItem {
                 name: "list all default".to_string(),
                 cmd: crate::cmd_config::SubCommand::List(crate::cmd_config::CmdConfigList { host: "".to_string() }),
-                want_out: "editor=\nprompt=enabled\npager=\nbrowser=bar\nformat=table\n".to_string(),
+                want_out: "editor=\nprompt=enabled\nbrowser=bar\nformat=table\n".to_string(),
                 want_err: "".to_string(),
             },
         ];

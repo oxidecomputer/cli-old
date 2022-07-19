@@ -70,16 +70,10 @@ pub fn config_options() -> Vec<ConfigOption> {
             allowed_values: vec!["enabled".to_string(), "disabled".to_string()],
         },
         ConfigOption {
-            key: "pager".to_string(),
-            description: "the terminal pager program to send standard output to".to_string(),
-            comment: "A pager program to send command output to, e.g. \"less\". Set the value to \"cat\" to disable the pager.".to_string(),
-            default_value: "".to_string(),
-            allowed_values: vec![],
-        },
-        ConfigOption {
             key: "browser".to_string(),
             description: "the web browser to use for opening URLs".to_string(),
-            comment: "What web browser oxide should use when opening URLs. If blank, will refer to environment.".to_string(),
+            comment: "What web browser oxide should use when opening URLs. If blank, will refer to environment."
+                .to_string(),
             default_value: "".to_string(),
             allowed_values: vec![],
         },
@@ -187,14 +181,12 @@ mod test {
         let mut c = new_blank_config().unwrap();
         assert!(c.set("", "editor", "vim").is_ok());
         assert!(c.set("", "prompt", "disabled").is_ok());
-        assert!(c.set("", "pager", "less").is_ok());
         assert!(c.set("", "browser", "firefox").is_ok());
         assert!(c.set("", "format", "table").is_ok());
 
         let doc = c.config_to_string().unwrap();
         assert!(doc.contains("editor = \"vim\""));
         assert!(doc.contains("prompt = \"disabled\""));
-        assert!(doc.contains("pager = \"less\""));
         assert!(doc.contains("browser = \"firefox\""));
         assert!(doc.contains("format = \"table\""));
     }
@@ -204,7 +196,6 @@ mod test {
         let mut c = new_blank_config().unwrap();
         assert!(c.set("example.com", "editor", "vim").is_ok());
         assert!(c.set("example.com", "prompt", "disabled").is_ok());
-        assert!(c.set("example.com", "pager", "less").is_ok());
         assert!(c.set("example.com", "browser", "firefox").is_ok());
         assert!(c.set("oxide.computer", "browser", "chrome").is_ok());
 
@@ -213,7 +204,6 @@ mod test {
         let expected = r#"["example.com"]
 editor = "vim"
 prompt = "disabled"
-pager = "less"
 browser = "firefox"
 
 ["oxide.computer"]
@@ -237,9 +227,6 @@ editor = ""
 # When to interactively prompt. This is a global config that cannot be overridden by hostname.
 # Supported values: enabled, disabled
 prompt = "enabled"
-
-# A pager program to send command output to, e.g. "less". Set the value to "cat" to disable the pager.
-pager = ""
 
 # What web browser oxide should use when opening URLs. If blank, will refer to environment.
 browser = ""
