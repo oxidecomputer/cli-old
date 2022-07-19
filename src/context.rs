@@ -151,7 +151,7 @@ mod test {
     #[test_context(TContext)]
     #[test]
     #[serial_test::serial]
-    fn test_context() {
+    fn test_context(_ctx: &mut TContext) {
         let tests = vec![
             TestItem {
                 name: "config prompt".to_string(),

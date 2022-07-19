@@ -89,7 +89,7 @@ mod test {
     #[test_context(TContext)]
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     #[serial_test::serial]
-    async fn test_cmd_org() {
+    async fn test_cmd_org(_ctx: &mut TContext) {
         let tests: Vec<TestItem> = vec![
             TestItem {
                 name: "create no name".to_string(),
