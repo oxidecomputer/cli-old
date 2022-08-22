@@ -12,6 +12,7 @@ anyhow = { version = "1", features = ["backtrace"] }
 async-trait = "^0.1.53"
 atty = "^0.2.14"
 byte-unit = "4.0.14"
+#bytes = { version = "1", features = ["serde"] }
 chrono = { version = "^0.4", features = ["serde"] }
 chrono-humanize = "^0.2.1"
 clap = { version = "^3.1.8", features = ["cargo", "derive", "env", "unicode"] }
@@ -31,7 +32,7 @@ regex = "1"
 num-traits = "^0.2.14"
 oauth2 = "4.1"
 open = "^2.1.1"
-oxide-api = "0.1.0-rc.39"
+oxide-api = "0.1.0-rc.40"
 #oxide-api = { path= "../oxide.rs/oxide" }
 parse-display = "^0.5.5"
 pulldown-cmark = "^0.9.1"
