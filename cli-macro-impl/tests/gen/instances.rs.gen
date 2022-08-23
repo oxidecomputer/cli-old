@@ -82,6 +82,9 @@ pub struct CmdInstanceCreate {
     #[doc = "The disks to be created or attached for this instance."]
     #[clap(long = "disks", multiple_values = true)]
     pub disks: Vec<String>,
+    #[doc = "The external IP addresses provided to this instance.\n\nBy default, all instances have outbound connectivity, but no inbound connectivity. These external addresses can be used to provide a fixed, known IP address for making inbound connections to the instance."]
+    #[clap(long = "external-ips", short = 'e', multiple_values = true)]
+    pub external_ips: Vec<String>,
     #[doc = "The hostname that holds the instance."]
     #[clap(long = "hostname", default_value_t)]
     pub hostname: String,
@@ -257,6 +260,11 @@ impl crate::cmd::Command for CmdInstanceCreate {
                     description: description.clone(),
                     disks: self
                         .disks
+                        .iter()
+                        .map(|v| serde_json::from_str(v).unwrap())
+                        .collect(),
+                    external_ips: self
+                        .external_ips
                         .iter()
                         .map(|v| serde_json::from_str(v).unwrap())
                         .collect(),
