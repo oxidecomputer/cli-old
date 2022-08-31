@@ -333,19 +333,33 @@ impl InstanceDetails {
         // Start the progress bar.
         let handle = ctx
             .io
-            .start_process_indicator_with_label(&format!(" Waiting for instance status to be `{}`", status));
+            .start_process_indicator_with_label(&format!(
+                " Waiting for instance status to be `{}`",
+                status
+            ));
 
         let client = ctx.api_client(&self.host)?;
 
         // TODO: we should probably time out here eventually with an error.
+        let mut last_state = None;
         loop {
-            // Get the instance.
             let instance = client
                 .instances()
                 .get(&self.instance, &self.organization, &self.project)
                 .await?;
+
             if status == instance.run_state {
                 break;
+            }
+
+            if last_state.as_ref() != Some(&instance.run_state) {
+                if let Some(handle) = &handle {
+                    handle.text(format!(
+                        " Waiting for instance status to be `{}` [{}]",
+                        status, instance.run_state
+                    ));
+                }
+                last_state = Some(instance.run_state);
             }
 
             // Back off a bit.
@@ -354,6 +368,7 @@ impl InstanceDetails {
 
         // End the progress bar.
         if let Some(handle) = handle {
+            handle.text(format!("Instance status now `{}`", status));
             handle.done();
         }
 
