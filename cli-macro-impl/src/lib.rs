@@ -583,6 +583,7 @@ struct Property {
     schema: openapiv3::ReferenceOr<openapiv3::Schema>,
     required: bool,
     description: Option<String>,
+    default: Option<serde_json::Value>,
 }
 
 struct Parameter {
@@ -745,6 +746,7 @@ impl Operation {
                     required: obj.required.contains(&key)
                         || obj.required.contains(&key.trim_start_matches("new_").to_string()),
                     description: s.schema_data.description,
+                    default: s.schema_data.default,
                 },
             );
         }
@@ -938,6 +940,7 @@ impl Operation {
         schema: openapiv3::ReferenceOr<T>,
         description: Option<String>,
         required: bool,
+        default: Option<serde_json::Value>,
     ) -> Result<TokenStream> {
         if skip_defaults(name, tag)
             || name == format!("{}_name", singular(tag))
@@ -1023,8 +1026,13 @@ impl Operation {
                     #[clap(#long_flag, #short_flag multiple_values = true)]
                 }
             } else {
+                let default = default
+                    .map(|d| d.to_string())
+                    .map(|d| quote! { default_value = #d })
+                    .unwrap_or_else(|| quote! { default_value_t });
+
                 quote! {
-                    #[clap(#long_flag, #short_flag default_value_t)]
+                    #[clap(#long_flag, #short_flag #default)]
                 }
             }
         } else {
@@ -1054,11 +1062,11 @@ impl Operation {
             // Let's get the type.
             let schema = data.format.schema()?;
 
-            params.push(self.render_struct_param(&param, tag, schema, data.description, p.required)?);
+            params.push(self.render_struct_param(&param, tag, schema, data.description, p.required, None)?);
         }
 
         for (param, p) in self.get_request_body_properties()? {
-            params.push(self.render_struct_param(&param, tag, p.schema, p.description, p.required)?);
+            params.push(self.render_struct_param(&param, tag, p.schema, p.description, p.required, p.default)?);
         }
 
         Ok(params)
