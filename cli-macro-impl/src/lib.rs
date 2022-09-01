@@ -1025,6 +1025,21 @@ impl Operation {
                 quote! {
                     #[clap(#long_flag, #short_flag multiple_values = true)]
                 }
+            } else if rendered == "bool" {
+                // Clap treats bools as flags, so any value passed is ignored
+                // just whether the argument is present or not is used.
+                // So if a default value of true is passed, there's no way to
+                // set the flag to false. We use `parse(try_from_str)` to
+                // allow passing true or false as the value.
+                // Perhaps we could be smart and generate --foo / --no-foo?
+                let default = default
+                    .map(|d| d.to_string())
+                    .map(|d| quote! { parse(try_from_str), default_value = #d })
+                    .unwrap_or_else(|| quote! { });
+
+                quote! {
+                    #[clap(#long_flag, #short_flag #default)]
+                }
             } else {
                 let default = default
                     .map(|d| d.to_string())
