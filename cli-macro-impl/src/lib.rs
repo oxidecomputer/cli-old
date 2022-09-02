@@ -1031,10 +1031,14 @@ impl Operation {
                 // So if a default value of true is passed, there's no way to
                 // set the flag to false. We use `parse(try_from_str)` to
                 // allow passing true or false as the value.
+                // To also allow passing the flag without a value, we use
+                // `default_missing_value`.
                 // Perhaps we could be smart and generate --foo / --no-foo?
                 let default = default
                     .map(|d| d.to_string())
-                    .map(|d| quote! { parse(try_from_str), default_value = #d })
+                    .map(|d| quote! {
+                        parse(try_from_str), default_value = #d, default_missing_value = #d
+                    })
                     .unwrap_or_else(|| quote! { });
 
                 quote! {
