@@ -126,23 +126,22 @@ impl crate::cmd::Command for CmdInstanceStart {
 
         let full_name = format!("{}/{}", self.organization, self.project);
 
-        // Start the instance.
-        client
-            .instances()
-            .start(&self.instance, &self.organization, &self.project)
-            .await?;
+        // Name the future to start the instance.
+        let instances = client.instances();
+        let start_instance = instances.start(&self.instance, &self.organization, &self.project);
 
-        // Wait for the instance to be started.
+        // And another to wait for the instance to be started.
         let instance_state = InstanceDetails {
             host: "".to_string(),
             instance: self.instance.to_string(),
             organization: self.organization.to_string(),
             project: self.project.to_string(),
         };
+        let state_change = instance_state.wait_for_state(ctx, oxide_api::types::InstanceState::Running);
 
-        instance_state
-            .wait_for_state(ctx, oxide_api::types::InstanceState::Running)
-            .await?;
+        // Concurrently send the start request and wait for the instance to be started,
+        // bail out if either fails.
+        tokio::try_join!(start_instance, state_change)?;
 
         let cs = ctx.io.color_scheme();
         writeln!(
@@ -334,27 +333,42 @@ impl InstanceDetails {
         // Start the progress bar.
         let handle = ctx
             .io
-            .start_process_indicator_with_label(&format!(" Waiting for instance status to be `{}`", status));
+            .start_process_indicator_with_label(&format!(
+                " Waiting for instance status to be `{}`",
+                status
+            ));
 
         let client = ctx.api_client(&self.host)?;
 
         // TODO: we should probably time out here eventually with an error.
+        let mut last_state = None;
         loop {
-            // Get the instance.
             let instance = client
                 .instances()
                 .get(&self.instance, &self.organization, &self.project)
                 .await?;
+
             if status == instance.run_state {
                 break;
             }
 
+            if last_state.as_ref() != Some(&instance.run_state) {
+                if let Some(handle) = &handle {
+                    handle.text(format!(
+                        " Waiting for instance status to be `{}` [{}]",
+                        status, instance.run_state
+                    ));
+                }
+                last_state = Some(instance.run_state);
+            }
+
             // Back off a bit.
-            std::thread::sleep(std::time::Duration::from_millis(100));
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         }
 
         // End the progress bar.
         if let Some(handle) = handle {
+            handle.text(format!("Instance status now `{}`", status));
             handle.done();
         }
 
