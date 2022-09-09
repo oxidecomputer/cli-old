@@ -126,23 +126,22 @@ impl crate::cmd::Command for CmdInstanceStart {
 
         let full_name = format!("{}/{}", self.organization, self.project);
 
-        // Start the instance.
-        client
-            .instances()
-            .start(&self.instance, &self.organization, &self.project)
-            .await?;
+        // Name the future to start the instance.
+        let instances = client.instances();
+        let start_instance = instances.start(&self.instance, &self.organization, &self.project);
 
-        // Wait for the instance to be started.
+        // And another to wait for the instance to be started.
         let instance_state = InstanceDetails {
             host: "".to_string(),
             instance: self.instance.to_string(),
             organization: self.organization.to_string(),
             project: self.project.to_string(),
         };
+        let state_change = instance_state.wait_for_state(ctx, oxide_api::types::InstanceState::Running);
 
-        instance_state
-            .wait_for_state(ctx, oxide_api::types::InstanceState::Running)
-            .await?;
+        // Concurrently send the start request and wait for the instance to be started,
+        // bail out if either fails.
+        tokio::try_join!(start_instance, state_change)?;
 
         let cs = ctx.io.color_scheme();
         writeln!(
