@@ -572,6 +572,7 @@ mod test {
                     disks: Default::default(),
                     user_data: "some data".to_string(),
                     external_ips: Vec::from(["mypool".to_string()]),
+                    start: true,
                 }),
 
                 stdin: "".to_string(),
@@ -592,6 +593,7 @@ mod test {
                     disks: Default::default(),
                     user_data: "some data".to_string(),
                     external_ips: Vec::from(["mypool".to_string()]),
+                    start: true,
                 }),
 
                 stdin: "".to_string(),
@@ -612,6 +614,7 @@ mod test {
                     disks: Default::default(),
                     user_data: "some data".to_string(),
                     external_ips: Vec::from(["mypool".to_string()]),
+                    start: true,
                 }),
 
                 stdin: "".to_string(),
@@ -632,6 +635,7 @@ mod test {
                     disks: Default::default(),
                     user_data: "some data".to_string(),
                     external_ips: Vec::from(["mypool".to_string()]),
+                    start: true,
                 }),
 
                 stdin: "".to_string(),
@@ -652,6 +656,7 @@ mod test {
                     disks: Default::default(),
                     user_data: "some data".to_string(),
                     external_ips: Vec::from(["mypool".to_string()]),
+                    start: true,
                 }),
 
                 stdin: "".to_string(),
@@ -672,6 +677,7 @@ mod test {
                     disks: Default::default(),
                     user_data: "some data".to_string(),
                     external_ips: Vec::from(["mypool".to_string()]),
+                    start: true,
                 }),
 
                 stdin: "".to_string(),
