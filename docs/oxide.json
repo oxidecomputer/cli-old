@@ -1299,6 +1299,11 @@
               "help": "Whether to continuously read from the running instance's output"
             },
             {
+              "short": "i",
+              "long": "interactive",
+              "help": "Whether to connect interactively (read/write) to the running instance's serial console. (NOTE: ignores --byte-offset, --max-bytes, and --continuous)"
+            },
+            {
               "short": "h",
               "long": "help",
               "help": "Print help information"

@@ -25,6 +25,9 @@ pub mod cmd_image;
 pub mod cmd_image_global;
 /// The instance command.
 pub mod cmd_instance;
+#[cfg(unix)]
+/// Support for interactive instance serial access
+pub mod cmd_instance_serial;
 /// The open command.
 pub mod cmd_open;
 /// The organization command.
