@@ -4,7 +4,7 @@ The Oxide command line tool.
 
 The instructions below refer to instructions for contributing to the repo.
 
-For the CLI docs for end users refer to: https://docs.oxide.computer/cli/manual
+For the CLI docs for end users refer to: https://docs.oxide.computer/cli
 
 If you are running nexus locally without `https://` make sure you denote that in
 the URL you pass to `OXIDE_HOST` or to `oxide auth login`.
