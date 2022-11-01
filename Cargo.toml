@@ -6,11 +6,17 @@ build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[patch.crates-io]
+# version conflicts between hyperx and everything else
+# https://github.com/dekellum/hyperx/pull/40
+hyperx = { git = "https://github.com/lifning/hyperx" }
+
 [dependencies]
 ansi_term = "^0.12.1"
 anyhow = { version = "1", features = ["backtrace"] }
 async-trait = "^0.1.53"
 atty = "^0.2.14"
+base64 = "0.13"
 byte-unit = "4.0.14"
 chrono = { version = "^0.4", features = ["serde"] }
 chrono-humanize = "^0.2.1"
@@ -21,11 +27,13 @@ colored_json = "^2.1.0"
 data-encoding = "2"
 dialoguer = "^0.10.0"
 dirs = "4"
+futures = "0.3.24"
 git_rev = "^0.1.0"
 heck = "^0.4.0"
 http = "^0.2.6"
 ipnetwork = "^0.18"
 Inflector = "^0.11.4"
+libc = "0.2.133"
 log = "=0.4.17"
 regex = "1"
 num-traits = "^0.2.14"
@@ -34,9 +42,12 @@ open = "^2.1.1"
 oxide-api = "0.1.0-rc.41"
 #oxide-api = { path= "../oxide.rs/oxide" }
 parse-display = "^0.5.5"
+progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
 pulldown-cmark = "^0.9.1"
 pulldown-cmark-to-cmark = "^10.0.0"
-reqwest = { version = "^0.11", default-features = false, features = ["json", "rustls-tls"] }
+rand = "0.8"
+regress = "0.4"
+reqwest = { version = "^0.11", default-features = false, features = ["json", "rustls-tls", "stream"] }
 ring = "^0.16.20"
 #roff = { version = "^0.2.1" }
 # Fix once https://github.com/clap-rs/clap/pull/3174 is merged.
@@ -60,14 +71,17 @@ terminal_size = "^0.1.17"
 terminal-spinners = "^0.3.2"
 thiserror = "1"
 tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.17.2"
 toml = "^0.5.9"
 toml_edit = "^0.14.2"
 url = "2.2.2"
-uuid = { version = "^0.8", features = ["serde", "v4"] }
+uuid = { version = "1.0.0", features = ["serde", "v4"] }
 version-compare = "^0.1.0"
 
 [build-dependencies]
 built = "^0.5"
+progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
+serde_json = "1.0"
 
 [dev-dependencies]
 expectorate = "^1.0.5"

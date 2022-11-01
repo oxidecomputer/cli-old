@@ -493,11 +493,22 @@ pub struct CmdInstanceSerial {
     /// Whether to continuously read from the running instance's output.
     #[clap(long, short)]
     pub continuous: bool,
+
+    /// Whether to connect interactively (read/write) to the running instance's serial console.
+    /// (NOTE: ignores --byte-offset, --max-bytes, and --continuous)
+    #[cfg(unix)]
+    #[clap(long, short)]
+    pub interactive: bool,
 }
 
 #[async_trait::async_trait]
 impl crate::cmd::Command for CmdInstanceSerial {
     async fn run(&self, ctx: &mut crate::context::Context) -> Result<()> {
+        #[cfg(unix)]
+        if self.interactive {
+            return self.websock_stream_tty(ctx).await;
+        }
+
         let client = ctx.api_client("")?;
 
         let mut from_start = None;
