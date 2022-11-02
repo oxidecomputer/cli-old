@@ -450,6 +450,9 @@ mod test {
         }
     }
 
+    // TODO: Auth is shaky with current docker container CI implementation.
+    // remove ignore tag once tests run against mock API server
+    #[ignore]
     #[test_context(TContext)]
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     #[serial_test::serial]
