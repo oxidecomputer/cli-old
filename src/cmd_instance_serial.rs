@@ -1,24 +1,23 @@
-use std::mem::swap;
-use std::os::unix::io::AsRawFd;
-use std::time::Duration;
+use std::{mem::swap, os::unix::io::AsRawFd, time::Duration};
+
 use anyhow::Result;
 use futures::{SinkExt, StreamExt};
 use http::HeaderMap;
 use reqwest::ClientBuilder;
-use tokio_tungstenite::tungstenite::protocol::{Message, Role};
-use tokio_tungstenite::WebSocketStream;
+use tokio_tungstenite::{
+    tungstenite::protocol::{Message, Role},
+    WebSocketStream,
+};
 
 mod nexus_client {
-    progenitor::generate_api!(
-        spec = "spec-serial.json",
-        interface = Builder,
-    );
+    progenitor::generate_api!(spec = "spec-serial.json", interface = Builder,);
 }
 
 impl super::cmd_instance::CmdInstanceSerial {
     pub(crate) async fn websock_stream_tty(&self, ctx: &mut crate::context::Context<'_>) -> Result<()> {
         // shenanigans to get the info we need to construct a progenitor-client
-        let reqw = ctx.api_client("")?
+        let reqw = ctx
+            .api_client("")?
             .request_raw(http::Method::GET, "", None)
             .await?
             .build()?;
@@ -27,9 +26,7 @@ impl super::cmd_instance::CmdInstanceSerial {
         let mut headers = HeaderMap::new();
         headers.insert(
             http::header::AUTHORIZATION,
-            reqw.headers().get(http::header::AUTHORIZATION)
-                .unwrap()
-                .to_owned()
+            reqw.headers().get(http::header::AUTHORIZATION).unwrap().to_owned(),
         );
 
         let reqw_client = ClientBuilder::new()
@@ -218,9 +215,10 @@ async fn stdin_to_websockets_task(
 
 #[cfg(test)]
 mod test {
-    use crate::cmd::Command;
     use pretty_assertions::assert_eq;
     use test_context::{test_context, AsyncTestContext};
+
+    use crate::cmd::Command;
 
     struct TContext {
         orig_oxide_host: Result<String, std::env::VarError>,
@@ -262,6 +260,9 @@ mod test {
         }
     }
 
+    // TODO: Auth is shaky with current docker container CI implementation.
+    // remove ignore tag once tests run against mock API server
+    #[ignore]
     #[test_context(TContext)]
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_cmd_instance_serial_interactive() {
