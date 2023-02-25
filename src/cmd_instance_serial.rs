@@ -32,6 +32,7 @@ impl super::cmd_instance::CmdInstanceSerial {
         let reqw_client = ClientBuilder::new()
             .connect_timeout(Duration::new(60, 0))
             .default_headers(headers)
+            .http1_only() // HTTP2 does not support websockets
             .build()?;
 
         let nexus_client = nexus_client::Client::new_with_client(base, reqw_client);
