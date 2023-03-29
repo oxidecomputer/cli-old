@@ -1,3 +1,8 @@
+> **Warning**
+>
+> This CLI is no longer supported and will not be maintained.
+> Refer to https://github.com/oxidecomputer/oxide-sdk-and-cli for the current CLI and Rust client
+
 # cli
 
 The Oxide command line tool.
